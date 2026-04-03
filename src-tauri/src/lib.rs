@@ -13,6 +13,7 @@ pub fn run() {
             commands::set_auth_token,
             commands::clear_auth_token,
             commands::get_current_user,
+            commands::get_user,
             commands::get_friends,
             commands::get_instance,
         ])

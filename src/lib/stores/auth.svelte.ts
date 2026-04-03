@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CurrentUser } from "../types";
+import type { CurrentUser, UserProfile } from "../types";
 
 let token = $state<string | null>(null);
 let user = $state<CurrentUser | null>(null);
@@ -76,6 +76,10 @@ export function restoreSession(): Promise<void> {
 
 export async function refreshCurrentUser(): Promise<void> {
   await loadCurrentUser();
+}
+
+export async function fetchUserProfile(userId: string): Promise<UserProfile> {
+  return invoke<UserProfile>("get_user", { userId });
 }
 
 export async function login(authToken: string): Promise<boolean> {

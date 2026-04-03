@@ -4,13 +4,20 @@
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import { getFriendsStore, fetchFriends } from "../stores/friends.svelte";
-  import { getAuth, refreshCurrentUser } from "../stores/auth.svelte";
+  import { fetchUserProfile, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
+  import type { Friend, UserProfile } from "../types";
+  import UserMenuDialog from "./UserMenuDialog.svelte";
   import Icon from "@iconify/svelte";
 
   const friends = getFriendsStore();
   const auth = getAuth();
   let activeTab = $state("friends");
   let refreshPromise: Promise<void> | null = null;
+  let selectedProfile = $state<UserProfile | null>(null);
+  let profileLoading = $state(false);
+  let profileError = $state<string | null>(null);
+  let profileDialogOpen = $state(false);
+  let profileRequestToken = 0;
 
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
@@ -39,6 +46,42 @@
   function handleVisibilityChange() {
     if (document.visibilityState !== "visible") return;
     void refreshDashboardData();
+  }
+
+  function closeProfileDialog() {
+    profileDialogOpen = false;
+    profileLoading = false;
+    profileError = null;
+    selectedProfile = null;
+  }
+
+  async function handleFriendProfile(friend: Friend) {
+    profileDialogOpen = true;
+    selectedProfile = friend;
+    profileLoading = true;
+    profileError = null;
+
+    const requestToken = ++profileRequestToken;
+
+    try {
+      const profile = await fetchUserProfile(friend.id);
+
+      if (requestToken !== profileRequestToken) {
+        return;
+      }
+
+      selectedProfile = profile;
+    } catch (error) {
+      if (requestToken !== profileRequestToken) {
+        return;
+      }
+
+      profileError = error instanceof Error ? error.message : String(error);
+    } finally {
+      if (requestToken === profileRequestToken) {
+        profileLoading = false;
+      }
+    }
   }
 </script>
 
@@ -88,7 +131,7 @@
         {:else}
           <div class="instances-grid">
             {#each friends.instanceGroups as group (group.location)}
-              <InstanceCard {group} />
+              <InstanceCard {group} onFriendProfile={handleFriendProfile} />
             {/each}
           </div>
         {/if}
@@ -98,6 +141,7 @@
         privateFriends={friends.privateFriends}
         offlineFriends={friends.offlineFriends}
         activeFriendIds={auth.user?.activeFriends || []}
+        onFriendProfile={handleFriendProfile}
       />
     {:else}
       <div class="main-content">
@@ -108,6 +152,15 @@
       </div>
     {/if}
   </div>
+
+  {#if profileDialogOpen}
+    <UserMenuDialog
+      user={selectedProfile}
+      loading={profileLoading}
+      error={profileError}
+      onClose={closeProfileDialog}
+    />
+  {/if}
 </div>
 
 <style>

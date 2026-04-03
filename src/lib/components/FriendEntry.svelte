@@ -25,17 +25,23 @@
 
   interface Props {
     friend: Friend;
+    onProfileClick: (friend: Friend) => void;
   }
 
-  let { friend }: Props = $props();
+  let { friend, onProfileClick }: Props = $props();
   const mobilePlatform = $derived(getMobilePlatform(friend));
 </script>
 
 <div class="friend-entry">
-  <div class="avatar-wrapper">
+  <button
+    class="avatar-button avatar-wrapper"
+    type="button"
+    title={`Open ${friend.displayName} profile`}
+    onclick={() => onProfileClick(friend)}
+  >
     <UserAvatar friend={friend} />
     <StatusDot status={friend.status} />
-  </div>
+  </button>
   <div class="details">
     <span class="name">{friend.displayName}</span>
     {#if mobilePlatform}
@@ -59,6 +65,16 @@
   .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
+  }
+
+  .avatar-button {
+    padding: 0;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+
+  .avatar-button:hover {
+    transform: translateY(-1px);
   }
 
   .details {

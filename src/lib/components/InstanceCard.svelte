@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { InstanceGroup, InstancePlatforms } from "../types";
+  import type { Friend, InstanceGroup, InstancePlatforms } from "../types";
   import { visibilityLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
@@ -34,9 +34,10 @@
 
   interface Props {
     group: InstanceGroup;
+    onFriendProfile: (friend: Friend) => void;
   }
 
-  let { group }: Props = $props();
+  let { group, onFriendProfile }: Props = $props();
 
   const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
   const thumbnailUrl = $derived(
@@ -82,7 +83,7 @@
   </div>
   <div class="friends-list">
     {#each group.friends as friend (friend.id)}
-      <FriendEntry {friend} />
+      <FriendEntry {friend} onProfileClick={onFriendProfile} />
     {/each}
   </div>
 </div>

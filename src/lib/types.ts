@@ -6,7 +6,24 @@ export interface Badge {
   showcased: boolean;
 }
 
-export interface Friend {
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  currentAvatarThumbnailImageUrl: string;
+  profilePicOverrideThumbnail: string;
+  userIcon: string;
+  status: string;
+  statusDescription?: string;
+  bio?: string;
+  pronouns?: string;
+  date_joined?: string;
+  tags: string[];
+  badges?: Badge[];
+  friends?: string[];
+  onlineFriends?: string[];
+}
+
+export interface Friend extends UserProfile {
   id: string;
   displayName: string;
   currentAvatarThumbnailImageUrl: string;
@@ -62,7 +79,7 @@ export interface InstanceData {
   world: WorldData;
 }
 
-export interface CurrentUser {
+export interface CurrentUser extends UserProfile {
   id: string;
   displayName: string;
   currentAvatarThumbnailImageUrl: string;

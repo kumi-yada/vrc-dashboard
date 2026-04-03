@@ -7,9 +7,10 @@
     privateFriends: Friend[];
     offlineFriends: Friend[];
     activeFriendIds: string[];
+    onFriendProfile: (friend: Friend) => void;
   }
 
-  let { privateFriends, offlineFriends, activeFriendIds }: Props = $props();
+  let { privateFriends, offlineFriends, activeFriendIds, onFriendProfile }: Props = $props();
 
   let sortedPrivateFriends = $derived.by(() => {
     const friendOrder = (friend: Friend) => {
@@ -46,7 +47,12 @@
   {#if sortedPrivateFriends.length > 0}
     <div class="sidebar-col private-col">
       {#each sortedPrivateFriends as friend (friend.id)}
-        <div class="sidebar-avatar" title={friend.displayName}>
+        <button
+          class="sidebar-avatar"
+          type="button"
+          title={`Open ${friend.displayName} profile`}
+          onclick={() => onFriendProfile(friend)}
+        >
           <UserAvatar {friend} size={40} />
           <StatusDot
             status={friend.status}
@@ -56,14 +62,19 @@
             bottom="-1px"
             right="-1px"
           />
-        </div>
+        </button>
       {/each}
     </div>
   {/if}
   {#if offlineFriends.length > 0}
     <div class="sidebar-col offline-col">
       {#each offlineFriends as friend (friend.id)}
-        <div class="sidebar-avatar offline" title={friend.displayName}>
+        <button
+          class="sidebar-avatar offline"
+          type="button"
+          title={`Open ${friend.displayName} profile`}
+          onclick={() => onFriendProfile(friend)}
+        >
           <UserAvatar {friend} size={40} grayscale={60} brightness={0.7} />
           <StatusDot
             status={friend.status}
@@ -73,7 +84,7 @@
             bottom="-1px"
             right="-1px"
           />
-        </div>
+        </button>
       {/each}
     </div>
   {/if}
@@ -103,5 +114,13 @@
   .sidebar-avatar {
     position: relative;
     flex-shrink: 0;
+    padding: 0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  .sidebar-avatar:hover {
+    transform: translateY(-1px);
   }
 </style>

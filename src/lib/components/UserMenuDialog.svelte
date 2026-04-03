@@ -1,18 +1,24 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import type { CurrentUser } from "../types";
+  import type { UserProfile } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
-    user: CurrentUser;
+    user: UserProfile | null;
     onClose: () => void;
-    onLogout: () => Promise<void> | void;
+    onLogout?: () => Promise<void> | void;
+    loading?: boolean;
+    error?: string | null;
   }
 
-  let { user, onClose, onLogout }: Props = $props();
+  let { user, onClose, onLogout, loading = false, error = null }: Props = $props();
 
-  const showcasedBadges = $derived(user.badges?.filter((badge) => badge.showcased) ?? []);
+  const showcasedBadges = $derived(user?.badges?.filter((badge) => badge.showcased) ?? []);
+  const hasFriendCounts = $derived(
+    Array.isArray(user?.friends) || Array.isArray(user?.onlineFriends)
+  );
+  const canLogout = $derived(Boolean(user && onLogout));
 
   function getTrustLevel(tags: string[]): string {
     if (tags.includes("system_trust_veteran")) return "Trusted";
@@ -40,6 +46,7 @@
   }
 
   async function handleLogout() {
+    if (!onLogout) return;
     onClose();
     await onLogout();
   }
@@ -66,84 +73,125 @@
       <Icon icon="mdi:close" width={18} />
     </button>
 
-    <div class="popup-header">
-      <div class="popup-avatar-wrap">
-        <UserAvatar friend={user} size={64} />
-        <StatusDot
-          status={user.status}
-          size={14}
-          borderWidth={2}
-          borderColor="var(--bg-secondary)"
-        />
-      </div>
-      <div class="popup-identity">
-        <h2 class="popup-displayname" id="user-menu-title">{user.displayName}</h2>
-        {#if user.pronouns}
-          <span class="popup-pronouns">{user.pronouns}</span>
-        {/if}
-        <span class="popup-trust" style:color={getTrustColor(user.tags ?? [])}>
-          {getTrustLevel(user.tags ?? [])}
-        </span>
-      </div>
-    </div>
-
-    {#if user.statusDescription}
-      <div class="popup-status-row">
-        <div class="status-dot-wrapper">
+    {#if user}
+      <div class="popup-header">
+        <div class="popup-avatar-wrap">
+          <UserAvatar friend={user} size={64} />
           <StatusDot
             status={user.status}
-            size={8}
+            size={14}
+            borderWidth={2}
             borderColor="var(--bg-secondary)"
           />
         </div>
-        <span class="popup-status-text">{user.statusDescription}</span>
+        <div class="popup-identity">
+          <h2 class="popup-displayname" id="user-menu-title">{user.displayName}</h2>
+          {#if user.pronouns}
+            <span class="popup-pronouns">{user.pronouns}</span>
+          {/if}
+          <span class="popup-trust" style:color={getTrustColor(user.tags ?? [])}>
+            {getTrustLevel(user.tags ?? [])}
+          </span>
+        </div>
       </div>
-    {/if}
 
-    {#if user.bio}
-      <div class="popup-bio">
-        <p>{user.bio}</p>
-      </div>
-    {/if}
-
-    <div class="popup-stats">
-      <div class="stat">
-        <span class="stat-value">{user.onlineFriends?.length ?? 0}</span>
-        <span class="stat-label">Online</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-value">{user.friends?.length ?? 0}</span>
-        <span class="stat-label">Friends</span>
-      </div>
-      {#if user.date_joined}
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-value stat-date">{formatDate(user.date_joined)}</span>
-          <span class="stat-label">Joined</span>
+      {#if loading}
+        <div class="loading-banner">
+          <Icon icon="mdi:loading" width={16} class="spinning" />
+          Refreshing profile...
         </div>
       {/if}
-    </div>
 
-    {#if showcasedBadges.length > 0}
-      <div class="popup-badges">
-        {#each showcasedBadges as badge (badge.badgeId)}
-          <img
-            src={badge.badgeImageUrl}
-            alt={badge.badgeName}
-            title={`${badge.badgeName}: ${badge.badgeDescription}`}
-            class="badge-img"
-          />
-        {/each}
+      {#if error}
+        <div class="message-row error-row">
+          <Icon icon="mdi:alert-circle-outline" width={16} />
+          <span>{error}</span>
+        </div>
+      {/if}
+
+      {#if user.statusDescription}
+        <div class="popup-status-row">
+          <div class="status-dot-wrapper">
+            <StatusDot
+              status={user.status}
+              size={8}
+              borderColor="var(--bg-secondary)"
+            />
+          </div>
+          <span class="popup-status-text">{user.statusDescription}</span>
+        </div>
+      {/if}
+
+      {#if user.bio}
+        <div class="popup-bio">
+          <p>{user.bio}</p>
+        </div>
+      {/if}
+
+      {#if hasFriendCounts || user.date_joined}
+        <div class="popup-stats">
+          {#if Array.isArray(user.onlineFriends)}
+            <div class="stat">
+              <span class="stat-value">{user.onlineFriends.length}</span>
+              <span class="stat-label">Online</span>
+            </div>
+          {/if}
+          {#if Array.isArray(user.onlineFriends) && (Array.isArray(user.friends) || user.date_joined)}
+            <div class="stat-divider"></div>
+          {/if}
+          {#if Array.isArray(user.friends)}
+            <div class="stat">
+              <span class="stat-value">{user.friends.length}</span>
+              <span class="stat-label">Friends</span>
+            </div>
+          {/if}
+          {#if Array.isArray(user.friends) && user.date_joined}
+            <div class="stat-divider"></div>
+          {/if}
+          {#if user.date_joined}
+            <div class="stat">
+              <span class="stat-value stat-date">{formatDate(user.date_joined)}</span>
+              <span class="stat-label">Joined</span>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if showcasedBadges.length > 0}
+        <div class="popup-badges">
+          {#each showcasedBadges as badge (badge.badgeId)}
+            <img
+              src={badge.badgeImageUrl}
+              alt={badge.badgeName}
+              title={`${badge.badgeName}: ${badge.badgeDescription}`}
+              class="badge-img"
+            />
+          {/each}
+        </div>
+      {/if}
+
+      {#if canLogout}
+        <div class="popup-footer">
+          <button class="logout-btn" type="button" onclick={handleLogout}>
+            <Icon icon="mdi:logout" width={15} />
+            Sign Out
+          </button>
+        </div>
+      {/if}
+    {:else if loading}
+      <div class="dialog-state">
+        <Icon icon="mdi:loading" width={24} class="spinning" />
+        <h2 class="dialog-title" id="user-menu-title">Loading profile</h2>
+      </div>
+    {:else}
+      <div class="dialog-state">
+        <Icon icon="mdi:account-off-outline" width={24} />
+        <h2 class="dialog-title" id="user-menu-title">Profile unavailable</h2>
+        {#if error}
+          <p class="dialog-copy">{error}</p>
+        {/if}
       </div>
     {/if}
-
-    <div class="popup-footer">
-      <button class="logout-btn" type="button" onclick={handleLogout}>
-        <Icon icon="mdi:logout" width={15} />
-        Sign Out
-      </button>
-    </div>
   </div>
 </div>
 
@@ -195,6 +243,30 @@
   .close-btn:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .dialog-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 220px;
+    padding: 2rem 1.5rem;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .dialog-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .dialog-copy {
+    margin: 0;
+    font-size: 0.84rem;
   }
 
   .popup-header {
@@ -253,6 +325,21 @@
     gap: 0.5rem;
     padding: 0.55rem 1.25rem;
     border-top: 1px solid var(--border);
+  }
+
+  .loading-banner,
+  .message-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+  }
+
+  .error-row {
+    color: #ef9a9a;
   }
 
   .status-dot-wrapper {
@@ -359,6 +446,15 @@
 
   .logout-btn:hover {
     background: rgba(239, 83, 80, 0.12);
+  }
+
+  :global(.spinning) {
+    animation: dialog-spin 1s linear infinite;
+  }
+
+  @keyframes dialog-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   @media (max-width: 520px) {
