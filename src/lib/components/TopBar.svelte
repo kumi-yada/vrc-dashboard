@@ -121,7 +121,6 @@
     gap: 0.75rem;
     background: var(--topbar-bg);
     padding: 0 1rem;
-    height: 48px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border);
   }
@@ -160,7 +159,7 @@
 
   .actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     align-items: center;
   }
 
@@ -207,25 +206,16 @@
     background: rgba(239, 83, 80, 0.85);
   }
 
-  /* Avatar button */
   .user-menu-wrapper {
-    position: relative;
-  }
-
-  .avatar-btn {
-    position: relative;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    padding: 0;
-    border: 2px solid transparent;
-    transition: border-color 0.15s;
-    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .avatar-btn :global(.user-avatar) {
-    width: 100%;
-    height: 100%;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
     display: block;
   }
 </style>
