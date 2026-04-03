@@ -20,11 +20,15 @@
       <input
         type="password"
         bind:value={tokenInput}
-        placeholder="Paste your auth token here..."
+        placeholder="authcookie_xxxxxx"
         class="token-input"
         disabled={auth.loading}
       />
-      <button type="submit" class="login-btn" disabled={auth.loading || !tokenInput.trim()}>
+      <button
+        type="submit"
+        class="login-btn"
+        disabled={auth.loading || !tokenInput.trim()}
+      >
         {auth.loading ? "Authenticating..." : "Login"}
       </button>
     </form>
@@ -36,9 +40,18 @@
     <div class="instructions">
       <h3>How to get your auth token:</h3>
       <ol>
-        <li>Go to <strong>vrchat.com</strong> and log in</li>
-        <li>Open browser DevTools (F12)</li>
-        <li>Go to Application → Cookies</li>
+        <li>
+          Go to <strong>vrchat.com</strong> and log in - <a
+            href="https://vrchat.com"
+            target="_blank">Link</a
+          >
+        </li>
+        <li>
+          Go to <strong>vrchat.com/api/1/auth</strong> - <a
+            href="https://vrchat.com/api/1/auth"
+            target="_blank">Link</a
+          >
+        </li>
         <li>Find the <code>auth</code> cookie and copy its value</li>
       </ol>
     </div>
