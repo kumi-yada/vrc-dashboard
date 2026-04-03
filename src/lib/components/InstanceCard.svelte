@@ -22,7 +22,7 @@
 </script>
 
 <div class="instance-card">
-  <div class="world-preview">
+  <div class="world-preview" title={`${worldName} - ${userCount}/${capacity} users`}>
     {#if thumbnailUrl}
       <img src={thumbnailUrl} alt={worldName} class="world-thumb" loading="lazy" />
     {:else}

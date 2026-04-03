@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import TopBar from "./TopBar.svelte";
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
@@ -9,15 +10,40 @@
   const friends = getFriendsStore();
   const auth = getAuth();
   let activeTab = $state("friends");
+  let refreshPromise: Promise<void> | null = null;
 
-  $effect(() => {
-    fetchFriends();
+  async function refreshDashboardData(): Promise<void> {
+    if (refreshPromise) return refreshPromise;
+
+    refreshPromise = Promise.all([refreshCurrentUser(), fetchFriends()])
+      .then(() => undefined)
+      .finally(() => {
+        refreshPromise = null;
+      });
+
+    return refreshPromise;
+  }
+
+  onMount(() => {
+    void refreshDashboardData();
   });
 
   async function handleRefresh() {
-    await Promise.all([refreshCurrentUser(), fetchFriends()]);
+    await refreshDashboardData();
+  }
+
+  function handleWindowFocus() {
+    void refreshDashboardData();
+  }
+
+  function handleVisibilityChange() {
+    if (document.visibilityState !== "visible") return;
+    void refreshDashboardData();
   }
 </script>
+
+<svelte:window onfocus={handleWindowFocus} />
+<svelte:document onvisibilitychange={handleVisibilityChange} />
 
 <div class="dashboard">
   <TopBar {activeTab} onTabChange={(tab) => (activeTab = tab)} />
