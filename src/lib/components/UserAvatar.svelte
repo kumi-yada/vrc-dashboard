@@ -36,6 +36,7 @@
   alt={friend.displayName}
   class="user-avatar"
   loading="lazy"
+  title={friend.displayName}
   style:width={`${size}px`}
   style:height={`${size}px`}
   style:border-radius={radius}

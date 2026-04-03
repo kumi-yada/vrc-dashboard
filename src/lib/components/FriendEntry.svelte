@@ -8,12 +8,13 @@
   }
 
   let { friend }: Props = $props();
+  $inspect(friend);
 </script>
 
 <div class="friend-entry">
   <div class="avatar-wrapper">
     <UserAvatar friend={friend} />
-    <StatusDot status={friend.status} />
+    <StatusDot status={friend.status} state={friend.state} />
   </div>
   <span class="name">{friend.displayName}</span>
 </div>

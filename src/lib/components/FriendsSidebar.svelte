@@ -19,6 +19,7 @@
           <UserAvatar friend={friend} size={40} radius="8px" />
           <StatusDot
             status={friend.status}
+            state={friend.state}
             size={10}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
@@ -36,6 +37,7 @@
           <UserAvatar friend={friend} size={40} radius="8px" grayscale={60} brightness={0.7} />
           <StatusDot
             status={friend.status}
+            state={friend.state}
             size={10}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
