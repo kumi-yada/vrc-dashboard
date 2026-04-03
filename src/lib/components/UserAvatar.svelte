@@ -15,7 +15,7 @@
   let {
     friend,
     size = 28,
-    radius = "50%",
+    radius = "10px",
     grayscale = 0,
     brightness = 1,
   }: Props = $props();

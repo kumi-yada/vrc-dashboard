@@ -12,7 +12,8 @@
   let { privateFriends, offlineFriends, activeFriendIds }: Props = $props();
 
   let sortedPrivateFriends = $derived.by(() => {
-    const isJustActive = (friend: Friend) => activeFriendIds.includes(friend.id);
+    const isJustActive = (friend: Friend) =>
+      activeFriendIds.includes(friend.id);
 
     return [...privateFriends].sort((left, right) => {
       if (isJustActive(left) === isJustActive(right)) {
@@ -29,7 +30,7 @@
     <div class="sidebar-col private-col">
       {#each sortedPrivateFriends as friend (friend.id)}
         <div class="sidebar-avatar" title={friend.displayName}>
-          <UserAvatar friend={friend} size={40} radius="8px" />
+          <UserAvatar {friend} size={40} />
           <StatusDot
             status={friend.status}
             active={activeFriendIds.includes(friend.id)}
@@ -46,7 +47,7 @@
     <div class="sidebar-col offline-col">
       {#each offlineFriends as friend (friend.id)}
         <div class="sidebar-avatar offline" title={friend.displayName}>
-          <UserAvatar friend={friend} size={40} radius="8px" grayscale={60} brightness={0.7} />
+          <UserAvatar {friend} size={40} grayscale={60} brightness={0.7} />
           <StatusDot
             status={friend.status}
             active={activeFriendIds?.includes(friend.id)}
@@ -65,16 +66,16 @@
   .sidebar {
     display: flex;
     gap: 0.35rem;
-    padding: 0.5rem 0.35rem;
     height: 100%;
     overflow: hidden;
     background: var(--sidebar-bg);
-    border-left: 1px solid var(--border);
     flex-shrink: 0;
   }
 
   .sidebar-col {
     display: flex;
+    border-left: 1px solid var(--border);
+    padding: 0.5rem 0.35rem;
     flex-direction: column;
     gap: 0.35rem;
     overflow-y: auto;
