@@ -14,7 +14,7 @@
 
   let {
     friend,
-    size = 28,
+    size = 42,
     radius = "10px",
     grayscale = 0,
     brightness = 1,

@@ -10,10 +10,18 @@
     onFriendProfile: (friend: Friend) => void;
   }
 
-  let { privateFriends, offlineFriends, activeFriendIds, onFriendProfile }: Props = $props();
+  let {
+    privateFriends,
+    offlineFriends,
+    activeFriendIds,
+    onFriendProfile,
+  }: Props = $props();
 
   let sortedPrivateFriends = $derived.by(() => {
     const friendOrder = (friend: Friend) => {
+      if (activeFriendIds.includes(friend.id)) {
+        return 1;
+      }
       switch (friend.status) {
         case Status.JoinMe:
           return 5;
@@ -23,9 +31,6 @@
           return 3;
         case Status.Busy:
           return 2;
-      }
-      if (activeFriendIds.includes(friend.id)) {
-        return 1;
       }
       return 0;
     };
@@ -38,7 +43,7 @@
         return 0;
       }
 
-      return leftOrder > rightOrder ? 1 : -1;
+      return leftOrder < rightOrder ? 1 : -1;
     });
   });
 </script>
@@ -53,7 +58,10 @@
           title={`Open ${friend.displayName} profile`}
           onclick={() => onFriendProfile(friend)}
         >
-          <UserAvatar {friend} size={40} />
+          <UserAvatar
+            {friend}
+            brightness={activeFriendIds.includes(friend.id) ? 0.5 : 1}
+          />
           <StatusDot
             status={friend.status}
             active={activeFriendIds.includes(friend.id)}
@@ -75,7 +83,7 @@
           title={`Open ${friend.displayName} profile`}
           onclick={() => onFriendProfile(friend)}
         >
-          <UserAvatar {friend} size={40} grayscale={60} brightness={0.7} />
+          <UserAvatar {friend} grayscale={100} brightness={1.0} />
           <StatusDot
             status={friend.status}
             active={activeFriendIds?.includes(friend.id)}
