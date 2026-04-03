@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CurrentUser, UserProfile, WorldData } from "../types";
+import type { CurrentUser, PrintData, UserProfile, WorldData } from "../types";
 
 interface GroupProfile {
   id: string;
@@ -93,6 +93,10 @@ export async function fetchGroupProfile(groupId: string): Promise<GroupProfile> 
 
 export async function fetchWorld(worldId: string): Promise<WorldData> {
   return invoke<WorldData>("get_world", { worldId });
+}
+
+export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {
+  return invoke<PrintData[]>("get_own_prints", { userId });
 }
 
 export async function login(authToken: string): Promise<boolean> {

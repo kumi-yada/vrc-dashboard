@@ -3,6 +3,7 @@
   import TopBar from "./TopBar.svelte";
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
+  import PhotosPage from "./PhotosPage.svelte";
   import { getFriendsStore, fetchFriends } from "../stores/friends.svelte";
   import { fetchUserProfile, fetchWorld, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
   import type { Friend, InstanceGroup, UserProfile, WorldData } from "../types";
@@ -13,6 +14,7 @@
   const friends = getFriendsStore();
   const auth = getAuth();
   let activeTab = $state("friends");
+  let photosRefreshToken = $state(0);
   let refreshPromise: Promise<void> | null = null;
   let selectedProfile = $state<UserProfile | null>(null);
   let profileLoading = $state(false);
@@ -42,15 +44,34 @@
   });
 
   async function handleRefresh() {
+    if (activeTab === "photos") {
+      await refreshCurrentUser();
+      photosRefreshToken += 1;
+      return;
+    }
+
     await refreshDashboardData();
   }
 
   function handleWindowFocus() {
+    if (activeTab === "photos") {
+      void refreshCurrentUser();
+      photosRefreshToken += 1;
+      return;
+    }
+
     void refreshDashboardData();
   }
 
   function handleVisibilityChange() {
     if (document.visibilityState !== "visible") return;
+
+    if (activeTab === "photos") {
+      void refreshCurrentUser();
+      photosRefreshToken += 1;
+      return;
+    }
+
     void refreshDashboardData();
   }
 
@@ -138,20 +159,42 @@
   <TopBar {activeTab} onTabChange={(tab) => (activeTab = tab)} />
 
   <div class="subheader">
-    <div class="search-wrapper">
-      <Icon icon="mdi:magnify" width={18} />
-      <input
-        type="text"
-        placeholder="Search friends or worlds..."
-        bind:value={friends.searchQuery}
-        class="search-input"
-      />
-    </div>
+    {#if activeTab === "friends"}
+      <div class="search-wrapper">
+        <Icon icon="mdi:magnify" width={18} />
+        <input
+          type="text"
+          placeholder="Search friends or worlds..."
+          bind:value={friends.searchQuery}
+          class="search-input"
+        />
+      </div>
+    {:else if activeTab === "photos"}
+      <div class="section-label">
+        <Icon icon="mdi:image-multiple" width={18} />
+        <span>Your VRChat Prints</span>
+      </div>
+    {:else}
+      <div class="section-label">
+        <Icon icon="mdi:earth" width={18} />
+        <span>Worlds</span>
+      </div>
+    {/if}
+
     <div class="online-info">
-      <button class="refresh-btn" onclick={handleRefresh} disabled={friends.loading} title="Refresh">
-        <Icon icon="mdi:refresh" width={20} class={friends.loading ? "spinning" : ""} />
+      <button
+        class="refresh-btn"
+        onclick={handleRefresh}
+        disabled={activeTab === "friends" && friends.loading}
+        title="Refresh"
+      >
+        <Icon icon="mdi:refresh" width={20} class={activeTab === "friends" && friends.loading ? "spinning" : ""} />
       </button>
-      <span class="online-count">{friends.onlineCount}/{friends.totalCount} Online</span>
+      {#if activeTab === "friends"}
+        <span class="online-count">{friends.onlineCount}/{friends.totalCount} Online</span>
+      {:else if activeTab === "photos"}
+        <span class="online-count">Signed in as {auth.user?.displayName}</span>
+      {/if}
     </div>
   </div>
 
@@ -193,6 +236,10 @@
         activeFriendIds={auth.user?.activeFriends || []}
         onFriendProfile={handleFriendProfile}
       />
+    {:else if activeTab === "photos"}
+      <div class="main-content photos-content">
+        <PhotosPage refreshToken={photosRefreshToken} />
+      </div>
     {:else}
       <div class="main-content">
         <div class="empty-state">
@@ -251,6 +298,14 @@
     color: var(--text-muted);
   }
 
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text-secondary);
+    min-height: 38px;
+  }
+
   .search-wrapper:focus-within {
     border-color: var(--accent);
   }
@@ -303,6 +358,10 @@
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
+  }
+
+  .photos-content {
+    padding-top: 1.25rem;
   }
 
   .instances-grid {
