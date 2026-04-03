@@ -1,0 +1,374 @@
+<script lang="ts">
+  import Icon from "@iconify/svelte";
+  import type { CurrentUser } from "../types";
+  import StatusDot from "./StatusDot.svelte";
+  import UserAvatar from "./UserAvatar.svelte";
+
+  interface Props {
+    user: CurrentUser;
+    onClose: () => void;
+    onLogout: () => Promise<void> | void;
+  }
+
+  let { user, onClose, onLogout }: Props = $props();
+
+  const showcasedBadges = $derived(user.badges?.filter((badge) => badge.showcased) ?? []);
+
+  function getTrustLevel(tags: string[]): string {
+    if (tags.includes("system_trust_veteran")) return "Trusted";
+    if (tags.includes("system_trust_trusted")) return "Known";
+    if (tags.includes("system_trust_known")) return "User";
+    if (tags.includes("system_trust_basic")) return "New User";
+    return "Visitor";
+  }
+
+  function getTrustColor(tags: string[]): string {
+    if (tags.includes("system_trust_veteran")) return "#CE93D8";
+    if (tags.includes("system_trust_trusted")) return "#FF7043";
+    if (tags.includes("system_trust_known")) return "#29B6F6";
+    if (tags.includes("system_trust_basic")) return "#66BB6A";
+    return "#9E9E9E";
+  }
+
+  function formatDate(dateStr: string): string {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  async function handleLogout() {
+    onClose();
+    await onLogout();
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
+      onClose();
+    }
+  }
+  </script>
+
+<svelte:document onkeydown={handleKeydown} />
+
+<div class="dialog-backdrop" onclick={onClose} aria-hidden="true"></div>
+
+<div
+  class="dialog-shell"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="user-menu-title"
+>
+  <div class="user-dialog">
+    <button class="close-btn" type="button" title="Close" onclick={onClose}>
+      <Icon icon="mdi:close" width={18} />
+    </button>
+
+    <div class="popup-header">
+      <div class="popup-avatar-wrap">
+        <UserAvatar friend={user} size={64} />
+        <StatusDot
+          status={user.status}
+          size={14}
+          borderWidth={2}
+          borderColor="var(--bg-secondary)"
+        />
+      </div>
+      <div class="popup-identity">
+        <h2 class="popup-displayname" id="user-menu-title">{user.displayName}</h2>
+        {#if user.pronouns}
+          <span class="popup-pronouns">{user.pronouns}</span>
+        {/if}
+        <span class="popup-trust" style:color={getTrustColor(user.tags ?? [])}>
+          {getTrustLevel(user.tags ?? [])}
+        </span>
+      </div>
+    </div>
+
+    {#if user.statusDescription}
+      <div class="popup-status-row">
+        <div class="status-dot-wrapper">
+          <StatusDot
+            status={user.status}
+            size={8}
+            borderColor="var(--bg-secondary)"
+          />
+        </div>
+        <span class="popup-status-text">{user.statusDescription}</span>
+      </div>
+    {/if}
+
+    {#if user.bio}
+      <div class="popup-bio">
+        <p>{user.bio}</p>
+      </div>
+    {/if}
+
+    <div class="popup-stats">
+      <div class="stat">
+        <span class="stat-value">{user.onlineFriends?.length ?? 0}</span>
+        <span class="stat-label">Online</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-value">{user.friends?.length ?? 0}</span>
+        <span class="stat-label">Friends</span>
+      </div>
+      {#if user.date_joined}
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-value stat-date">{formatDate(user.date_joined)}</span>
+          <span class="stat-label">Joined</span>
+        </div>
+      {/if}
+    </div>
+
+    {#if showcasedBadges.length > 0}
+      <div class="popup-badges">
+        {#each showcasedBadges as badge (badge.badgeId)}
+          <img
+            src={badge.badgeImageUrl}
+            alt={badge.badgeName}
+            title={`${badge.badgeName}: ${badge.badgeDescription}`}
+            class="badge-img"
+          />
+        {/each}
+      </div>
+    {/if}
+
+    <div class="popup-footer">
+      <button class="logout-btn" type="button" onclick={handleLogout}>
+        <Icon icon="mdi:logout" width={15} />
+        Sign Out
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 10, 18, 0.7);
+    backdrop-filter: blur(10px);
+    z-index: 99;
+  }
+
+  .dialog-shell {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .user-dialog {
+    position: relative;
+    width: min(100%, 640px);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .close-btn {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .close-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .popup-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.25rem 1.25rem 1rem;
+    background: linear-gradient(
+      135deg,
+      rgba(76, 175, 80, 0.18),
+      rgba(36, 52, 71, 0)
+    );
+  }
+
+  .popup-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .popup-avatar-wrap :global(.user-avatar) {
+    border: 2px solid var(--border);
+  }
+
+  .popup-identity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .popup-displayname {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .popup-pronouns {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .popup-trust {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .popup-status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .status-dot-wrapper {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+  }
+
+  .popup-status-text {
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .popup-bio {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .popup-bio p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .popup-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 0.8rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .stat-date {
+    font-size: 0.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+  }
+
+  .popup-badges {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .badge-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .popup-footer {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    color: #ef5350;
+    transition: background 0.15s;
+  }
+
+  .logout-btn:hover {
+    background: rgba(239, 83, 80, 0.12);
+  }
+
+  @media (max-width: 520px) {
+    .dialog-shell {
+      padding: 1rem;
+      align-items: end;
+    }
+
+    .user-dialog {
+      width: 100%;
+    }
+  }
+</style>
