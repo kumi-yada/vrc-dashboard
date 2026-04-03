@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { openUrl } from "@tauri-apps/plugin-opener";
   import type { UserProfile } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
@@ -51,6 +52,12 @@
     await onLogout();
   }
 
+  async function handleProfileOpen() {
+    if (!user?.id) return;
+
+    await openUrl(`https://vrchat.com/home/user/${encodeURIComponent(user.id)}`);
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       onClose();
@@ -75,7 +82,13 @@
 
     {#if user}
       <div class="popup-header">
-        <div class="popup-avatar-wrap">
+        <button
+          class="popup-avatar-wrap"
+          type="button"
+          onclick={handleProfileOpen}
+          title="Open VRChat profile"
+          aria-label={`Open ${user.displayName}'s VRChat profile`}
+        >
           <UserAvatar friend={user} size={64} />
           <StatusDot
             status={user.status}
@@ -83,7 +96,7 @@
             borderWidth={2}
             borderColor="var(--bg-secondary)"
           />
-        </div>
+        </button>
         <div class="popup-identity">
           <h2 class="popup-displayname" id="user-menu-title">{user.displayName}</h2>
           {#if user.pronouns}
@@ -284,6 +297,20 @@
   .popup-avatar-wrap {
     position: relative;
     flex-shrink: 0;
+    display: inline-flex;
+    padding: 0;
+    border-radius: 14px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .popup-avatar-wrap:hover {
+    transform: translateY(-1px);
+  }
+
+  .popup-avatar-wrap:focus-visible {
+    outline: 2px solid rgba(76, 175, 80, 0.75);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.18);
   }
 
   .popup-avatar-wrap :global(.user-avatar) {

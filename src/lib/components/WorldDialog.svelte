@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { openUrl } from "@tauri-apps/plugin-opener";
   import type { WorldData } from "../types";
 
   type SupportedPlatform = "standalonewindows" | "android" | "ios";
@@ -80,7 +81,7 @@
     return items;
   });
   const publishedDate = $derived(
-    formatDate(world?.publicationDate ?? world?.created_at ?? "")
+    formatDate(world?.publicationDate && world?.publicationDate !== "none" ? world?.publicationDate : world?.created_at ?? "")
   );
   const updatedDate = $derived(formatDate(world?.updated_at ?? ""));
   const instanceCount = $derived(world?.slimInstances?.length ?? 0);
@@ -93,6 +94,12 @@
       month: "short",
       day: "numeric"
     });
+  }
+
+  async function handleWorldOpen() {
+    if (!world?.id) return;
+
+    await openUrl(`https://vrchat.com/home/world/${encodeURIComponent(world.id)}`);
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -118,7 +125,14 @@
     </button>
 
     {#if world}
-      <div class="hero" style:background-image={imageUrl ? `url(${imageUrl})` : undefined}>
+      <button
+        class="hero"
+        type="button"
+        onclick={handleWorldOpen}
+        title="Open VRChat world"
+        aria-label={`Open ${world.name} on VRChat`}
+        style:background-image={imageUrl ? `url(${imageUrl})` : undefined}
+      >
         <div class="hero-scrim"></div>
         <div class="hero-content">
           <div class="eyebrow-row">
@@ -156,7 +170,7 @@
             {/if}
           </div>
         </div>
-      </div>
+      </button>
 
       <div class="dialog-body">
         {#if loading}
@@ -291,9 +305,22 @@
     min-height: 250px;
     display: flex;
     align-items: flex-end;
+    width: 100%;
+    padding: 0;
     background-color: var(--bg-card);
     background-position: center;
     background-size: cover;
+    text-align: left;
+    transition: transform 0.15s ease;
+  }
+
+  .hero:hover {
+    transform: translateY(-1px);
+  }
+
+  .hero:focus-visible {
+    outline: 2px solid rgba(76, 175, 80, 0.75);
+    outline-offset: -2px;
   }
 
   .hero-scrim {
