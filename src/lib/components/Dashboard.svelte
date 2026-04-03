@@ -3,17 +3,19 @@
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import { getFriendsStore, fetchFriends } from "../stores/friends.svelte";
+  import { getAuth, refreshCurrentUser } from "../stores/auth.svelte";
   import Icon from "@iconify/svelte";
 
   const friends = getFriendsStore();
+  const auth = getAuth();
   let activeTab = $state("friends");
 
   $effect(() => {
     fetchFriends();
   });
 
-  function handleRefresh() {
-    fetchFriends();
+  async function handleRefresh() {
+    await Promise.all([refreshCurrentUser(), fetchFriends()]);
   }
 </script>
 
@@ -69,6 +71,7 @@
       <FriendsSidebar
         privateFriends={friends.privateFriends}
         offlineFriends={friends.offlineFriends}
+        activeFriendIds={auth.user?.activeFriends || []}
       />
     {:else}
       <div class="main-content">

@@ -1,7 +1,7 @@
 <script lang="ts">
   interface Props {
     status: string;
-    state?: string;
+    active?: boolean;
     size?: number;
     borderWidth?: number;
     borderColor?: string;
@@ -11,17 +11,17 @@
 
   let {
     status,
-    state,
-    size = 8,
+    active = false,
+    size = 12,
     borderWidth = 1.5,
     borderColor = "var(--bg-card)",
     bottom = "0px",
     right = "0px",
   }: Props = $props();
 
-  function getStatusColor(status: string, state?: string): string {
-    if (state === "active") {
-      return "#000000";
+  function getStatusColor(status: string, active?: boolean): string {
+    if (active) {
+      return "transparent";
     }
 
     const colors: Record<string, string> = {
@@ -35,9 +35,7 @@
     return colors[status?.toLowerCase()] || "#9E9E9E";
   }
 
-  // console.log("StatusDot props:", { status, state });
-  // $inspect(status, state);
-  let color = $derived(getStatusColor(status, state));
+  let color = $derived(getStatusColor(status, active));
 </script>
 
 <span

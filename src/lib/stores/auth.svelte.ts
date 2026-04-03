@@ -35,6 +35,28 @@ async function clearStoredAuth(): Promise<void> {
   }
 }
 
+async function loadCurrentUser(): Promise<CurrentUser | null> {
+  try {
+    const result = await invoke<CurrentUser>("get_current_user");
+    user = result;
+    error = null;
+    return result;
+  } catch (e) {
+    const message = getErrorMessage(e);
+    user = null;
+    token = null;
+
+    if (isUnauthorizedError(message)) {
+      error = null;
+      await clearStoredAuth();
+    } else {
+      error = message;
+    }
+
+    return null;
+  }
+}
+
 export function restoreSession(): Promise<void> {
   if (restorePromise) return restorePromise;
 
@@ -43,24 +65,17 @@ export function restoreSession(): Promise<void> {
     error = null;
 
     try {
-      const result = await invoke<CurrentUser>("get_current_user");
-      user = result;
-    } catch (e) {
-      const message = getErrorMessage(e);
-      user = null;
-      token = null;
-
-      if (isUnauthorizedError(message)) {
-        await clearStoredAuth();
-      } else {
-        error = message;
-      }
+      await loadCurrentUser();
     } finally {
       initializing = false;
     }
   })();
 
   return restorePromise;
+}
+
+export async function refreshCurrentUser(): Promise<void> {
+  await loadCurrentUser();
 }
 
 export async function login(authToken: string): Promise<boolean> {

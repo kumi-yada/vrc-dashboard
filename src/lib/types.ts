@@ -54,6 +54,14 @@ export interface CurrentUser {
   displayName: string;
   currentAvatarThumbnailImageUrl: string;
   profilePicOverride: string;
+  profilePicOverrideThumbnail: string;
+  userIcon: string;
+  bio: string;
+  pronouns: string;
+  statusDescription: string;
+  date_joined: string;
+  tags: string[];
+  badges: Badge[];
   friends: string[];
   onlineFriends: string[];
   offlineFriends: string[];

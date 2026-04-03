@@ -6,21 +6,33 @@
   interface Props {
     privateFriends: Friend[];
     offlineFriends: Friend[];
+    activeFriendIds: string[];
   }
 
-  let { privateFriends, offlineFriends }: Props = $props();
+  let { privateFriends, offlineFriends, activeFriendIds }: Props = $props();
+
+  let sortedPrivateFriends = $derived.by(() => {
+    const isJustActive = (friend: Friend) => activeFriendIds.includes(friend.id);
+
+    return [...privateFriends].sort((left, right) => {
+      if (isJustActive(left) === isJustActive(right)) {
+        return 0;
+      }
+
+      return isJustActive(left) ? 1 : -1;
+    });
+  });
 </script>
 
 <aside class="sidebar">
-  {#if privateFriends.length > 0}
+  {#if sortedPrivateFriends.length > 0}
     <div class="sidebar-col private-col">
-      {#each privateFriends as friend (friend.id)}
+      {#each sortedPrivateFriends as friend (friend.id)}
         <div class="sidebar-avatar" title={friend.displayName}>
           <UserAvatar friend={friend} size={40} radius="8px" />
           <StatusDot
             status={friend.status}
-            state={friend.state}
-            size={10}
+            active={activeFriendIds.includes(friend.id)}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
             bottom="-1px"
@@ -37,8 +49,7 @@
           <UserAvatar friend={friend} size={40} radius="8px" grayscale={60} brightness={0.7} />
           <StatusDot
             status={friend.status}
-            state={friend.state}
-            size={10}
+            active={activeFriendIds?.includes(friend.id)}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
             bottom="-1px"

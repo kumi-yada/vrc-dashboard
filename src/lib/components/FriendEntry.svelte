@@ -14,7 +14,7 @@
 <div class="friend-entry">
   <div class="avatar-wrapper">
     <UserAvatar friend={friend} />
-    <StatusDot status={friend.status} state={friend.state} />
+    <StatusDot status={friend.status} />
   </div>
   <span class="name">{friend.displayName}</span>
 </div>
