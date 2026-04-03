@@ -1,0 +1,4735 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Scratch Pad
+meta:
+  id: wrk_scratchpad
+  created: 1742488611635
+  modified: 1742488611635
+  description: ""
+collection:
+  - name: authentication
+    meta:
+      id: fld_00c38d8674bb4c39a1190dcd5a8a5aa6
+      created: 1742488671494
+      modified: 1742488671494
+      sortKey: -1742488671494
+      description: Authentication Docs Here
+    children:
+      - url: "{{ _.base_url }}/auth/exists"
+        name: Check User Exists
+        meta:
+          id: req_aac513b35b534738bc8ee48db7ee0ada
+          created: 1742488671503
+          modified: 1742488671503
+          isPrivate: false
+          description: >-
+            Checks if a user by a given `username`, `displayName` or `email`
+            exist. This is used during registration to check if a username has
+            already been taken, during change of displayName to check if a
+            displayName is available, and during change of email to check if the
+            email is already used. In the later two cases the `excludeUserId` is
+            used to exclude oneself, otherwise the result would always be true.
+
+
+            It is **REQUIRED** to include **AT LEAST** `username`, `displayName`
+            **or** `email` query parameter. Although they can be combined - in
+            addition with `excludeUserId` (generally to exclude yourself) - to
+            further fine-tune the search.
+          sortKey: -1742488671503
+        method: GET
+        parameters:
+          - name: email
+            value: string
+            disabled: true
+          - name: displayName
+            value: string
+            disabled: true
+          - name: username
+            value: string
+            disabled: true
+          - name: excludeUserId
+            value: string
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user"
+        name: Login and/or Get Current User Info
+        meta:
+          id: req_aac881f242644b28b98de86d50aff5bb
+          created: 1742488671505
+          modified: 1761115823895
+          isPrivate: false
+          description: >-
+            This endpoint does the following two operations:
+              1) Checks if you are already logged in by looking for a valid `auth` cookie. If you are have a valid auth cookie then no additional auth-related actions are taken. If you are **not** logged in then it will log you in with the `Authorization` header and set the `auth` cookie. The `auth` cookie will only be sent once.
+              2) If logged in, this function will also return the CurrentUser object containing detailed information about the currently logged in user.
+
+            The auth string after `Authorization: Basic {string}` is a
+            base64-encoded string of the username and password, both
+            individually url-encoded, and then joined with a colon.
+              
+            > base64(urlencode(username):urlencode(password))
+
+
+            **WARNING: Session Limit:** Each authentication with login
+            credentials counts as a separate session, out of which you have a
+            limited amount. Make sure to save and reuse the `auth` cookie if you
+            are often restarting the program. The provided API libraries
+            automatically save cookies during runtime, but does not persist
+            during restart. While it can be fine to use username/password during
+            development, expect in production to very fast run into the
+            rate-limit and be temporarily blocked from making new sessions until
+            older ones expire. The exact number of simultaneous sessions is
+            unknown/undisclosed.
+          sortKey: -1742488671505
+        method: GET
+        headers:
+          - name: User-Agent
+            value: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0
+            description: ""
+            disabled: false
+        authentication:
+          type: basic
+          username: "{{ _.httpUsername }}"
+          password: "{{ _.httpPassword }}"
+          disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/twofactorauth/otp/verify"
+        name: Verify 2FA code with Recovery code
+        meta:
+          id: req_8c8b9052ff8145ad8e08f080566cb45d
+          created: 1742488671506
+          modified: 1742488671506
+          isPrivate: false
+          description: Finishes the login sequence with an OTP (One Time Password)
+            recovery code for accounts with 2FA-protection enabled.
+          sortKey: -1742488671506
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "code": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/twofactorauth/totp/verify"
+        name: Verify 2FA code
+        meta:
+          id: req_f9d8692e6ae34084be9fa34b32581126
+          created: 1742488671506
+          modified: 1773099129848
+          isPrivate: false
+          description: Finishes the login sequence with a normal 2FA-generated code for
+            accounts with 2FA-protection enabled.
+          sortKey: -1742488671506
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "code": "534952"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+          - name: User-Agent
+            value: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0
+            description: ""
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/twofactorauth/emailotp/verify"
+        name: Verify 2FA email code
+        meta:
+          id: req_5757c06cc60745d4bdd1ce32f7c1e335
+          created: 1742488671507
+          modified: 1742488671507
+          isPrivate: false
+          description: Finishes the login sequence with an 2FA email code.
+          sortKey: -1742488671507
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "code": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth"
+        name: Verify Auth Token
+        meta:
+          id: req_a1ead1d4c4fd4fcc9caa3565e86ef8f5
+          created: 1742488671508
+          modified: 1761057750535
+          isPrivate: false
+          description: Verify whether the currently provided Auth Token is valid.
+          sortKey: -1742488671508
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/logout"
+        name: Logout
+        meta:
+          id: req_d874a0f14fc848819ed9ea47fb4e7266
+          created: 1742488671508
+          modified: 1742488671508
+          isPrivate: false
+          description: Invalidates the login session.
+          sortKey: -1742488671508
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/delete"
+        name: Delete User
+        meta:
+          id: req_b08117c566704beb8dcf86fa13631bd8
+          created: 1742488671509
+          modified: 1742488671509
+          isPrivate: false
+          description: >-
+            Deletes the account with given ID. Normal users only have permission
+            to delete their own account. Account deletion is 14 days from this
+            request, and will be cancelled if you do an authenticated request
+            with the account afterwards.
+
+
+            **VRC+ NOTE:** Despite the 14-days cooldown, any VRC+ subscription
+            will be cancelled **immediately**.
+
+
+            **METHOD NOTE:** Despite this being a Delete action, the method type
+            required is PUT.
+          sortKey: -1742488671509
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: avatars
+    meta:
+      id: fld_3dd0dbb62eb948a6b82658f99ac6a030
+      created: 1742488671494
+      modified: 1742488671494
+      sortKey: -1742488671494
+      description: Avatars Docs Here
+    children:
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/avatar"
+        name: Get Own Avatar
+        meta:
+          id: req_0a2810e8a797483bb9b21b88de1db7d6
+          created: 1742488671509
+          modified: 1742488671509
+          isPrivate: false
+          description: Get the current avatar for the user. This will return an error for
+            any other user than the one logged in.
+          sortKey: -1742488671509
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars"
+        name: Search Avatars
+        meta:
+          id: req_32f73f465f734cfda05bfe6e32ca2e3c
+          created: 1742488671510
+          modified: 1742488671510
+          isPrivate: false
+          description: Search and list avatars by query filters. You can only search your
+            own or featured avatars. It is not possible as a normal user to
+            search other peoples avatars.
+          sortKey: -1742488671510
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: user
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars"
+        name: Create Avatar
+        meta:
+          id: req_6249a590252f4595964e7941d4e55820
+          created: 1742488671511
+          modified: 1742488671511
+          isPrivate: false
+          description: Create an avatar. It's possible to optionally specify a ID if you
+            want a custom one. Attempting to create an Avatar with an already
+            claimed ID will result in a DB error.
+          sortKey: -1742488671511
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "assetUrl": "string",
+              "id": "avtr_912d66a4-4714-43b8-8407-7de2cafbf55b",
+              "name": "string",
+              "description": "string",
+              "tags": [
+                "string"
+              ],
+              "imageUrl": "string",
+              "releaseStatus": "public",
+              "version": 1,
+              "unityPackageUrl": "string",
+              "unityVersion": "2022.3.6f1"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/avtr_2fe72ad2-bf3a-424b-88d5-fd9b612a14a7"
+        name: Get Avatar
+        meta:
+          id: req_657899c288054f9abf545696140d2bf5
+          created: 1742488671511
+          modified: 1773099158959
+          isPrivate: false
+          description: Get information about a specific Avatar.
+          sortKey: -1742488671511
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}"
+        name: Update Avatar
+        meta:
+          id: req_01a035c8c60647219d398fc9e3fef081
+          created: 1742488671512
+          modified: 1742489541784
+          isPrivate: false
+          description: Update information about a specific avatar.
+          sortKey: -1742488671512
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "assetUrl": "string",
+              "id": "avtr_c1fd6720-9b0f-475a-87f1-764e3c963a70",
+              "name": "Kuma",
+              "description": "",
+              "tags": [
+                "string"
+              ],
+              "imageUrl": "string",
+              "releaseStatus": "public",
+              "version": 1,
+              "unityPackageUrl": "string",
+              "unityVersion": "2022.3.6f1"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}"
+        name: Delete Avatar
+        meta:
+          id: req_14701d80ced04b98b984eaf264a8bae1
+          created: 1742488671513
+          modified: 1742488671513
+          isPrivate: false
+          description: Delete an avatar. Notice an avatar is never fully "deleted", only
+            its ReleaseStatus is set to "hidden" and the linked Files are
+            deleted. The AvatarID is permanently reserved.
+          sortKey: -1742488671513
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}/select"
+        name: Select Avatar
+        meta:
+          id: req_3fc70770dbad4410b2b5c38a9a28de55
+          created: 1742488671513
+          modified: 1742488671513
+          isPrivate: false
+          description: Switches into that avatar.
+          sortKey: -1742488671513
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/licensed"
+        name: List Licensed Avatars
+        meta:
+          id: req_709b624ecf584bbbabda463cde47db57
+          created: 1742488671514
+          modified: 1742488671514
+          isPrivate: false
+          description: List licensed avatars.
+          sortKey: -1742488671514
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}/selectFallback"
+        name: Select Fallback Avatar
+        meta:
+          id: req_70f4e5e3391d4f099cdb5971aedae534
+          created: 1742488671514
+          modified: 1742488671514
+          isPrivate: false
+          description: Switches into that avatar as your fallback avatar.
+          sortKey: -1742488671514
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/favorites"
+        name: List Favorited Avatars
+        meta:
+          id: req_d4f8d7437df04cf9a39d786100ff4681
+          created: 1742488671514
+          modified: 1742488671514
+          isPrivate: false
+          description: Search and list favorited avatars by query filters.
+          sortKey: -1742488671514
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: search
+            value: string
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}/impostor/enqueue"
+        name: Enqueue Impostor generation
+        meta:
+          id: req_4e09e861f4e841dcb95ac263209befd2
+          created: 1742488671515
+          modified: 1742488671515
+          isPrivate: false
+          description: Enqueue Impostor generation for that avatar.
+          sortKey: -1742488671515
+        method: POST
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/impostor/queue/stats"
+        name: Get Impostor Queue Stats
+        meta:
+          id: req_5ca1db5a02564977a741cc650329b319
+          created: 1742488671516
+          modified: 1742488671516
+          isPrivate: false
+          description: Gets service stats for queued impostor.
+          sortKey: -1742488671516
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/avatars/{{ _.avatarId }}/impostor"
+        name: Delete generated Impostor
+        meta:
+          id: req_c8317fa941734fcdbe8ffd9c20fdce0a
+          created: 1742488671517
+          modified: 1742488671517
+          isPrivate: false
+          description: Delete generated Impostor for that avatar.
+          sortKey: -1742488671517
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: files
+    meta:
+      id: fld_ce97445bba7140db882165ade2d4672f
+      created: 1742488671496
+      modified: 1742488671496
+      sortKey: -1742488671496
+      description: Files Docs Here
+    children:
+      - url: "{{ _.base_url }}/files"
+        name: List Files
+        meta:
+          id: req_479c19bd85f1492b918c6f4877c2b51c
+          created: 1742488671546
+          modified: 1742488671546
+          isPrivate: false
+          description: Returns a list of files
+          sortKey: -1742488671546
+        method: GET
+        parameters:
+          - name: tag
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file"
+        name: Create File
+        meta:
+          id: req_2efe1a32982a4e09bca063495e84ff94
+          created: 1742488671548
+          modified: 1742488671548
+          isPrivate: false
+          description: Creates a new File object
+          sortKey: -1742488671548
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "string",
+              "mimeType": "image/jpeg",
+              "extension": "string",
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/file_ba8c2693-e7ae-4104-be4a-85aa5c8f44f3"
+        name: Show File
+        meta:
+          id: req_a598f2743aea46dba83d37d165734637
+          created: 1742488671549
+          modified: 1773099383525
+          isPrivate: false
+          description: Shows general information about the "File" object. Each File can
+            have several "Version"'s, and each Version can have multiple real
+            files or "Data" blobs.
+          sortKey: -1742488671549
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}"
+        name: Delete File
+        meta:
+          id: req_d06cd08417c348d5a12df23ded41d047
+          created: 1742488671551
+          modified: 1742488671551
+          isPrivate: false
+          description: Deletes a File object.
+          sortKey: -1742488671551
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}"
+        name: Create File Version
+        meta:
+          id: req_ccdbfabf5d2141b299316247c5638664
+          created: 1742488671553
+          modified: 1742488671553
+          isPrivate: false
+          description: Creates a new FileVersion. Once a Version has been created, proceed
+            to the `/file/{fileId}/{versionId}/file/start` endpoint to start a
+            file upload.
+          sortKey: -1742488671553
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "signatureMd5": "string",
+              "signatureSizeInBytes": 0,
+              "fileMd5": "string",
+              "fileSizeInBytes": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/file_ba8c2693-e7ae-4104-be4a-85aa5c8f44f3/3"
+        name: Download File Version
+        meta:
+          id: req_883befc55c864763a46a56283775a6ce
+          created: 1742488671555
+          modified: 1773099483145
+          isPrivate: false
+          description: >-
+            Downloads the file with the provided version number.
+
+
+            **Version Note:** Version 0 is always when the file was created. The
+            real data is usually always located in version 1 and up.
+
+
+            **Extension Note:** Files are not guaranteed to have a file
+            extensions. UnityPackage files tends to have it, images through this
+            endpoint do not. You are responsible for appending file extension
+            from the `extension` field when neccesary.
+          sortKey: -1742488671555
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}/{{ _.versionId }}"
+        name: Delete File Version
+        meta:
+          id: req_7b8524039f114fe78122315ed365377d
+          created: 1742488671557
+          modified: 1742488671557
+          isPrivate: false
+          description: Delete a specific version of a file. You can only delete the latest
+            version.
+          sortKey: -1742488671557
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}/{{ _.versionId }}/{{ _.fileType
+          }}/finish"
+        name: Finish FileData Upload
+        meta:
+          id: req_63beedf53ea4482c9b839af5e5c24fde
+          created: 1742488671558
+          modified: 1742488671558
+          isPrivate: false
+          description: Finish an upload of a FileData. This will mark it as "complete".
+            After uploading the `file` for Avatars and Worlds you then have to
+            upload a `signature` file.
+          sortKey: -1742488671558
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "etags": [
+                "string"
+              ],
+              "nextPartNumber": "0",
+              "maxParts": "0"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}/{{ _.versionId }}/{{ _.fileType
+          }}/start"
+        name: Start FileData Upload
+        meta:
+          id: req_d328d27f04ee4d78ba6aa53f53031c3c
+          created: 1742488671560
+          modified: 1742488671560
+          isPrivate: false
+          description: >-
+            Starts an upload of a specific FilePart. This endpoint will return
+            an AWS URL which you can PUT data to. You need to call this and
+            receive a new AWS API URL for each `partNumber`. Please see AWS's
+            REST documentation on "PUT Object to S3" on how to upload. Once all
+            parts has been uploaded, proceed to `/finish` endpoint.
+
+
+            **Note:** `nextPartNumber` seems like it is always ignored. Despite
+            it returning 0, first partNumber is always 1.
+          sortKey: -1742488671560
+        method: PUT
+        parameters:
+          - name: partNumber
+            value: "1"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/file/{{ _.fileId }}/{{ _.versionId }}/{{ _.fileType
+          }}/status"
+        name: Check FileData Upload Status
+        meta:
+          id: req_5818e67ec0084f8092cbbc4a4ac10dfd
+          created: 1742488671562
+          modified: 1742488671562
+          isPrivate: false
+          description: Retrieves the upload status for file upload. Can currently only be
+            accessed when `status` is `waiting`. Trying to access it on a file
+            version already uploaded currently times out.
+          sortKey: -1742488671562
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/analysis/file_ba8c2693-e7ae-4104-be4a-85aa5c8f44f3/3"
+        name: Get File Version Analysis
+        meta:
+          id: req_5051d851455b4f318765f1fff211b722
+          created: 1742488671564
+          modified: 1773099429463
+          isPrivate: false
+          description: Get the performance analysis for the uploaded assets of an avatar
+          sortKey: -1742488671564
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/analysis/{{ _.fileId }}/{{ _.versionId }}/security"
+        name: Get File Version Analysis Security
+        meta:
+          id: req_0c754ab4f4224b76af4b70e1d0a8eef6
+          created: 1742488671566
+          modified: 1742488671566
+          isPrivate: false
+          description: Get the security performance analysis for the uploaded assets of an
+            avatar
+          sortKey: -1742488671566
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url
+          }}/analysis/file_ba8c2693-e7ae-4104-be4a-85aa5c8f44f3/1/standard"
+        name: Get File Version Analysis Standard
+        meta:
+          id: req_a5ed396103b84d4d8e5f5678c0fdd03f
+          created: 1742488671568
+          modified: 1773099418447
+          isPrivate: false
+          description: Get the standard performance analysis for the uploaded assets of an
+            avatar
+          sortKey: -1742488671568
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: favorites
+    meta:
+      id: fld_ef6ccf181b9b45409281fccf7ba3c434
+      created: 1742488671496
+      modified: 1742488671496
+      sortKey: -1742488671496
+      description: Favorites Docs Here
+    children:
+      - url: "{{ _.base_url }}/favorites?type=friend&n=20"
+        name: List Favorites
+        meta:
+          id: req_d95a1386bfc94df6b0bdcd663a216af3
+          created: 1742488671534
+          modified: 1761061607298
+          isPrivate: false
+          description: Returns a list of favorites.
+          sortKey: -1742488671534
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: type
+            value: string
+            disabled: true
+            type: text
+            multiline: false
+          - name: tag
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorites"
+        name: Add Favorite
+        meta:
+          id: req_a71cb66ff8c344b6bbe07eec43aada64
+          created: 1742488671535
+          modified: 1742488671535
+          isPrivate: false
+          description: >-
+            Add a new favorite.
+
+
+            Friend groups are named `group_0` through `group_3`. Avatar and
+            World groups are named `avatars1` to `avatars4` and `worlds1` to
+            `worlds4`.
+
+
+            You cannot add people whom you are not friends with to your friends
+            list. Destroying a friendship removes the person as favorite on both
+            sides.
+          sortKey: -1742488671535
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "type": "friend",
+              "favoriteId": "string",
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorites/{{ _.favoriteId }}"
+        name: Remove Favorite
+        meta:
+          id: req_9638125be2e84892a68e75a6ebc66381
+          created: 1742488671536
+          modified: 1742488671536
+          isPrivate: false
+          description: Remove a favorite from your favorites list.
+          sortKey: -1742488671536
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorite/groups"
+        name: List Favorite Groups
+        meta:
+          id: req_8dff4abcbcaa4307a28ae822c1abb546
+          created: 1742488671538
+          modified: 1742488671538
+          isPrivate: false
+          description: Return a list of favorite groups owned by a user. Returns the same
+            information as `getFavoriteGroups`.
+          sortKey: -1742488671538
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: ownerId
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorite/group/{{ _.favoriteGroupType }}/{{
+          _.favoriteGroupName }}/{{ _.userId }}"
+        name: Show Favorite Group
+        meta:
+          id: req_f037ddf9e9d248d8b68ff4d4c6ea15ac
+          created: 1742488671539
+          modified: 1742488671539
+          isPrivate: false
+          description: Fetch information about a specific favorite group.
+          sortKey: -1742488671539
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorite/group/{{ _.favoriteGroupType }}/{{
+          _.favoriteGroupName }}/{{ _.userId }}"
+        name: Update Favorite Group
+        meta:
+          id: req_e4b0cafe52524b9684f5b7842b6788be
+          created: 1742488671541
+          modified: 1742488671541
+          isPrivate: false
+          description: Update information about a specific favorite group.
+          sortKey: -1742488671541
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "displayName": "string",
+              "visibility": "private",
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/favorite/group/{{ _.favoriteGroupType }}/{{
+          _.favoriteGroupName }}/{{ _.userId }}"
+        name: Clear Favorite Group
+        meta:
+          id: req_72b7eb18d1264568a72826fef07e3208
+          created: 1742488671542
+          modified: 1742488671542
+          isPrivate: false
+          description: Clear ALL contents of a specific favorite group.
+          sortKey: -1742488671542
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/favoritelimits"
+        name: Get Favorite Limits
+        meta:
+          id: req_32739341b3864d8cb4fef1a13cc11193
+          created: 1742488671545
+          modified: 1742488671545
+          isPrivate: false
+          description: Return information about a specific Favorite.
+          sortKey: -1742488671545
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: friends
+    meta:
+      id: fld_acd954688e2f4f279d562406238154de
+      created: 1742488671497
+      modified: 1742488671497
+      sortKey: -1742488671497
+      description: Friends Docs Here
+    children:
+      - url: "{{ _.base_url }}/auth/user/friends"
+        name: List Friends
+        meta:
+          id: req_e828dac0bcc1409a82b5195688c78fb5
+          created: 1742488671570
+          modified: 1761044510949
+          isPrivate: false
+          description: List information about friends.
+          sortKey: -1742488671570
+        method: GET
+        parameters:
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offline
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/user/{{ _.userId }}/friendRequest"
+        name: Send Friend Request
+        meta:
+          id: req_4f8fbd4b7bf647739dff4f42c6ea5b6e
+          created: 1742488671572
+          modified: 1742488671572
+          isPrivate: false
+          description: Send a friend request to another user.
+          sortKey: -1742488671572
+        method: POST
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/user/{{ _.userId }}/friendRequest"
+        name: Delete Friend Request
+        meta:
+          id: req_7c0fc765bd144d15bfb92914e1fb6bb4
+          created: 1742488671574
+          modified: 1742488671574
+          isPrivate: false
+          description: Deletes an outgoing pending friend request to another user. To
+            delete an incoming friend request, use the `deleteNotification`
+            endpoint instead.
+          sortKey: -1742488671574
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url
+          }}/user/usr_e4ccb1d1-b5bb-4393-bf0a-492ce560217c/friendStatus"
+        name: Check Friend Status
+        meta:
+          id: req_868701fea4be402a9c6704385cbe44e7
+          created: 1742488671576
+          modified: 1765545556428
+          isPrivate: false
+          description: Retrieve if the user is currently a friend with a given user, if
+            they have an outgoing friend request, and if they have an incoming
+            friend request. The proper way to receive and accept friend request
+            is by checking if the user has an incoming `Notification` of type
+            `friendRequest`, and then accepting that notification.
+          sortKey: -1742488671576
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/friends/{{ _.userId }}"
+        name: Unfriend
+        meta:
+          id: req_a7bd7e7917da431586b05da53679ad4e
+          created: 1742488671579
+          modified: 1742488671579
+          isPrivate: false
+          description: Unfriend a user by ID.
+          sortKey: -1742488671579
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: invite
+    meta:
+      id: fld_8d643cc02da84c63998cf0b10514886d
+      created: 1742488671498
+      modified: 1742488671498
+      sortKey: -1742488671498
+      description: Invite Docs Here
+    children:
+      - url: "{{ _.base_url }}/invite/{{ _.userId }}"
+        name: Invite User
+        meta:
+          id: req_99132c84cebd46cabe569439d02a30cf
+          created: 1742488671634
+          modified: 1742488671634
+          isPrivate: false
+          description: Sends an invite to a user. Returns the Notification of type
+            `invite` that was sent.
+          sortKey: -1742488671634
+        method: POST
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "instanceId": "12345~hidden(usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469)~region(eu)~nonce(27e8414a-59a0-4f3d-af1f-f27557eb49a2)",
+              "messageSlot": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/invite/myself/to/{{ _.worldId }}:{{ _.instanceId }}"
+        name: Invite Myself To Instance
+        meta:
+          id: req_8d708a8adf4d443c802b1ee63190fb70
+          created: 1742488671636
+          modified: 1742488671636
+          isPrivate: false
+          description: Sends self an invite to an instance
+          sortKey: -1742488671636
+        method: POST
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/requestInvite/{{ _.userId }}"
+        name: Request Invite
+        meta:
+          id: req_96cb1cca501344959a16be3eaae88cd1
+          created: 1742488671637
+          modified: 1742488671637
+          isPrivate: false
+          description: Requests an invite from a user. Returns the Notification of type
+            `requestInvite` that was sent.
+          sortKey: -1742488671637
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "messageSlot": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/invite/{{ _.notificationId }}/response"
+        name: Respond Invite
+        meta:
+          id: req_0b498cd22b0c4bf79654828463894004
+          created: 1742488671639
+          modified: 1742488671639
+          isPrivate: false
+          description: Respond to an invite request by sending a world invite to the
+            requesting user. `:notificationId` is the ID of the requesting
+            notification.
+          sortKey: -1742488671639
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "responseSlot": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/message/{{ _.userId }}/{{ _.messageType }}"
+        name: List Invite Messages
+        meta:
+          id: req_8e7b662ce98540d09d144db39b8c029e
+          created: 1742488671640
+          modified: 1742488671640
+          isPrivate: false
+          description: >-
+            Returns a list of all the users Invite Messages. Admin Credentials
+            are required to view messages of other users!
+
+
+            Message type refers to a different collection of messages, used
+            during different types of responses.
+
+
+            * `message` = Message during a normal invite
+
+            * `response` = Message when replying to a message
+
+            * `request` = Message when requesting an invite
+
+            * `requestResponse` = Message when replying to a request for invite
+          sortKey: -1742488671640
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/message/{{ _.userId }}/{{ _.messageType }}/{{ _.slot }}"
+        name: Get Invite Message
+        meta:
+          id: req_925ee8d8190c4043be7b1aec55a08544
+          created: 1742488671641
+          modified: 1742488671641
+          isPrivate: false
+          description: >-
+            Returns a single Invite Message. This returns the exact same
+            information but less than `getInviteMessages`. Admin Credentials are
+            required to view messages of other users!
+
+
+            Message type refers to a different collection of messages, used
+            during different types of responses.
+
+
+            * `message` = Message during a normal invite
+
+            * `response` = Message when replying to a message
+
+            * `request` = Message when requesting an invite
+
+            * `requestResponse` = Message when replying to a request for invite
+          sortKey: -1742488671641
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/message/{{ _.userId }}/{{ _.messageType }}/{{ _.slot }}"
+        name: Update Invite Message
+        meta:
+          id: req_a404089ab0704867bfbf5c6bd5d26fbe
+          created: 1742488671642
+          modified: 1742488671642
+          isPrivate: false
+          description: >-
+            Updates a single Invite Message and then returns a list of all of
+            them. Admin Credentials are required to update messages of other
+            users!
+
+
+            Updating a message automatically sets the cooldown timer to 60
+            minutes.
+
+            Trying to edit a message before the cooldown timer expires results
+            in a 429 "Too Fast Error".
+
+
+            Message type refers to a different collection of messages, used
+            during different types of responses.
+
+
+            * `message` = Message during a normal invite
+
+            * `response` = Message when replying to a message
+
+            * `request` = Message when requesting an invite
+
+            * `requestResponse` = Message when replying to a request for invite
+          sortKey: -1742488671642
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "message": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/message/{{ _.userId }}/{{ _.messageType }}/{{ _.slot }}"
+        name: Reset Invite Message
+        meta:
+          id: req_ef9e44b8b7c649f6b29ba8eb4296cd98
+          created: 1742488671644
+          modified: 1742488671644
+          isPrivate: false
+          description: >-
+            Resets a single Invite Message back to its original message, and
+            then returns a list of all of them. Admin Credentials are required
+            to update messages of other users!
+
+
+            Resetting a message respects the rate-limit, so it is not possible
+            to reset within the 60 minutes countdown.
+
+            Resetting it does however not set the rate-limit to 60 like when
+            editing it.
+
+            It is possible to edit it right after resetting it.
+
+            Trying to edit a message before the cooldown timer expires results
+            in a 429 "Too Fast Error".
+
+
+            Message type refers to a different collection of messages, used
+            during different types of responses.
+
+
+            * `message` = Message during a normal invite
+
+            * `response` = Message when replying to a message
+
+            * `request` = Message when requesting an invite
+
+            * `requestResponse` = Message when replying to a request for invite
+
+
+            The DELETE endpoint does not have/require any request body.
+          sortKey: -1742488671644
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: groups
+    meta:
+      id: fld_d5c87168308f46adb3db1491b1141eac
+      created: 1742488671498
+      modified: 1742488671498
+      sortKey: -1742488671498
+      description: Group Docs Here
+    children:
+      - url: "{{ _.base_url }}/groups"
+        name: Search Group
+        meta:
+          id: req_2f6c4787c29340f6b440c54f0d4387f5
+          created: 1742488671581
+          modified: 1742488671581
+          isPrivate: false
+          description: Searches Groups by name or shortCode
+          sortKey: -1742488671581
+        method: GET
+        parameters:
+          - name: query
+            value: string
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups"
+        name: Create Group
+        meta:
+          id: req_53ee791bcce0412db4c8b19e440e7484
+          created: 1742488671582
+          modified: 1742488671582
+          isPrivate: false
+          description: Creates a Group and returns a Group object. **Requires VRC+
+            Subscription.**
+          sortKey: -1742488671582
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "string",
+              "shortCode": "string",
+              "description": "string",
+              "joinState": "open",
+              "iconId": "string",
+              "bannerId": "string",
+              "privacy": "default",
+              "roleTemplate": "default"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}"
+        name: Get Group by ID
+        meta:
+          id: req_0e1a2ccf78a54174abc066978f281ae7
+          created: 1742488671583
+          modified: 1742488671583
+          isPrivate: false
+          description: Returns a single Group by ID.
+          sortKey: -1742488671583
+        method: GET
+        parameters:
+          - name: includeRoles
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}"
+        name: Update Group
+        meta:
+          id: req_2ec12a3526fb4f5cbfaa3820fb74becc
+          created: 1742488671585
+          modified: 1742488671585
+          isPrivate: false
+          description: Updates a Group and returns it.
+          sortKey: -1742488671585
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "string",
+              "shortCode": "string",
+              "description": "string",
+              "joinState": "open",
+              "iconId": "string",
+              "bannerId": "string",
+              "languages": [
+                "string"
+              ],
+              "links": [
+                "string"
+              ],
+              "rules": "string",
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}"
+        name: Delete Group
+        meta:
+          id: req_577735c5718b4e0c99afd4b3af9df193
+          created: 1742488671587
+          modified: 1742488671587
+          isPrivate: false
+          description: Deletes a Group.
+          sortKey: -1742488671587
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/announcement"
+        name: Get Group Announcement
+        meta:
+          id: req_377808d8954245068c3e937a4cb0da24
+          created: 1742488671589
+          modified: 1742488671589
+          isPrivate: false
+          description: >-
+            Returns the announcement for a Group.
+
+            If no announcement has been made, then it returns **empty object**. 
+
+            If an announcement exists, then it will always return all fields
+            except `imageId` and `imageUrl` which may be null.
+          sortKey: -1742488671589
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/announcement"
+        name: Create Group Announcement
+        meta:
+          id: req_517a0b6dae0c4c679c9794f99e54a98d
+          created: 1742488671590
+          modified: 1742488671590
+          isPrivate: false
+          description: "Creates an Announcement for a Group. Warning: This will also
+            remove all announcements. To make proper announcements, use the
+            posts endpoint instead"
+          sortKey: -1742488671590
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "title": "Event is starting soon!",
+              "text": "Come join us for the event!",
+              "imageId": "file_ce35d830-e20a-4df0-a6d4-5aaef4508044",
+              "sendNotification": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/announcement"
+        name: Delete Group Announcement
+        meta:
+          id: req_a8844cddcc10433ca0eb8a198c6f72c3
+          created: 1742488671592
+          modified: 1742488671592
+          isPrivate: false
+          description: Deletes the announcement for a Group.
+          sortKey: -1742488671592
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/auditLogs"
+        name: Get Group Audit Logs
+        meta:
+          id: req_029ff394d3b148d0bd17a3367e35b309
+          created: 1742488671593
+          modified: 1742488671593
+          isPrivate: false
+          description: Returns a list of audit logs for a Group.
+          sortKey: -1742488671593
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: startDate
+            value: 2025-03-20T16:37:49.707Z
+            disabled: true
+          - name: endDate
+            value: 2025-03-20T16:37:49.707Z
+            disabled: true
+          - name: actorIds
+            value: usr_00000000-0000-0000-0000-000000000000,usr_11111111-1111-1111-1111-111111111111
+            disabled: true
+          - name: eventTypes
+            value: group.member.remove,group.instance.kick
+            disabled: true
+          - name: targetIds
+            value: usr_00000000-0000-0000-0000-000000000000,usr_11111111-1111-1111-1111-111111111111
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/bans"
+        name: Get Group Bans
+        meta:
+          id: req_b04297d55b03439096658d23e666eade
+          created: 1742488671594
+          modified: 1742488671594
+          isPrivate: false
+          description: Returns a list of banned users for a Group.
+          sortKey: -1742488671594
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/bans"
+        name: Ban Group Member
+        meta:
+          id: req_ab451f60ec574cf9afc75bacf31401b6
+          created: 1742488671595
+          modified: 1742488671595
+          isPrivate: false
+          description: Bans a user from a Group.
+          sortKey: -1742488671595
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "userId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/bans/{{ _.userId }}"
+        name: Unban Group Member
+        meta:
+          id: req_d2bbae59639f4dc09eb3598aeaf28d0f
+          created: 1742488671596
+          modified: 1742488671596
+          isPrivate: false
+          description: Unbans a user from a Group.
+          sortKey: -1742488671596
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries"
+        name: Create Group Gallery
+        meta:
+          id: req_c1a911b4c7294170b6ebc4b369b2e213
+          created: 1742488671597
+          modified: 1742488671597
+          isPrivate: false
+          description: Creates a gallery for a Group.
+          sortKey: -1742488671597
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Example Gallery",
+              "description": "Example Description",
+              "membersOnly": true,
+              "roleIdsToView": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToSubmit": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToAutoApprove": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToManage": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries/{{ _.groupGalleryId }}"
+        name: Get Group Gallery Images
+        meta:
+          id: req_c6080936c1d04a2cb455b5befa194ee7
+          created: 1742488671597
+          modified: 1742488671597
+          isPrivate: false
+          description: Returns a list of images for a Group gallery.
+          sortKey: -1742488671597
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: approved
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries/{{ _.groupGalleryId }}"
+        name: Update Group Gallery
+        meta:
+          id: req_d7c92224ff3348bdaa0b9115b455cda7
+          created: 1742488671598
+          modified: 1742488671598
+          isPrivate: false
+          description: Updates a gallery for a Group.
+          sortKey: -1742488671598
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Example Gallery",
+              "description": "Example Description",
+              "membersOnly": true,
+              "roleIdsToView": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToSubmit": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToAutoApprove": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "roleIdsToManage": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries/{{ _.groupGalleryId }}"
+        name: Delete Group Gallery
+        meta:
+          id: req_c60f57bbf69e4745a6ee0c26e2943c8d
+          created: 1742488671599
+          modified: 1742488671599
+          isPrivate: false
+          description: Deletes a gallery for a Group.
+          sortKey: -1742488671599
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries/{{ _.groupGalleryId
+          }}/images"
+        name: Add Group Gallery Image
+        meta:
+          id: req_07c4ca153ad6456298b678b809d1c01b
+          created: 1742488671600
+          modified: 1742488671600
+          isPrivate: false
+          description: Adds an image to a Group gallery.
+          sortKey: -1742488671600
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "fileId": "file_ce35d830-e20a-4df0-a6d4-5aaef4508044"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/galleries/{{ _.groupGalleryId
+          }}/images/{{ _.groupGalleryImageId }}"
+        name: Delete Group Gallery Image
+        meta:
+          id: req_be017683740446e9a03accdfa2d7453c
+          created: 1742488671600
+          modified: 1742488671600
+          isPrivate: false
+          description: Deletes an image from a Group gallery.
+          sortKey: -1742488671600
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/instances"
+        name: Get Group Instances
+        meta:
+          id: req_99154972076c48be90578d44125a5ca3
+          created: 1742488671601
+          modified: 1742488671601
+          isPrivate: false
+          description: Returns a list of group instances
+          sortKey: -1742488671601
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/invites"
+        name: Get Group Invites Sent
+        meta:
+          id: req_ad4fcf7f993046de88e8b9128c4f8d58
+          created: 1742488671603
+          modified: 1742488671603
+          isPrivate: false
+          description: Returns a list of members that have been invited to the Group.
+          sortKey: -1742488671603
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/invites"
+        name: Invite User to Group
+        meta:
+          id: req_b266f4add7a2470bba41d96bd9eed868
+          created: 1742488671604
+          modified: 1742488671604
+          isPrivate: false
+          description: Sends an invite to a user to join the group.
+          sortKey: -1742488671604
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "userId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+              "confirmOverrideBlock": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/invites/{{ _.userId }}"
+        name: Delete User Invite
+        meta:
+          id: req_53bc45fe27d34b6ca69d163fcb7835c6
+          created: 1742488671605
+          modified: 1742488671605
+          isPrivate: false
+          description: Deletes an Group invite sent to a User
+          sortKey: -1742488671605
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/join"
+        name: Join Group
+        meta:
+          id: req_f7a7f25aba4a40839d6b358b7e62a5fb
+          created: 1742488671606
+          modified: 1742488671606
+          isPrivate: false
+          description: Join a Group by ID and returns the member object.
+          sortKey: -1742488671606
+        method: POST
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/leave"
+        name: Leave Group
+        meta:
+          id: req_f6e54f3b13ae4684a7a64e7cf9b84c15
+          created: 1742488671607
+          modified: 1742488671607
+          isPrivate: false
+          description: Leave a group by ID.
+          sortKey: -1742488671607
+        method: POST
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members"
+        name: List Group Members
+        meta:
+          id: req_fb537baf9da2451a8937660214567c9b
+          created: 1742488671608
+          modified: 1742488671608
+          isPrivate: false
+          description: >-
+            Returns a List of all **other** Group Members. This endpoint will
+            never return the user calling the endpoint.
+
+            Information about the user calling the endpoint must be found in the
+            `myMember` field of the Group object.
+          sortKey: -1742488671608
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: sort
+            value: joinedAt:asc
+            disabled: true
+          - name: roleId
+            value: grol_459d3911-f672-44bc-b84d-e54ffe7960fe
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members/{{ _.userId }}"
+        name: Get Group Member
+        meta:
+          id: req_4c8cf077f9ee460fb0397c5b2fd138ab
+          created: 1742488671609
+          modified: 1742488671609
+          isPrivate: false
+          description: Returns a LimitedGroup Member.
+          sortKey: -1742488671609
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members/{{ _.userId }}"
+        name: Update Group Member
+        meta:
+          id: req_cef3a14263044df391e752bb4919a988
+          created: 1742488671610
+          modified: 1742488671610
+          isPrivate: false
+          description: Updates a Group Member
+          sortKey: -1742488671610
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "visibility": "visible",
+              "isSubscribedToAnnouncements": true,
+              "managerNotes": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members/{{ _.userId }}"
+        name: Kick Group Member
+        meta:
+          id: req_1455e48782444e109edf59ed496a7274
+          created: 1742488671611
+          modified: 1742488671611
+          isPrivate: false
+          description: Kicks a Group Member from the Group. The current user must have the
+            "Remove Group Members" permission.
+          sortKey: -1742488671611
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members/{{ _.userId }}/roles/{{
+          _.groupRoleId }}"
+        name: Add Role to GroupMember
+        meta:
+          id: req_c995e92da15d4c72af4c089d54489c2a
+          created: 1742488671612
+          modified: 1742488671612
+          isPrivate: false
+          description: Adds a Role to a Group Member
+          sortKey: -1742488671612
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/members/{{ _.userId }}/roles/{{
+          _.groupRoleId }}"
+        name: Remove Role from GroupMember
+        meta:
+          id: req_fb633375d08f4b64b5c772bd559d011a
+          created: 1742488671613
+          modified: 1742488671613
+          isPrivate: false
+          description: Removes a Role from a Group Member
+          sortKey: -1742488671613
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/permissions"
+        name: List Group Permissions
+        meta:
+          id: req_357fe0f4e0054bbbb0af4b8c9a2dcdc3
+          created: 1742488671615
+          modified: 1742488671615
+          isPrivate: false
+          description: Returns a List of all possible/available permissions for a Group.
+          sortKey: -1742488671615
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/posts"
+        name: Get posts from a Group
+        meta:
+          id: req_3a1c1b58aeac4ada91b309c4d02af31c
+          created: 1742488671616
+          modified: 1742488671616
+          isPrivate: false
+          description: Get posts from a Group
+          sortKey: -1742488671616
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: publicOnly
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/posts"
+        name: Create a post in a Group
+        meta:
+          id: req_d3bfc8b7bc4844648c91ba6c1c6cf2bd
+          created: 1742488671617
+          modified: 1742488671617
+          isPrivate: false
+          description: Create a post in a Group.
+          sortKey: -1742488671617
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "title": "Event is starting soon!",
+              "text": "Come join us for the event!",
+              "imageId": "file_ce35d830-e20a-4df0-a6d4-5aaef4508044",
+              "sendNotification": true,
+              "roleIds": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "visibility": "public"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/posts/{{ _.notificationId }}"
+        name: Delete a Group post
+        meta:
+          id: req_22c912b66a114f4ba97c7cfe037222b7
+          created: 1742488671619
+          modified: 1742488671619
+          isPrivate: false
+          description: Delete a Group post
+          sortKey: -1742488671619
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/posts/{{ _.notificationId }}"
+        name: Edits a Group post
+        meta:
+          id: req_91cf5786c5ba4dfbb2ef9d582c37af75
+          created: 1742488671620
+          modified: 1742488671620
+          isPrivate: false
+          description: Edits a Group post
+          sortKey: -1742488671620
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "title": "Event is starting soon!",
+              "text": "Come join us for the event!",
+              "imageId": "file_ce35d830-e20a-4df0-a6d4-5aaef4508044",
+              "sendNotification": true,
+              "roleIds": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "visibility": "public"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/requests"
+        name: Get Group Join Requests
+        meta:
+          id: req_7d1d41b0c499438391cb970f9763efb6
+          created: 1742488671622
+          modified: 1742488671622
+          isPrivate: false
+          description: Returns a list of members that have requested to join the Group.
+          sortKey: -1742488671622
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: blocked
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/requests"
+        name: Cancel Group Join Request
+        meta:
+          id: req_35006e01a5d04456b7c82a5444bb4b9d
+          created: 1742488671624
+          modified: 1742488671624
+          isPrivate: false
+          description: Cancels a request sent to join the group.
+          sortKey: -1742488671624
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/requests/{{ _.userId }}"
+        name: Respond Group Join request
+        meta:
+          id: req_078dde9f521048e191395b4205b63329
+          created: 1742488671625
+          modified: 1742488671625
+          isPrivate: false
+          description: Responds to a Group Join Request with Accept/Deny
+          sortKey: -1742488671625
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "action": "accept",
+              "block": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/roles"
+        name: Get Group Roles
+        meta:
+          id: req_b58a2d74081c40a9870ff657f2b834e6
+          created: 1742488671627
+          modified: 1742488671627
+          isPrivate: false
+          description: Returns a Group Role by ID.
+          sortKey: -1742488671627
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/roles"
+        name: Create GroupRole
+        meta:
+          id: req_fe49ee95f77c4de6a40ebf4730e13047
+          created: 1742488671629
+          modified: 1742488671629
+          isPrivate: false
+          description: Create a Group role.
+          sortKey: -1742488671629
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "id": "string",
+              "name": "string",
+              "description": "string",
+              "isSelfAssignable": true,
+              "permissions": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/roles/{{ _.groupRoleId }}"
+        name: Update Group Role
+        meta:
+          id: req_9b68a5e21dda45178f14789c3e214dfb
+          created: 1742488671631
+          modified: 1742488671631
+          isPrivate: false
+          description: Updates a group role by ID.
+          sortKey: -1742488671631
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "string",
+              "description": "string",
+              "isSelfAssignable": true,
+              "permissions": [
+                "string"
+              ],
+              "order": 0
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/groups/{{ _.groupId }}/roles/{{ _.groupRoleId }}"
+        name: Delete Group Role
+        meta:
+          id: req_40dda39e4efd4eb5a37bacf755ff8566
+          created: 1742488671632
+          modified: 1742488671632
+          isPrivate: false
+          description: Deletes a Group Role by ID and returns the remaining roles.
+          sortKey: -1742488671632
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: instances
+    meta:
+      id: fld_e0af9c1da4f9437fbd651ad142036822
+      created: 1742488671499
+      modified: 1742488671499
+      sortKey: -1742488671499
+      description: Instances Docs Here
+    children:
+      - url: "{{ _.base_url }}/instances"
+        name: Create Instance
+        meta:
+          id: req_7a7027fbb2ba4a6cac8aa9f6653a0b9b
+          created: 1742488671646
+          modified: 1742488671646
+          isPrivate: false
+          description: Create an instance
+          sortKey: -1742488671646
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "worldId": "wrld_ba913a96-fac4-4048-a062-9aa5db092812",
+              "type": "hidden",
+              "region": "us",
+              "ownerId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+              "roleIds": [
+                "grol_459d3911-f672-44bc-b84d-e54ffe7960fe"
+              ],
+              "groupAccessType": "members",
+              "queueEnabled": true,
+              "closedAt": "2025-03-20T16:37:49.707Z",
+              "canRequestInvite": true,
+              "hardClose": true,
+              "inviteOnly": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/instances/{{ _.worldId }}:{{ _.instanceId }}"
+        name: Get Instance
+        meta:
+          id: req_283f630802334d7f8b7c06984ad909aa
+          created: 1742488671648
+          modified: 1742488671648
+          isPrivate: false
+          description: >-
+            Returns an instance. Please read [Instances
+            Tutorial](https://vrchatapi.github.io/tutorials/instances/) for more
+            information on Instances.
+
+
+            If an invalid instanceId is provided, this endpoint will simply
+            return "null"!
+          sortKey: -1742488671648
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/instances/{{ _.worldId }}:{{ _.instanceId }}"
+        name: Close Instance
+        meta:
+          id: req_4cfb60d1a146413eb497a935980aa371
+          created: 1742488671650
+          modified: 1742488671650
+          isPrivate: false
+          description: >-
+            Close an instance or update the closedAt time when it will be
+            closed.
+
+
+            You can only close an instance if the ownerId is yourself or if the
+            instance owner is a group and you have the `group-instance-moderate`
+            permission.
+          sortKey: -1742488671650
+        method: DELETE
+        parameters:
+          - name: hardClose
+            value: "true"
+            disabled: true
+          - name: closedAt
+            value: 2025-03-20T16:37:49.707Z
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/instances/{{ _.worldId }}:{{ _.instanceId }}/shortName"
+        name: Get Instance Short Name
+        meta:
+          id: req_8c2b6f8c380f4b42a4a4bf949cb26d12
+          created: 1742488671651
+          modified: 1742488671651
+          isPrivate: false
+          description: Returns an instance short name.
+          sortKey: -1742488671651
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/instances/s/{{ _.shortName }}"
+        name: Get Instance By Short Name
+        meta:
+          id: req_7ad7b43e356447a18f16cf418d3ff57b
+          created: 1742488671653
+          modified: 1742488671653
+          isPrivate: false
+          description: Returns an instance. Please read [Instances
+            Tutorial](https://vrchatapi.github.io/tutorials/instances/) for more
+            information on Instances.
+          sortKey: -1742488671653
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: notifications
+    meta:
+      id: fld_1ecc076e39f041fc8e44c59c016d8e5b
+      created: 1742488671500
+      modified: 1742488671500
+      sortKey: -1742488671500
+      description: Notifiations Docs
+    children:
+      - url: "{{ _.base_url }}/auth/user/notifications"
+        name: List Notifications
+        meta:
+          id: req_df805d5de3d346a083956d17814492e9
+          created: 1742488671656
+          modified: 1742488671656
+          isPrivate: false
+          description: Retrieve all of the current user's notifications.
+          sortKey: -1742488671656
+        method: GET
+        parameters:
+          - name: type
+            value: all
+            disabled: true
+          - name: sent
+            value: "true"
+            disabled: true
+          - name: hidden
+            value: "true"
+            disabled: true
+          - name: after
+            value: five_minutes_ago
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/notifications/{{ _.notificationId }}"
+        name: Show notification
+        meta:
+          id: req_be54faedcc7345ea869de8644ff4beb0
+          created: 1742488671659
+          modified: 1742488671659
+          isPrivate: false
+          description: Get a notification by notification `not_` ID.
+          sortKey: -1742488671659
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/notifications/{{ _.notificationId }}/accept"
+        name: Accept Friend Request
+        meta:
+          id: req_aa80a6dea47c46afabe47ba0b9ac2e52
+          created: 1742488671660
+          modified: 1742488671660
+          isPrivate: false
+          description: Accept a friend request by notification `frq_` ID. Friend requests
+            can be found using the NotificationsAPI `getNotifications` by
+            filtering of type `friendRequest`.
+          sortKey: -1742488671660
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/notifications/{{ _.notificationId }}/see"
+        name: Mark Notification As Read
+        meta:
+          id: req_4b453675586e4a33b760f65c4d29a67b
+          created: 1742488671661
+          modified: 1742488671661
+          isPrivate: false
+          description: Mark a notification as seen.
+          sortKey: -1742488671661
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/notifications/{{ _.notificationId }}/hide"
+        name: Delete Notification
+        meta:
+          id: req_ddaff50efadf43b8b8986d94b3ba1706
+          created: 1742488671663
+          modified: 1742488671663
+          isPrivate: false
+          description: Delete a notification.
+          sortKey: -1742488671663
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/auth/user/notifications/clear"
+        name: Clear All Notifications
+        meta:
+          id: req_f8b44502e0e24ea2b349658d11e8b0ea
+          created: 1742488671664
+          modified: 1742488671664
+          isPrivate: false
+          description: Clear **all** notifications.
+          sortKey: -1742488671664
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: prints
+    meta:
+      id: fld_c0f76c9ca12b4c57a41022701e2bae87
+      created: 1742488671501
+      modified: 1742488671501
+      sortKey: -1742488671501
+      description: Prints are a way to print photos directly from the VRChat camera.
+    children:
+      - url: "{{ _.base_url }}/prints/user/{{ _.userId }}"
+        name: Get Own Prints
+        meta:
+          id: req_d554a8d4ff5440489180abb18b7a0571
+          created: 1742488671679
+          modified: 1742488671679
+          isPrivate: false
+          description: Returns a list of all prints of the user. User id has to be your
+            own userId, as you can't request other user's prints.
+          sortKey: -1742488671679
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/prints/{{ _.printId }}"
+        name: Get Print
+        meta:
+          id: req_01165632a1144ba8b91ce1ced8c0b469
+          created: 1742488671681
+          modified: 1742488671681
+          isPrivate: false
+          description: Returns a print.
+          sortKey: -1742488671681
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/prints/{{ _.printId }}"
+        name: Delete Print
+        meta:
+          id: req_8c4882d92a374d39b8ed2ad4faca42c3
+          created: 1742488671682
+          modified: 1742488671682
+          isPrivate: false
+          description: Returns a print.
+          sortKey: -1742488671682
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: users
+    meta:
+      id: fld_6b8195cb109149bea7577ac0351a628f
+      created: 1742488671502
+      modified: 1742488671502
+      sortKey: -1742488671502
+      description: Users Docs Here
+    children:
+      - url: "{{ _.base_url }}/users"
+        name: Search All Users
+        meta:
+          id: req_21755172df67414e8689f0bff1b6d791
+          created: 1742488671701
+          modified: 1742488671701
+          isPrivate: false
+          description: Search and list any users by text query
+          sortKey: -1742488671701
+        method: GET
+        parameters:
+          - name: search
+            value: string
+            disabled: true
+          - name: developerType
+            value: string
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.username }}/name"
+        name: Get User by Username
+        meta:
+          id: req_b941724afe574dc294973df4b0092aaa
+          created: 1742488671706
+          modified: 1742488671706
+          isPrivate: false
+          description: >-
+            ~~Get public user information about a specific user using their
+            name.~~
+
+
+            **DEPRECATED:** VRChat API no longer return usernames of other
+            users. [See issue by Tupper for more
+            information](https://github.com/pypy-vrc/VRCX/issues/429).
+
+            This endpoint now require Admin Credentials.
+          sortKey: -1742488671706
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/usr_5e238d47-42d6-4627-ac21-f89e50f18456"
+        name: Get User by ID
+        meta:
+          id: req_a1c6da8aca2340c686d79a8585cd5292
+          created: 1742488671707
+          modified: 1775171650812
+          isPrivate: false
+          description: Get public user information about a specific user using their ID.
+          sortKey: -1742488671707
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}"
+        name: Update User Info
+        meta:
+          id: req_796843ba6b714de0a7560b41c1fc9d3c
+          created: 1742488671708
+          modified: 1742488671708
+          isPrivate: false
+          description: Update a users information such as the email and birthday.
+          sortKey: -1742488671708
+        method: PUT
+        body:
+          mimeType: application/json
+          text: >-
+            {
+              "email": "string",
+              "birthday": "string",
+              "acceptedTOSVersion": 0,
+              "tags": [
+                "string"
+              ],
+              "status": "offline",
+              "statusDescription": "string",
+              "bio": "string",
+              "bioLinks": [
+                "string"
+              ],
+              "pronouns": "string",
+              "isBoopingEnabled": true,
+              "userIcon": "https://api.vrchat.cloud/api/1/file/file_76dc2964-0ce8-41df-b2e7-8edf994fee31/1"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/groups"
+        name: Get User Groups
+        meta:
+          id: req_41648d8dbb8249b0ab4dec410d5f847b
+          created: 1742488671710
+          modified: 1742488671710
+          isPrivate: false
+          description: Get user's public groups
+          sortKey: -1742488671710
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/groups/requested"
+        name: Get User Group Requests
+        meta:
+          id: req_d8e7f6973a2d4d6eb3bb1e58ecb5f424
+          created: 1742488671711
+          modified: 1742488671711
+          isPrivate: false
+          description: Returns a list of Groups the user has requested to be invited into.
+          sortKey: -1742488671711
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/groups/represented"
+        name: Get user's current represented group
+        meta:
+          id: req_d094d778b5a846dd9ea869f3fc4da8eb
+          created: 1742488671712
+          modified: 1761053399728
+          isPrivate: false
+          description: Returns the current group that the user is currently representing
+          sortKey: -1742488671712
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/feedback"
+        name: Get User Feedback
+        meta:
+          id: req_929a5da2f54844caae306ed4b474d31f
+          created: 1742488671713
+          modified: 1742488671713
+          isPrivate: false
+          description: Get user's submitted feedback
+          sortKey: -1742488671713
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/userNotes"
+        name: Get User Notes
+        meta:
+          id: req_2e027bf69d7e415cb2f070b2b34294c3
+          created: 1742488671714
+          modified: 1742488671714
+          isPrivate: false
+          description: Get recently updated user notes
+          sortKey: -1742488671714
+        method: GET
+        parameters:
+          - name: n
+            value: "60"
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/userNotes"
+        name: Update User Note
+        meta:
+          id: req_b7cc8f5bbbff4ee29ce507ab319679cc
+          created: 1742488671715
+          modified: 1742488671715
+          isPrivate: false
+          description: Updates the currently authenticated user's note on a user
+          sortKey: -1742488671715
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "targetUserId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+              "note": "string"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/userNotes/usr_e4ccb1d1-b5bb-4393-bf0a-492ce560217c"
+        name: Get User Note
+        meta:
+          id: req_bc980418c6734fe18228067975369e31
+          created: 1742488671716
+          modified: 1761053384500
+          isPrivate: false
+          description: Get a particular user note
+          sortKey: -1742488671716
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/addTags"
+        name: Add User Tags
+        meta:
+          id: req_56b5c97c75e84920bfcb3484ecbe1877
+          created: 1742488671718
+          modified: 1742488671718
+          isPrivate: false
+          description: Adds tags to the user's profile
+          sortKey: -1742488671718
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/removeTags"
+        name: Remove User Tags
+        meta:
+          id: req_9d92fc948a65461299685c021aac69c2
+          created: 1742488671719
+          modified: 1742488671719
+          isPrivate: false
+          description: Removes tags from the user's profile
+          sortKey: -1742488671719
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "tags": [
+                "string"
+              ]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/badges/{{ _.badgeId }}"
+        name: Update User Badge
+        meta:
+          id: req_61df2be718574ce6aa11ab551d842f4f
+          created: 1742488671720
+          modified: 1742488671720
+          isPrivate: false
+          description: Updates a user's badge
+          sortKey: -1742488671720
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "hidden": true,
+              "showcased": true
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/{{ _.worldId }}/persist/exists"
+        name: Check User Persistence Exists
+        meta:
+          id: req_0c5488c0615f4ceaa8777fd39ff5140e
+          created: 1742488671721
+          modified: 1742488671721
+          isPrivate: false
+          description: Checks whether the user has persistence data for a given world
+          sortKey: -1742488671721
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/instances/groups"
+        name: Get User Group Instances
+        meta:
+          id: req_84c9af5662704691afa2b0bb5a68dfd5
+          created: 1742488671721
+          modified: 1742488671721
+          isPrivate: false
+          description: Returns a list of group instances for a user
+          sortKey: -1742488671721
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/{{ _.worldId }}/persist"
+        name: Delete User Persistence
+        meta:
+          id: req_04fabcc0806f446d9e91194b8ec10c6b
+          created: 1742488671723
+          modified: 1742488671723
+          isPrivate: false
+          description: Deletes the user's persistence data for a given world
+          sortKey: -1742488671723
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+  - name: worlds
+    meta:
+      id: fld_6c2f1cb3a236446190c3dcc5d0791b5c
+      created: 1742488671503
+      modified: 1742488671503
+      sortKey: -1742488671503
+      description: Worlds Docs Here
+    children:
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/{{ _.worldId }}/persist/exists"
+        name: Check User Persistence Exists
+        meta:
+          id: req_8c8f0c618f7c4730b0d1e849adfd06b4
+          created: 1742488671722
+          modified: 1742488671722
+          isPrivate: false
+          description: Checks whether the user has persistence data for a given world
+          sortKey: -1742488671722
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/users/{{ _.userId }}/{{ _.worldId }}/persist"
+        name: Delete User Persistence
+        meta:
+          id: req_6ba206494a8541a4aecf02f3875d04ae
+          created: 1742488671724
+          modified: 1742488671724
+          isPrivate: false
+          description: Deletes the user's persistence data for a given world
+          sortKey: -1742488671724
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds"
+        name: Search All Worlds
+        meta:
+          id: req_f0d69ce7516744a5adcf98c6d51e1127
+          created: 1742488671725
+          modified: 1742488671725
+          isPrivate: false
+          description: Search and list any worlds by query filters.
+          sortKey: -1742488671725
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: user
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: search
+            value: string
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+          - name: fuzzy
+            value: "true"
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds"
+        name: Create World
+        meta:
+          id: req_8542e332e0ee4e4d8d112806a94bcd88
+          created: 1742488671726
+          modified: 1742488671726
+          isPrivate: false
+          description: Create a new world. This endpoint requires `assetUrl` to be a valid
+            File object with `.vrcw` file extension, and `imageUrl` to be a
+            valid File object with an image file extension.
+          sortKey: -1742488671726
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "assetUrl": "string",
+              "assetVersion": 0,
+              "authorId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+              "authorName": "string",
+              "capacity": 8,
+              "description": "string",
+              "id": "wrld_ba913a96-fac4-4048-a062-9aa5db092812",
+              "imageUrl": "string",
+              "name": "string",
+              "platform": "standalonewindows",
+              "releaseStatus": "public",
+              "tags": [
+                "string"
+              ],
+              "unityPackageUrl": "string",
+              "unityVersion": "2022.3.6f1"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/active"
+        name: List Active Worlds
+        meta:
+          id: req_7f270a1d2a464c749eb024a1d334efd1
+          created: 1742488671728
+          modified: 1742488671728
+          isPrivate: false
+          description: Search and list currently Active worlds by query filters.
+          sortKey: -1742488671728
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: search
+            value: string
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/favorites"
+        name: List Favorited Worlds
+        meta:
+          id: req_287b8204c5f84d6fbc60f8c89540dab9
+          created: 1742488671729
+          modified: 1742488671729
+          isPrivate: false
+          description: Search and list favorited worlds by query filters.
+          sortKey: -1742488671729
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: search
+            value: string
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/recent"
+        name: List Recent Worlds
+        meta:
+          id: req_7dd4efa34c7a4f039bba4c58d6736716
+          created: 1742488671730
+          modified: 1742488671730
+          isPrivate: false
+          description: Search and list recently visited worlds by query filters.
+          sortKey: -1742488671730
+        method: GET
+        parameters:
+          - name: featured
+            value: "true"
+            disabled: true
+          - name: sort
+            value: popularity
+            disabled: true
+          - name: n
+            value: "60"
+            disabled: true
+          - name: order
+            value: descending
+            disabled: true
+          - name: offset
+            value: "0"
+            disabled: true
+          - name: search
+            value: string
+            disabled: true
+          - name: tag
+            value: string
+            disabled: true
+          - name: notag
+            value: string
+            disabled: true
+          - name: releaseStatus
+            value: public
+            disabled: true
+          - name: maxUnityVersion
+            value: string
+            disabled: true
+          - name: minUnityVersion
+            value: string
+            disabled: true
+          - name: platform
+            value: string
+            disabled: true
+          - name: userId
+            value: string
+            disabled: true
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}"
+        name: Get World by ID
+        meta:
+          id: req_eb01b47dc87c42fa96ce4c77350a8c9c
+          created: 1742488671732
+          modified: 1742488671732
+          isPrivate: false
+          description: >-
+            Get information about a specific World.
+
+            Works unauthenticated but when so will always return `0` for certain
+            fields.
+          sortKey: -1742488671732
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}"
+        name: Update World
+        meta:
+          id: req_f01f606342cd4dc08e02913e934b1447
+          created: 1742488671733
+          modified: 1742488671733
+          isPrivate: false
+          description: Update information about a specific World.
+          sortKey: -1742488671733
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "assetUrl": "string",
+              "assetVersion": "string",
+              "authorId": "usr_c1644b5b-3ca4-45b4-97c6-a2a0de70d469",
+              "authorName": "string",
+              "capacity": 8,
+              "description": "string",
+              "imageUrl": "string",
+              "name": "string",
+              "platform": "standalonewindows",
+              "releaseStatus": "public",
+              "tags": [
+                "string"
+              ],
+              "unityPackageUrl": "string",
+              "unityVersion": "2022.3.6f1"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+            disabled: false
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}"
+        name: Delete World
+        meta:
+          id: req_869248c2880e4a61b89bdb832b3eca9f
+          created: 1742488671734
+          modified: 1742488671734
+          isPrivate: false
+          description: Delete a world. Notice a world is never fully "deleted", only its
+            ReleaseStatus is set to "hidden" and the linked Files are deleted.
+            The WorldID is permanently reserved.
+          sortKey: -1742488671734
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}/metadata"
+        name: Get World Metadata
+        meta:
+          id: req_779d6b9267b64c0bb1eb61fe0f0f8268
+          created: 1742488671735
+          modified: 1742488671735
+          isPrivate: false
+          description: Return a worlds custom metadata. This is currently believed to be
+            unused. Metadata can be set with `updateWorld` and can be any
+            arbitrary object.
+          sortKey: -1742488671735
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}/publish"
+        name: Get World Publish Status
+        meta:
+          id: req_3f80ed05778e4179887dca45a9674e40
+          created: 1742488671736
+          modified: 1742488671736
+          isPrivate: false
+          description: Returns a worlds publish status.
+          sortKey: -1742488671736
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}/publish"
+        name: Publish World
+        meta:
+          id: req_2ccce436548744b390978f106b71d2ec
+          created: 1742488671737
+          modified: 1742488671737
+          isPrivate: false
+          description: Publish a world. You can only publish one world per week.
+          sortKey: -1742488671737
+        method: PUT
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url }}/worlds/{{ _.worldId }}/publish"
+        name: Unpublish World
+        meta:
+          id: req_3046a90abe734a81865bd18d2cb74e43
+          created: 1742488671738
+          modified: 1742488671738
+          isPrivate: false
+          description: Unpublish a world.
+          sortKey: -1742488671738
+        method: DELETE
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: "{{ _.base_url
+          }}/worlds/wrld_41efe3b1-9931-40ab-a15d-6946d22481b5/68563~region(us)"
+        name: Get World Instance
+        meta:
+          id: req_dbb7232b2f6d4031a29aaad14332c579
+          created: 1742488671740
+          modified: 1761167184800
+          isPrivate: false
+          description: Returns a worlds instance.
+          sortKey: -1742488671740
+        method: GET
+        authentication:
+          type: apikey
+          key: auth
+          value: "{{ _.auth }}"
+          addTo: cookie
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_99d30891da4bdcebc63947a8fc17f076de878684
+    created: 1742488620041
+    modified: 1773099132348
+  cookies:
+    - id: 249be0c9-b364-4e36-9d4d-a119694e398e
+      key: auth
+      value: authcookie_50a982bf-0fed-4dfb-9a4f-5bcc95d31495
+      domain: api.vrchat.cloud
+      path: /
+      secure: false
+      httpOnly: true
+      hostOnly: true
+    - id: f9e5f506-5bdf-4a0b-bee0-785a13224397
+      key: twoFactorAuth
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfMDIwZTFiODQtN2VhZC00ZGFiLWFiYTgtMDJkY2JjM2RlZWQ3IiwibWFjQWRkcmVzcyI6IiIsInRpbWVzdGFtcCI6MTc3MzA5OTEzMjI4NCwidmVyc2lvbiI6MSwiaWF0IjoxNzczMDk5MTMyLCJleHAiOjE3NzU2OTExMzIsImF1ZCI6IlZSQ2hhdFR3b0ZhY3RvckF1dGgiLCJpc3MiOiJWUkNoYXQifQ.3a-bHVXzNvHFKlH8WkWjItI2UUlAg_Kse2YTNSSVEmI
+      domain: api.vrchat.cloud
+      path: /
+      secure: false
+      httpOnly: true
+      hostOnly: true
+environments:
+  name: Base Environment
+  meta:
+    id: env_99d30891da4bdcebc63947a8fc17f076de878684
+    created: 1742488619975
+    modified: 1742488671491
+    isPrivate: false
+  data:
+    base_url: "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
+  subEnvironments:
+    - name: OpenAPI env api.vrchat.cloud
+      meta:
+        id: env_3ca7014a33794cc2b0a30356d5133ca7
+        created: 1742488671492
+        modified: 1742489558233
+        isPrivate: false
+        sortKey: 1742488671492
+      data:
+        scheme: https
+        base_path: /api/1
+        host: api.vrchat.cloud
+        auth: auth
+        twoFactorAuth: "934468"
+        httpUsername: sakkakujp@gmail.com
+        httpPassword: JEBPq5*v22BRhL7iyM2P
+        userId: usr_020e1b84-7ead-4dab-aba8-02dcbc3deed7
+        avatarId: avtr_c1fd6720-9b0f-475a-87f1-764e3c963a70
+        GLOBAL_HEADERS:
+          User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101
+            Firefox/136.0
+    - name: OpenAPI env api.vrchat.cloud
+      meta:
+        id: env_64ee020188964e76b2bdb8822c22849f
+        created: 1742488671492
+        modified: 1742489558233
+        isPrivate: false
+        sortKey: 1742488671492
+      data:
+        scheme: https
+        base_path: /api/1
+        host: api.vrchat.cloud
+        auth: auth
+        twoFactorAuth: "934468"
+        httpUsername: sakkakujp@gmail.com
+        httpPassword: JEBPq5*v22BRhL7iyM2P
+        userId: usr_020e1b84-7ead-4dab-aba8-02dcbc3deed7
+        avatarId: avtr_c1fd6720-9b0f-475a-87f1-764e3c963a70
+        GLOBAL_HEADERS:
+          User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101
+            Firefox/136.0
+    - name: OpenAPI env api.vrchat.cloud
+      meta:
+        id: env_c3161c0b81464bf7986b6c45cd77a727
+        created: 1742488671492
+        modified: 1742489558233
+        isPrivate: false
+        sortKey: 1742488671492
+      data:
+        scheme: https
+        base_path: /api/1
+        host: api.vrchat.cloud
+        auth: auth
+        twoFactorAuth: "934468"
+        httpUsername: sakkakujp@gmail.com
+        httpPassword: JEBPq5*v22BRhL7iyM2P
+        userId: usr_020e1b84-7ead-4dab-aba8-02dcbc3deed7
+        avatarId: avtr_c1fd6720-9b0f-475a-87f1-764e3c963a70
+        GLOBAL_HEADERS:
+          User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101
+            Firefox/136.0
