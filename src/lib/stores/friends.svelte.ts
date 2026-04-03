@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { Friend, InstanceData, InstanceGroup } from "../types";
+import type { Friend, InstanceData, InstanceGroup, UserProfile } from "../types";
 import { fetchGroupProfile, fetchUserProfile, getAuth } from "./auth.svelte";
 import { parseInstanceId } from "../utils/instance";
 
@@ -182,4 +182,8 @@ export async function fetchFriends(): Promise<void> {
   } finally {
     loading = false;
   }
+}
+
+export async function fetchMutualFriends(userId: string): Promise<UserProfile[]> {
+    return invoke<UserProfile[]>("get_mutual_friends", { userId });
 }

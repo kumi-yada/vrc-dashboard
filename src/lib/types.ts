@@ -9,6 +9,7 @@ export interface Badge {
 export interface UserProfile {
   id: string;
   displayName: string;
+  currentAvatarImageUrl: string;
   currentAvatarThumbnailImageUrl: string;
   profilePicOverrideThumbnail: string;
   userIcon: string;
@@ -24,20 +25,12 @@ export interface UserProfile {
 }
 
 export interface Friend extends UserProfile {
-  id: string;
-  displayName: string;
-  currentAvatarThumbnailImageUrl: string;
-  profilePicOverrideThumbnail: string;
-  userIcon: string;
-  status: string;
-  statusDescription: string;
   location: string;
   worldId: string;
   instanceId: string;
   state: string;
   platform?: string;
   last_platform: string;
-  tags: string[];
   isFriend: boolean;
 }
 

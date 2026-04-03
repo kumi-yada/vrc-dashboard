@@ -7,19 +7,34 @@
 
   interface Props {
     user: UserProfile | null;
+    mutualFriends?: UserProfile[] | null;
     onClose: () => void;
+    onUserSelected?: (user: UserProfile) => void;
     onLogout?: () => Promise<void> | void;
     loading?: boolean;
     error?: string | null;
   }
 
-  let { user, onClose, onLogout, loading = false, error = null }: Props = $props();
+  let {
+    user,
+    mutualFriends,
+    onClose,
+    onUserSelected,
+    onLogout,
+    loading = false,
+    error = null,
+  }: Props = $props();
 
-  const showcasedBadges = $derived(user?.badges?.filter((badge) => badge.showcased) ?? []);
+  const showcasedBadges = $derived(
+    user?.badges?.filter((badge) => badge.showcased) ?? [],
+  );
   const hasFriendCounts = $derived(
-    Array.isArray(user?.friends) || Array.isArray(user?.onlineFriends)
+    Array.isArray(user?.friends) || Array.isArray(user?.onlineFriends),
   );
   const canLogout = $derived(Boolean(user && onLogout));
+  const mutuals: any[] = $derived(mutualFriends ?? []);
+
+  $inspect(mutualFriends, "user");
 
   function getTrustLevel(tags: string[]): string {
     if (tags.includes("system_trust_veteran")) return "Trusted";
@@ -55,7 +70,9 @@
   async function handleProfileOpen() {
     if (!user?.id) return;
 
-    await openUrl(`https://vrchat.com/home/user/${encodeURIComponent(user.id)}`);
+    await openUrl(
+      `https://vrchat.com/home/user/${encodeURIComponent(user.id)}`,
+    );
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -63,7 +80,7 @@
       onClose();
     }
   }
-  </script>
+</script>
 
 <svelte:document onkeydown={handleKeydown} />
 
@@ -98,11 +115,16 @@
           />
         </button>
         <div class="popup-identity">
-          <h2 class="popup-displayname" id="user-menu-title">{user.displayName}</h2>
+          <h2 class="popup-displayname" id="user-menu-title">
+            {user.displayName}
+          </h2>
           {#if user.pronouns}
             <span class="popup-pronouns">{user.pronouns}</span>
           {/if}
-          <span class="popup-trust" style:color={getTrustColor(user.tags ?? [])}>
+          <span
+            class="popup-trust"
+            style:color={getTrustColor(user.tags ?? [])}
+          >
             {getTrustLevel(user.tags ?? [])}
           </span>
         </div>
@@ -163,7 +185,9 @@
           {/if}
           {#if user.date_joined}
             <div class="stat">
-              <span class="stat-value stat-date">{formatDate(user.date_joined)}</span>
+              <span class="stat-value stat-date"
+                >{formatDate(user.date_joined)}</span
+              >
               <span class="stat-label">Joined</span>
             </div>
           {/if}
@@ -180,6 +204,28 @@
               class="badge-img"
             />
           {/each}
+        </div>
+      {/if}
+
+      {#if mutuals.length > 0}
+        <div class="popup-mutuals">
+          <h3 class="mutuals-title">Mutual Friends</h3>
+          <div class="mutuals-list">
+            {#each mutuals as m (m.id)}
+              <button
+                class="mutual-entry"
+                type="button"
+                onclick={() =>
+                  onUserSelected
+                    ? onUserSelected(m)
+                    : openUrl(
+                        `https://vrchat.com/home/user/${encodeURIComponent(m.id)}`,
+                      )}
+              >
+                <UserAvatar friend={m} size={36} />
+              </button>
+            {/each}
+          </div>
         </div>
       {/if}
 
@@ -250,7 +296,9 @@
     border-radius: 999px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.04);
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
   }
 
   .close-btn:hover {
@@ -300,7 +348,9 @@
     display: inline-flex;
     padding: 0;
     border-radius: 14px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
   }
 
   .popup-avatar-wrap:hover {
@@ -479,9 +529,33 @@
     animation: dialog-spin 1s linear infinite;
   }
 
+  .mutuals-list {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem 1rem;
+    overflow-x: auto;
+  }
+
+  .mutuals-title {
+    margin: 0.5rem 1.25rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .popup-mutuals {
+    border-top: 1px solid var(--border);
+  }
+
   @keyframes dialog-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   @media (max-width: 520px) {

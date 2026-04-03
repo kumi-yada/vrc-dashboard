@@ -176,7 +176,7 @@
     left: 0;
     right: 0;
     padding: 0.4rem;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.9));
   }
 
   .world-name {

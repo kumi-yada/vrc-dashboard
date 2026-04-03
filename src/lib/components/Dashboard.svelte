@@ -4,7 +4,7 @@
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import PhotosPage from "./PhotosPage.svelte";
-  import { getFriendsStore, fetchFriends } from "../stores/friends.svelte";
+  import { getFriendsStore, fetchFriends, fetchMutualFriends } from "../stores/friends.svelte";
   import { fetchUserProfile, fetchWorld, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
   import type { Friend, InstanceGroup, UserProfile, WorldData } from "../types";
   import UserMenuDialog from "./UserMenuDialog.svelte";
@@ -16,6 +16,8 @@
   let activeTab = $state("friends");
   let photosRefreshToken = $state(0);
   let refreshPromise: Promise<void> | null = null;
+
+  let selectedMutualFriends = $state<UserProfile[] | null>(null);
   let selectedProfile = $state<UserProfile | null>(null);
   let profileLoading = $state(false);
   let profileError = $state<string | null>(null);
@@ -89,7 +91,7 @@
     selectedWorld = null;
   }
 
-  async function handleFriendProfile(friend: Friend) {
+  async function handleFriendProfile(friend: UserProfile) {
     profileDialogOpen = true;
     selectedProfile = friend;
     profileLoading = true;
@@ -99,6 +101,17 @@
 
     try {
       const profile = await fetchUserProfile(friend.id);
+      fetchMutualFriends(friend.id).then((mutuals) => {
+         if (requestToken !== profileRequestToken) {
+           return;
+         }
+         selectedMutualFriends = mutuals;
+       }).catch(() => {
+         if (requestToken !== profileRequestToken) {
+           return;
+         }
+         selectedMutualFriends = null;
+       });
 
       if (requestToken !== profileRequestToken) {
         return;
@@ -253,9 +266,11 @@
   {#if profileDialogOpen}
     <UserMenuDialog
       user={selectedProfile}
+      mutualFriends={selectedMutualFriends}
       loading={profileLoading}
       error={profileError}
       onClose={closeProfileDialog}
+      onUserSelected={(user) => handleFriendProfile(user)}
     />
   {/if}
 

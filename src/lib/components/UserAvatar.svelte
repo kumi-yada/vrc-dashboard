@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { Friend } from "../types";
+  import type { UserProfile } from "../types";
 
   interface Props {
     friend: Pick<
-      Friend,
-      "displayName" | "profilePicOverrideThumbnail" | "currentAvatarThumbnailImageUrl"
+      UserProfile,
+      "displayName" | "profilePicOverrideThumbnail" | "currentAvatarThumbnailImageUrl" | "currentAvatarImageUrl"
     >;
     size?: number;
     radius?: string;
@@ -21,7 +21,7 @@
   }: Props = $props();
 
   function getAvatar(user: Props["friend"]): string {
-    return user.profilePicOverrideThumbnail || user.currentAvatarThumbnailImageUrl || "";
+    return user.profilePicOverrideThumbnail || user.currentAvatarThumbnailImageUrl || user.currentAvatarImageUrl || "";
   }
 
   let filter = $derived(
