@@ -19,6 +19,7 @@
     "__TAURI_INTERNALS__" in
       (window as Window & { __TAURI_INTERNALS__?: unknown });
   let showUserMenu = $state(false);
+  let showNotifications = $state(false);
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
@@ -64,9 +65,24 @@
   <div class="window-drag-region" data-tauri-drag-region></div>
 
   <div class="actions">
-    <button class="icon-btn" title="Notifications">
-      <Icon icon="mdi:bell-outline" width={22} />
-    </button>
+    <div class="notifications-wrapper">
+      <button
+        class="icon-btn"
+        title="Notifications"
+        onclick={() => {
+          showNotifications = !showNotifications;
+          showUserMenu = false;
+        }}
+      >
+        <Icon icon="mdi:bell-outline" width={22} />
+      </button>
+
+      {#if showNotifications}
+        <div class="notifications-popup">
+          <div class="popup-card">Coming soon</div>
+        </div>
+      {/if}
+    </div>
     {#if auth.user}
       <div class="user-menu-wrapper">
         <button
@@ -217,5 +233,30 @@
     height: 28px;
     border-radius: 10px;
     display: block;
+  }
+
+  .notifications-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .notifications-popup {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 40;
+  }
+
+  .popup-card {
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    min-width: 160px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    font-size: 0.9rem;
+    text-align: center;
   }
 </style>
