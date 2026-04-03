@@ -107,6 +107,31 @@ pub async fn get_user(
 }
 
 #[tauri::command]
+pub async fn get_group(
+    state: State<'_, AuthState>,
+    group_id: String,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("{}/groups/{}", BASE_URL, group_id))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn get_friends(
     state: State<'_, AuthState>,
     offline: bool,
@@ -164,6 +189,31 @@ pub async fn get_instance(
     let client = reqwest::Client::new();
     let resp = client
         .get(format!("{}/instances/{}", BASE_URL, instance_id))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_world(
+    state: State<'_, AuthState>,
+    world_id: String,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("{}/worlds/{}", BASE_URL, world_id))
         .headers(build_headers(&token))
         .send()
         .await

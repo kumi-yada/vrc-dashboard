@@ -35,9 +35,10 @@
   interface Props {
     group: InstanceGroup;
     onFriendProfile: (friend: Friend) => void;
+    onWorldOpen: (group: InstanceGroup) => void;
   }
 
-  let { group, onFriendProfile }: Props = $props();
+  let { group, onFriendProfile, onWorldOpen }: Props = $props();
 
   const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
   const thumbnailUrl = $derived(
@@ -52,10 +53,19 @@
   const supportedPlatformsLabel = $derived(
     supportedPlatforms.map((platform) => PLATFORM_META[platform].label).join(", ")
   );
+
+  function handleWorldOpen() {
+    onWorldOpen(group);
+  }
 </script>
 
 <div class="instance-card">
-  <div class="world-preview" title={`${worldName} - ${userCount}/${capacity} users`}>
+  <button
+    class="world-preview"
+    type="button"
+    title={`Open ${worldName} details`}
+    onclick={handleWorldOpen}
+  >
     {#if supportedPlatforms.length}
       <div class="platform-badge" title={`Supported on ${supportedPlatformsLabel}`}>
         {#each supportedPlatforms as platform (platform)}
@@ -79,8 +89,14 @@
           {userCount}/{capacity}
         </span>
       </div>
+      {#if group.ownerName}
+        <div class="owner-row" title={`Owner: ${group.ownerName}`}>
+          <Icon icon="mdi:crown-outline" width={14} />
+          <span class="owner-name">{group.ownerName}</span>
+        </div>
+      {/if}
     </div>
-  </div>
+  </button>
   <div class="friends-list">
     {#each group.friends as friend (friend.id)}
       <FriendEntry {friend} onProfileClick={onFriendProfile} />
@@ -107,6 +123,20 @@
     width: 180px;
     min-height: 140px;
     flex-shrink: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .world-preview:hover .world-overlay {
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  }
+
+  .world-preview:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
   .platform-badge {
@@ -163,6 +193,22 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 0.15rem;
+  }
+
+  .owner-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    min-width: 0;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .owner-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .visibility {

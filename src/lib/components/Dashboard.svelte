@@ -4,9 +4,10 @@
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import { getFriendsStore, fetchFriends } from "../stores/friends.svelte";
-  import { fetchUserProfile, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
-  import type { Friend, UserProfile } from "../types";
+  import { fetchUserProfile, fetchWorld, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
+  import type { Friend, InstanceGroup, UserProfile, WorldData } from "../types";
   import UserMenuDialog from "./UserMenuDialog.svelte";
+  import WorldDialog from "./WorldDialog.svelte";
   import Icon from "@iconify/svelte";
 
   const friends = getFriendsStore();
@@ -18,6 +19,11 @@
   let profileError = $state<string | null>(null);
   let profileDialogOpen = $state(false);
   let profileRequestToken = 0;
+  let selectedWorld = $state<WorldData | null>(null);
+  let worldLoading = $state(false);
+  let worldError = $state<string | null>(null);
+  let worldDialogOpen = $state(false);
+  let worldRequestToken = 0;
 
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
@@ -55,6 +61,13 @@
     selectedProfile = null;
   }
 
+  function closeWorldDialog() {
+    worldDialogOpen = false;
+    worldLoading = false;
+    worldError = null;
+    selectedWorld = null;
+  }
+
   async function handleFriendProfile(friend: Friend) {
     profileDialogOpen = true;
     selectedProfile = friend;
@@ -80,6 +93,39 @@
     } finally {
       if (requestToken === profileRequestToken) {
         profileLoading = false;
+      }
+    }
+  }
+
+  async function handleWorldOpen(group: InstanceGroup) {
+    worldDialogOpen = true;
+    selectedWorld = group.instance?.world ?? null;
+    worldLoading = true;
+    worldError = null;
+
+    const requestToken = ++worldRequestToken;
+
+    try {
+      const world = await fetchWorld(group.parsed.worldId);
+
+      if (requestToken !== worldRequestToken) {
+        return;
+      }
+
+      selectedWorld = world;
+    } catch (error) {
+      if (requestToken !== worldRequestToken) {
+        return;
+      }
+
+      if (!selectedWorld) {
+        selectedWorld = group.instance?.world ?? null;
+      }
+
+      worldError = error instanceof Error ? error.message : String(error);
+    } finally {
+      if (requestToken === worldRequestToken) {
+        worldLoading = false;
       }
     }
   }
@@ -131,7 +177,11 @@
         {:else}
           <div class="instances-grid">
             {#each friends.instanceGroups as group (group.location)}
-              <InstanceCard {group} onFriendProfile={handleFriendProfile} />
+              <InstanceCard
+                {group}
+                onFriendProfile={handleFriendProfile}
+                onWorldOpen={handleWorldOpen}
+              />
             {/each}
           </div>
         {/if}
@@ -159,6 +209,15 @@
       loading={profileLoading}
       error={profileError}
       onClose={closeProfileDialog}
+    />
+  {/if}
+
+  {#if worldDialogOpen}
+    <WorldDialog
+      world={selectedWorld}
+      loading={worldLoading}
+      error={worldError}
+      onClose={closeWorldDialog}
     />
   {/if}
 </div>

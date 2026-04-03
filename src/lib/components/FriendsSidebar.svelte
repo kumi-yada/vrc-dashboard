@@ -60,11 +60,11 @@
         >
           <UserAvatar
             {friend}
-            brightness={activeFriendIds.includes(friend.id) ? 0.5 : 1}
+            brightness={friend.location === "offline" ? 0.5 : 1}
           />
           <StatusDot
             status={friend.status}
-            active={activeFriendIds.includes(friend.id)}
+            active={friend.location === "offline"}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
             bottom="-1px"
@@ -83,10 +83,9 @@
           title={`Open ${friend.displayName} profile`}
           onclick={() => onFriendProfile(friend)}
         >
-          <UserAvatar {friend} grayscale={100} brightness={1.0} />
+          <UserAvatar {friend} grayscale={100} brightness={0.5} />
           <StatusDot
             status={friend.status}
-            active={activeFriendIds?.includes(friend.id)}
             borderWidth={2}
             borderColor="var(--sidebar-bg)"
             bottom="-1px"

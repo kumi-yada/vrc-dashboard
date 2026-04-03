@@ -45,6 +45,7 @@ export interface WorldData {
   id: string;
   name: string;
   description: string;
+  authorId?: string;
   authorName: string;
   capacity: number;
   recommendedCapacity: number;
@@ -52,7 +53,25 @@ export interface WorldData {
   thumbnailImageUrl: string;
   favorites: number;
   visits: number;
+  occupants?: number;
+  publicOccupants?: number;
+  privateOccupants?: number;
+  heat?: number;
+  popularity?: number;
+  created_at?: string;
+  publicationDate?: string;
+  labsPublicationDate?: string;
+  updated_at?: string;
+  releaseStatus?: string;
+  tags?: string[];
+  slimInstances?: WorldSlimInstance[];
   unityPackages?: WorldUnityPackage[];
+}
+
+export interface WorldSlimInstance {
+  instanceId: string;
+  n_users: number;
+  languageRatio?: Record<string, number>;
 }
 
 export interface WorldUnityPackage {
@@ -129,5 +148,6 @@ export interface InstanceGroup {
   location: string;
   parsed: ParsedInstance;
   instance: InstanceData | null;
+  ownerName: string;
   friends: Friend[];
 }

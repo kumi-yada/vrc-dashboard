@@ -14,8 +14,10 @@ pub fn run() {
             commands::clear_auth_token,
             commands::get_current_user,
             commands::get_user,
+            commands::get_group,
             commands::get_friends,
             commands::get_instance,
+            commands::get_world,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {
