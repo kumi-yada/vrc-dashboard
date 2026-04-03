@@ -18,6 +18,7 @@ export interface Friend {
   worldId: string;
   instanceId: string;
   state: string;
+  platform?: string;
   last_platform: string;
   tags: string[];
   isFriend: boolean;
@@ -34,6 +35,17 @@ export interface WorldData {
   thumbnailImageUrl: string;
   favorites: number;
   visits: number;
+  unityPackages?: WorldUnityPackage[];
+}
+
+export interface WorldUnityPackage {
+  platform: string;
+}
+
+export interface InstancePlatforms {
+  android?: number;
+  ios?: number;
+  standalonewindows?: number;
 }
 
 export interface InstanceData {
@@ -46,6 +58,7 @@ export interface InstanceData {
   userCount: number;
   capacity: number;
   recommendedCapacity: number;
+  platforms?: InstancePlatforms;
   world: WorldData;
 }
 

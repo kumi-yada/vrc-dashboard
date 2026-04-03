@@ -1,8 +1,36 @@
 <script lang="ts">
-  import type { InstanceGroup } from "../types";
+  import type { InstanceGroup, InstancePlatforms } from "../types";
   import { visibilityLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
+
+  type SupportedPlatform = "standalonewindows" | "android" | "ios";
+
+  const PLATFORM_META: Record<SupportedPlatform, { icon: string; label: string }> = {
+    standalonewindows: {
+      icon: "mdi:microsoft-windows",
+      label: "Windows"
+    },
+    android: {
+      icon: "mdi:android",
+      label: "Android"
+    },
+    ios: {
+      icon: "mdi:apple-ios",
+      label: "iOS"
+    }
+  };
+
+  function getSupportedPlatforms(group: InstanceGroup): SupportedPlatform[] {
+    const worldPlatforms = group.instance?.world?.unityPackages?.map((pkg) => pkg.platform);
+
+    if (!worldPlatforms?.length) {
+      return [];
+    }
+
+    return [...new Set(worldPlatforms)]
+      .filter((platform): platform is SupportedPlatform => platform in PLATFORM_META);
+  }
 
   interface Props {
     group: InstanceGroup;
@@ -19,10 +47,21 @@
   const userCount = $derived(group.instance?.n_users ?? group.friends.length);
   const capacity = $derived(group.instance?.capacity ?? 0);
   const visLabel = $derived(visibilityLabel(group.parsed.visibility));
+  const supportedPlatforms = $derived(getSupportedPlatforms(group));
+  const supportedPlatformsLabel = $derived(
+    supportedPlatforms.map((platform) => PLATFORM_META[platform].label).join(", ")
+  );
 </script>
 
 <div class="instance-card">
   <div class="world-preview" title={`${worldName} - ${userCount}/${capacity} users`}>
+    {#if supportedPlatforms.length}
+      <div class="platform-badge" title={`Supported on ${supportedPlatformsLabel}`}>
+        {#each supportedPlatforms as platform (platform)}
+          <Icon icon={PLATFORM_META[platform].icon} width={14} />
+        {/each}
+      </div>
+    {/if}
     {#if thumbnailUrl}
       <img src={thumbnailUrl} alt={worldName} class="world-thumb" loading="lazy" />
     {:else}
@@ -64,9 +103,24 @@
 
   .world-preview {
     position: relative;
-    width: 130px;
-    min-height: 100px;
+    width: 180px;
+    min-height: 140px;
     flex-shrink: 0;
+  }
+
+  .platform-badge {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.35rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    backdrop-filter: blur(6px);
   }
 
   .world-thumb {

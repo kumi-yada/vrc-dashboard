@@ -101,12 +101,6 @@
           onclick={() => (showUserMenu = !showUserMenu)}
         >
           <UserAvatar friend={auth.user} size={32} />
-          <StatusDot
-            status={auth.user.status}
-            size={9}
-            borderWidth={1.5}
-            borderColor="var(--topbar-bg)"
-          />
         </button>
 
         {#if showUserMenu}
@@ -341,11 +335,6 @@
     border: 2px solid transparent;
     transition: border-color 0.15s;
     cursor: pointer;
-  }
-
-  .avatar-btn:hover,
-  .avatar-btn.active {
-    border-color: var(--accent);
   }
 
   .avatar-btn :global(.user-avatar) {
