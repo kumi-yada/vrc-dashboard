@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Friend } from "../types";
+  import StatusDot from "./StatusDot.svelte";
 
   interface Props {
     friend: Friend;
@@ -9,17 +10,6 @@
 
   function getAvatar(f: Friend): string {
     return f.profilePicOverrideThumbnail || f.currentAvatarThumbnailImageUrl || "";
-  }
-
-  function getStatusColor(status: string): string {
-    const colors: Record<string, string> = {
-      offline: "#9E9E9E",
-      active: "#4CAF50",
-      "join me": "#2196F3",
-      "ask me": "#FF9800",
-      busy: "#F44336",
-    };
-    return colors[status?.toLowerCase()] || "#9E9E9E";
   }
 </script>
 
@@ -31,7 +21,7 @@
       class="avatar"
       loading="lazy"
     />
-    <span class="online-dot" style="background: {getStatusColor(friend.status)}"></span>
+    <StatusDot status={friend.status} />
   </div>
   <span class="name">{friend.displayName}</span>
 </div>
@@ -57,16 +47,6 @@
     border-radius: 50%;
     object-fit: cover;
     background: var(--bg-input);
-  }
-
-  .online-dot {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    border: 1.5px solid var(--bg-card);
   }
 
   .name {

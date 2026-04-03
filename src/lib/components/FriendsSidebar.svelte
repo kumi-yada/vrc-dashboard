@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Friend } from "../types";
+  import StatusDot from "./StatusDot.svelte";
 
   interface Props {
     privateFriends: Friend[];
@@ -11,17 +12,6 @@
   function getAvatar(f: Friend): string {
     return f.profilePicOverrideThumbnail || f.currentAvatarThumbnailImageUrl || "";
   }
-
-  function getStatusColor(status: string): string {
-    const colors: Record<string, string> = {
-      offline: "#9E9E9E",
-      active: "#4CAF50",
-      "join me": "#2196F3",
-      "ask me": "#FF9800",
-      busy: "#F44336",
-    };
-    return colors[status?.toLowerCase()] || "#9E9E9E";
-  }
 </script>
 
 <aside class="sidebar">
@@ -30,7 +20,14 @@
       {#each privateFriends as friend (friend.id)}
         <div class="sidebar-avatar" title={friend.displayName}>
           <img src={getAvatar(friend)} alt={friend.displayName} loading="lazy" />
-          <span class="dot" style="background: {getStatusColor(friend.status)}"></span>
+          <StatusDot
+            status={friend.status}
+            size={10}
+            borderWidth={2}
+            borderColor="var(--sidebar-bg)"
+            bottom="-1px"
+            right="-1px"
+          />
         </div>
       {/each}
     </div>
@@ -40,7 +37,14 @@
       {#each offlineFriends as friend (friend.id)}
         <div class="sidebar-avatar offline" title={friend.displayName}>
           <img src={getAvatar(friend)} alt={friend.displayName} loading="lazy" />
-          <span class="dot" style="background: {getStatusColor(friend.status)}"></span>
+          <StatusDot
+            status={friend.status}
+            size={10}
+            borderWidth={2}
+            borderColor="var(--sidebar-bg)"
+            bottom="-1px"
+            right="-1px"
+          />
         </div>
       {/each}
     </div>
@@ -83,15 +87,5 @@
 
   .sidebar-avatar.offline img {
     filter: grayscale(60%) brightness(0.7);
-  }
-
-  .dot {
-    position: absolute;
-    bottom: -1px;
-    right: -1px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid var(--sidebar-bg);
   }
 </style>
