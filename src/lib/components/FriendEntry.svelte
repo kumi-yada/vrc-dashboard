@@ -1,26 +1,18 @@
 <script lang="ts">
   import type { Friend } from "../types";
   import StatusDot from "./StatusDot.svelte";
+  import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
     friend: Friend;
   }
 
   let { friend }: Props = $props();
-
-  function getAvatar(f: Friend): string {
-    return f.profilePicOverrideThumbnail || f.currentAvatarThumbnailImageUrl || "";
-  }
 </script>
 
 <div class="friend-entry">
   <div class="avatar-wrapper">
-    <img
-      src={getAvatar(friend)}
-      alt={friend.displayName}
-      class="avatar"
-      loading="lazy"
-    />
+    <UserAvatar friend={friend} />
     <StatusDot status={friend.status} />
   </div>
   <span class="name">{friend.displayName}</span>
@@ -39,14 +31,6 @@
   .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
-  }
-
-  .avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: var(--bg-input);
   }
 
   .name {

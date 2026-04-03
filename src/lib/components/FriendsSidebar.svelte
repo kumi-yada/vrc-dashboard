@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Friend } from "../types";
   import StatusDot from "./StatusDot.svelte";
+  import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
     privateFriends: Friend[];
@@ -8,10 +9,6 @@
   }
 
   let { privateFriends, offlineFriends }: Props = $props();
-
-  function getAvatar(f: Friend): string {
-    return f.profilePicOverrideThumbnail || f.currentAvatarThumbnailImageUrl || "";
-  }
 </script>
 
 <aside class="sidebar">
@@ -19,7 +16,7 @@
     <div class="sidebar-col private-col">
       {#each privateFriends as friend (friend.id)}
         <div class="sidebar-avatar" title={friend.displayName}>
-          <img src={getAvatar(friend)} alt={friend.displayName} loading="lazy" />
+          <UserAvatar friend={friend} size={40} radius="8px" />
           <StatusDot
             status={friend.status}
             size={10}
@@ -36,7 +33,7 @@
     <div class="sidebar-col offline-col">
       {#each offlineFriends as friend (friend.id)}
         <div class="sidebar-avatar offline" title={friend.displayName}>
-          <img src={getAvatar(friend)} alt={friend.displayName} loading="lazy" />
+          <UserAvatar friend={friend} size={40} radius="8px" grayscale={60} brightness={0.7} />
           <StatusDot
             status={friend.status}
             size={10}
@@ -75,17 +72,5 @@
   .sidebar-avatar {
     position: relative;
     flex-shrink: 0;
-  }
-
-  .sidebar-avatar img {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: var(--bg-input);
-  }
-
-  .sidebar-avatar.offline img {
-    filter: grayscale(60%) brightness(0.7);
   }
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { logout } from "../stores/auth.svelte";
 
   interface Props {
     activeTab: string;
@@ -13,11 +14,15 @@
     { id: "worlds", label: "Worlds", icon: "mdi:earth" },
     { id: "photos", label: "Photos", icon: "mdi:image-multiple" },
   ];
+
+  async function handleLogout() {
+    await logout();
+  }
 </script>
 
 <nav class="topbar">
   <div class="tabs">
-    {#each tabs as tab}
+    {#each tabs as tab (tab.id)}
       <button
         class="tab"
         class:active={activeTab === tab.id}
@@ -32,8 +37,8 @@
     <button class="icon-btn" title="Notifications">
       <Icon icon="mdi:bell-outline" width={22} />
     </button>
-    <button class="icon-btn" title="Profile">
-      <Icon icon="mdi:account" width={22} />
+    <button class="icon-btn" title="Logout" onclick={handleLogout}>
+      <Icon icon="mdi:logout" width={22} />
     </button>
   </div>
 </nav>
