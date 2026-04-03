@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Friend } from "../types";
+  import { Status, type Friend } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
@@ -12,15 +12,32 @@
   let { privateFriends, offlineFriends, activeFriendIds }: Props = $props();
 
   let sortedPrivateFriends = $derived.by(() => {
-    const isJustActive = (friend: Friend) =>
-      activeFriendIds.includes(friend.id);
+    const friendOrder = (friend: Friend) => {
+      switch (friend.status) {
+        case Status.JoinMe:
+          return 5;
+        case Status.Active:
+          return 4;
+        case Status.AskMe:
+          return 3;
+        case Status.Busy:
+          return 2;
+      }
+      if (activeFriendIds.includes(friend.id)) {
+        return 1;
+      }
+      return 0;
+    };
 
     return [...privateFriends].sort((left, right) => {
-      if (isJustActive(left) === isJustActive(right)) {
+      const leftOrder = friendOrder(left);
+      const rightOrder = friendOrder(right);
+
+      if (leftOrder === rightOrder) {
         return 0;
       }
 
-      return isJustActive(left) ? 1 : -1;
+      return leftOrder > rightOrder ? 1 : -1;
     });
   });
 </script>

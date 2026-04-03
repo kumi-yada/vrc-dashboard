@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import { logout, getAuth } from "../stores/auth.svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import StatusDot from "./StatusDot.svelte";
@@ -12,6 +13,11 @@
   let { activeTab, onTabChange }: Props = $props();
 
   const auth = getAuth();
+  const appWindow = getCurrentWindow();
+  const isDesktop =
+    typeof window !== "undefined" &&
+    "__TAURI_INTERNALS__" in
+      (window as Window & { __TAURI_INTERNALS__?: unknown });
   let showUserMenu = $state(false);
 
   const tabs = [
@@ -23,6 +29,21 @@
   async function handleLogout() {
     showUserMenu = false;
     await logout();
+  }
+
+  async function minimizeWindow() {
+    if (!isDesktop) return;
+    await appWindow.minimize();
+  }
+
+  async function toggleMaximizeWindow() {
+    if (!isDesktop) return;
+    await appWindow.toggleMaximize();
+  }
+
+  async function closeWindow() {
+    if (!isDesktop) return;
+    await appWindow.close();
   }
 
   function getTrustLevel(tags: string[]): string {
@@ -64,6 +85,9 @@
       </button>
     {/each}
   </div>
+
+  <div class="window-drag-region" data-tauri-drag-region></div>
+
   <div class="actions">
     <button class="icon-btn" title="Notifications">
       <Icon icon="mdi:bell-outline" width={22} />
@@ -87,7 +111,11 @@
 
         {#if showUserMenu}
           <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-          <div class="backdrop" onclick={() => (showUserMenu = false)} role="none"></div>
+          <div
+            class="backdrop"
+            onclick={() => (showUserMenu = false)}
+            role="none"
+          ></div>
           <div class="user-popup">
             <div class="popup-header">
               <div class="popup-avatar-wrap">
@@ -116,9 +144,15 @@
             {#if auth.user.statusDescription}
               <div class="popup-status-row">
                 <div class="status-dot-wrapper">
-                  <StatusDot status={auth.user.status} size={8} borderColor="var(--bg-secondary)" />
+                  <StatusDot
+                    status={auth.user.status}
+                    size={8}
+                    borderColor="var(--bg-secondary)"
+                  />
                 </div>
-                <span class="popup-status-text">{auth.user.statusDescription}</span>
+                <span class="popup-status-text"
+                  >{auth.user.statusDescription}</span
+                >
               </div>
             {/if}
 
@@ -130,7 +164,9 @@
 
             <div class="popup-stats">
               <div class="stat">
-                <span class="stat-value">{auth.user.onlineFriends?.length ?? 0}</span>
+                <span class="stat-value"
+                  >{auth.user.onlineFriends?.length ?? 0}</span
+                >
                 <span class="stat-label">Online</span>
               </div>
               <div class="stat-divider"></div>
@@ -141,7 +177,9 @@
               {#if auth.user.date_joined}
                 <div class="stat-divider"></div>
                 <div class="stat">
-                  <span class="stat-value stat-date">{formatDate(auth.user.date_joined)}</span>
+                  <span class="stat-value stat-date"
+                    >{formatDate(auth.user.date_joined)}</span
+                  >
                   <span class="stat-label">Joined</span>
                 </div>
               {/if}
@@ -170,6 +208,28 @@
         {/if}
       </div>
     {/if}
+
+    {#if isDesktop}
+      <div class="window-controls">
+        <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
+          <Icon icon="mdi:window-minimize" width={16} />
+        </button>
+        <button
+          class="window-btn"
+          title="Maximize"
+          onclick={toggleMaximizeWindow}
+        >
+          <Icon icon="mdi:window-maximize" width={14} />
+        </button>
+        <button
+          class="window-btn window-btn-close"
+          title="Close"
+          onclick={closeWindow}
+        >
+          <Icon icon="mdi:close" width={16} />
+        </button>
+      </div>
+    {/if}
   </div>
 </nav>
 
@@ -178,6 +238,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 0.75rem;
     background: var(--topbar-bg);
     padding: 0 1rem;
     height: 48px;
@@ -188,6 +249,12 @@
   .tabs {
     display: flex;
     gap: 0.25rem;
+  }
+
+  .window-drag-region {
+    flex: 1;
+    min-width: 4rem;
+    height: 100%;
   }
 
   .tab {
@@ -213,8 +280,14 @@
 
   .actions {
     display: flex;
-    gap: 0.25rem;
+    gap: 1rem;
     align-items: center;
+  }
+
+  .window-controls {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: 0.25rem;
   }
 
   .icon-btn {
@@ -231,6 +304,27 @@
   .icon-btn:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.05);
+  }
+
+  .window-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .window-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .window-btn-close:hover {
+    color: #fff;
+    background: rgba(239, 83, 80, 0.85);
   }
 
   /* Avatar button */
@@ -286,7 +380,11 @@
     align-items: center;
     gap: 0.75rem;
     padding: 1rem;
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(36, 52, 71, 0));
+    background: linear-gradient(
+      135deg,
+      rgba(76, 175, 80, 0.1),
+      rgba(36, 52, 71, 0)
+    );
   }
 
   .popup-avatar-wrap {

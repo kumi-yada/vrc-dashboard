@@ -79,6 +79,14 @@ export type InstanceVisibility =
   | "group"
   | "group+";
 
+export enum Status {
+    Offline = "offline",
+    Active = "active",
+    JoinMe = "join me",
+    AskMe = "ask me",
+    Busy = "busy",
+}
+
 export interface ParsedInstance {
   worldId: string;
   instancePart: string;
