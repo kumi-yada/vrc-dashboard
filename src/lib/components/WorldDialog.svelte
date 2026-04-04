@@ -193,6 +193,7 @@
     inset: 0;
     background: rgba(7, 10, 18, 0.7);
     backdrop-filter: blur(10px);
+    z-index: 50;
   }
 
   .dialog-shell {
@@ -202,6 +203,7 @@
     place-items: center;
     padding: 1.5rem;
     pointer-events: none;
+    z-index: 100;
   }
 
   .world-dialog {
