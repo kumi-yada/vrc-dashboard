@@ -98,7 +98,7 @@
   .world-preview {
     position: relative;
     width: 180px;
-    min-height: 140px;
+    min-height: 160px;
     flex-shrink: 0;
     padding: 0;
     text-align: left;
@@ -195,6 +195,6 @@
     min-width: 0;
     flex: 1;
     overflow-y: auto;
-    max-height: 200px;
+    max-height: 160px;
   }
 </style>
