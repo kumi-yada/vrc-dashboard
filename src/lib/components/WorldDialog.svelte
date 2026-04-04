@@ -1,73 +1,44 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
-  import { SUPPORTED_PLATFORMS, type SupportedPlatform, type WorldData } from "../types";
+  import {
+    SUPPORTED_PLATFORMS,
+    type InstanceGroup,
+    type SupportedPlatform,
+    type WorldData,
+  } from "../types";
   import PlatformMeta from "./PlatformMeta.svelte";
 
   interface Props {
     world: WorldData | null;
+    group?: InstanceGroup | null;
     onClose: () => void;
     loading?: boolean;
     error?: string | null;
   }
 
-  let { world, onClose, loading = false, error = null }: Props = $props();
+  let {
+    world,
+    group,
+    onClose,
+    loading = false,
+    error = null,
+  }: Props = $props();
 
   const imageUrl = $derived(world?.imageUrl ?? world?.thumbnailImageUrl ?? "");
   const platformList = $derived(
-    [...new Set(world?.unityPackages?.map((pkg) => pkg.platform) ?? [])]
-      .filter((platform): platform is SupportedPlatform => SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform))
+    [...new Set(world?.unityPackages?.map((pkg) => pkg.platform) ?? [])].filter(
+      (platform): platform is SupportedPlatform =>
+        SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform),
+    ),
   );
-  const statItems = $derived.by(() => {
-    if (!world) {
-      return [] as Array<{ icon: string; label: string; value: string }>;
-    }
-
-    const items = [
-      { icon: "mdi:account-group", label: "Capacity", value: `${world.capacity}` },
-      { icon: "mdi:heart-outline", label: "Favorites", value: `${world.favorites.toLocaleString()}` },
-      { icon: "mdi:walk", label: "Visits", value: `${world.visits.toLocaleString()}` }
-    ];
-
-    if (typeof world.occupants === "number") {
-      items.unshift({
-        icon: "mdi:account-multiple",
-        label: "Occupants",
-        value: `${world.occupants.toLocaleString()}`
-      });
-    }
-
-    return items;
-  });
-  const occupancyItems = $derived.by(() => {
-    if (!world) {
-      return [] as Array<{ label: string; value: string }>;
-    }
-
-    const items: Array<{ label: string; value: string }> = [];
-
-    if (typeof world.publicOccupants === "number") {
-      items.push({ label: "Public occupants", value: `${world.publicOccupants.toLocaleString()}` });
-    }
-
-    if (typeof world.privateOccupants === "number") {
-      items.push({ label: "Private occupants", value: `${world.privateOccupants.toLocaleString()}` });
-    }
-
-    if (world.recommendedCapacity) {
-      items.push({ label: "Recommended capacity", value: `${world.recommendedCapacity}` });
-    }
-
-    if (world.releaseStatus) {
-      items.push({ label: "Release status", value: world.releaseStatus });
-    }
-
-    return items;
-  });
   const publishedDate = $derived(
-    formatDate(world?.publicationDate && world?.publicationDate !== "none" ? world?.publicationDate : world?.created_at ?? "")
+    formatDate(
+      world?.publicationDate && world?.publicationDate !== "none"
+        ? world?.publicationDate
+        : (world?.created_at ?? ""),
+    ),
   );
-  const updatedDate = $derived(formatDate(world?.updated_at ?? ""));
   const instanceCount = $derived(world?.slimInstances?.length ?? 0);
 
   function formatDate(dateStr: string): string {
@@ -76,14 +47,16 @@
     return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
-      day: "numeric"
+      day: "numeric",
     });
   }
 
   async function handleWorldOpen() {
     if (!world?.id) return;
 
-    await openUrl(`https://vrchat.com/home/world/${encodeURIComponent(world.id)}`);
+    await openUrl(
+      `https://vrchat.com/home/world/${encodeURIComponent(world.id)}`,
+    );
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -91,7 +64,7 @@
       onClose();
     }
   }
-  </script>
+</script>
 
 <svelte:document onkeydown={handleKeydown} />
 
@@ -164,37 +137,25 @@
           </div>
         {/if}
 
-        <div class="stats-grid">
-          {#each statItems as stat (stat.label)}
-            <div class="stat-card">
-              <span class="stat-icon"><Icon icon={stat.icon} width={16} /></span>
-              <span class="stat-value">{stat.value}</span>
-              <span class="stat-label">{stat.label}</span>
+        {#if group}
+          <section class="instance-section">
+            <div class="detail-row">
+              <div class="detail-label">Owner</div>
+              <div class="detail-value">{group.ownerName ?? "—"}</div>
             </div>
-          {/each}
-        </div>
 
+            <div class="detail-row">
+              <div class="detail-label">Users</div>
+              <div class="detail-value">
+                {group.instance?.n_users ?? 0}/{group.instance?.capacity}
+              </div>
+            </div>
+          </section>
+        {/if}
         {#if world.description}
           <section class="section">
             <h3>About</h3>
             <p>{world.description}</p>
-          </section>
-        {/if}
-
-        {#if occupancyItems.length > 0}
-          <section class="section detail-grid">
-            {#each occupancyItems as item (item.label)}
-              <div class="detail-row">
-                <span class="detail-label">{item.label}</span>
-                <span class="detail-value">{item.value}</span>
-              </div>
-            {/each}
-            {#if updatedDate}
-              <div class="detail-row">
-                <span class="detail-label">Updated</span>
-                <span class="detail-value">{updatedDate}</span>
-              </div>
-            {/if}
           </section>
         {/if}
 
@@ -270,7 +231,9 @@
     border-radius: 999px;
     color: #fff;
     background: rgba(0, 0, 0, 0.28);
-    transition: background 0.15s, color 0.15s;
+    transition:
+      background 0.15s,
+      color 0.15s;
   }
 
   .close-btn:hover {
@@ -303,7 +266,11 @@
   .hero-scrim {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(6, 10, 20, 0.18), rgba(6, 10, 20, 0.9));
+    background: linear-gradient(
+      180deg,
+      rgba(6, 10, 20, 0.18),
+      rgba(6, 10, 20, 0.9)
+    );
   }
 
   .hero-content {
@@ -379,36 +346,9 @@
     background: rgba(239, 83, 80, 0.12);
   }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .stat-card {
-    display: grid;
-    gap: 0.35rem;
-    padding: 0.95rem;
-    border-radius: 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-  }
-
-  .stat-icon {
-    color: var(--accent);
-  }
-
-  .stat-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .instance-section {
+    display: flex;
+    gap: 1rem;
   }
 
   .section {
@@ -429,10 +369,6 @@
     color: var(--text-primary);
     line-height: 1.55;
     white-space: pre-wrap;
-  }
-
-  .detail-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .detail-row {

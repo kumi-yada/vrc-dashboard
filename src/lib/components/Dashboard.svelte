@@ -4,9 +4,18 @@
   import InstanceCard from "./InstanceCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import PhotosPage from "./PhotosPage.svelte";
-  import { getFriendsStore, fetchFriends, fetchMutualFriends } from "../stores/friends.svelte";
-  import { fetchUserProfile, fetchWorld, getAuth, refreshCurrentUser } from "../stores/auth.svelte";
-  import type { Friend, InstanceGroup, UserProfile, WorldData } from "../types";
+  import {
+    getFriendsStore,
+    fetchFriends,
+    fetchMutualFriends,
+  } from "../stores/friends.svelte";
+  import {
+    fetchUserProfile,
+    fetchWorld,
+    getAuth,
+    refreshCurrentUser,
+  } from "../stores/auth.svelte";
+  import type { InstanceGroup, UserProfile, WorldData } from "../types";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import WorldDialog from "./WorldDialog.svelte";
   import Icon from "@iconify/svelte";
@@ -24,6 +33,7 @@
   let profileDialogOpen = $state(false);
   let profileRequestToken = 0;
   let selectedWorld = $state<WorldData | null>(null);
+  let selectedGroup = $state<InstanceGroup | null>(null);
   let worldLoading = $state(false);
   let worldError = $state<string | null>(null);
   let worldDialogOpen = $state(false);
@@ -89,6 +99,7 @@
     worldLoading = false;
     worldError = null;
     selectedWorld = null;
+    selectedGroup = null;
   }
 
   async function handleFriendProfile(friend: UserProfile) {
@@ -101,17 +112,19 @@
 
     try {
       const profile = await fetchUserProfile(friend.id);
-      fetchMutualFriends(friend.id).then((mutuals) => {
-         if (requestToken !== profileRequestToken) {
-           return;
-         }
-         selectedMutualFriends = mutuals;
-       }).catch(() => {
-         if (requestToken !== profileRequestToken) {
-           return;
-         }
-         selectedMutualFriends = null;
-       });
+      fetchMutualFriends(friend.id)
+        .then((mutuals) => {
+          if (requestToken !== profileRequestToken) {
+            return;
+          }
+          selectedMutualFriends = mutuals;
+        })
+        .catch(() => {
+          if (requestToken !== profileRequestToken) {
+            return;
+          }
+          selectedMutualFriends = null;
+        });
 
       if (requestToken !== profileRequestToken) {
         return;
@@ -134,6 +147,7 @@
   async function handleWorldOpen(group: InstanceGroup) {
     worldDialogOpen = true;
     selectedWorld = group.instance?.world ?? null;
+    selectedGroup = group;
     worldLoading = true;
     worldError = null;
 
@@ -201,10 +215,16 @@
         disabled={activeTab === "friends" && friends.loading}
         title="Refresh"
       >
-        <Icon icon="mdi:refresh" width={20} class={activeTab === "friends" && friends.loading ? "spinning" : ""} />
+        <Icon
+          icon="mdi:refresh"
+          width={20}
+          class={activeTab === "friends" && friends.loading ? "spinning" : ""}
+        />
       </button>
       {#if activeTab === "friends"}
-        <span class="online-count">{friends.onlineCount}/{friends.totalCount} Online</span>
+        <span class="online-count"
+          >{friends.onlineCount}/{friends.totalCount} Online</span
+        >
       {:else if activeTab === "photos"}
         <span class="online-count">Signed in as {auth.user?.displayName}</span>
       {/if}
@@ -277,6 +297,7 @@
   {#if worldDialogOpen}
     <WorldDialog
       world={selectedWorld}
+      group={selectedGroup}
       loading={worldLoading}
       error={worldError}
       onClose={closeWorldDialog}
@@ -419,7 +440,11 @@
   }
 
   @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 </style>

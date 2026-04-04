@@ -45,7 +45,6 @@
   <button
     class="world-preview"
     type="button"
-    title={`Open ${worldName} details`}
     onclick={handleWorldOpen}
   >
     {#if supportedPlatforms.length}
