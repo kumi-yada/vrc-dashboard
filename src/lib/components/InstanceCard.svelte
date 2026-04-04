@@ -1,25 +1,10 @@
 <script lang="ts">
-  import type { Friend, InstanceGroup, InstancePlatforms } from "../types";
+  import { PLATFORM_META, SUPPORTED_PLATFORMS, type Friend, type InstanceGroup, type InstancePlatforms, type SupportedPlatform } from "../types";
   import { visibilityLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
 
-  type SupportedPlatform = "standalonewindows" | "android" | "ios";
-
-  const PLATFORM_META: Record<SupportedPlatform, { icon: string; label: string }> = {
-    standalonewindows: {
-      icon: "mdi:microsoft-windows",
-      label: "Windows"
-    },
-    android: {
-      icon: "mdi:android",
-      label: "Android"
-    },
-    ios: {
-      icon: "mdi:apple-ios",
-      label: "iOS"
-    }
-  };
+  import PlatformMeta from "./PlatformMeta.svelte";
 
   function getSupportedPlatforms(group: InstanceGroup): SupportedPlatform[] {
     const worldPlatforms = group.instance?.world?.unityPackages?.map((pkg) => pkg.platform);
@@ -29,7 +14,7 @@
     }
 
     return [...new Set(worldPlatforms)]
-      .filter((platform): platform is SupportedPlatform => platform in PLATFORM_META);
+      .filter((platform): platform is SupportedPlatform => SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform));
   }
 
   interface Props {
@@ -50,9 +35,6 @@
   const capacity = $derived(group.instance?.capacity ?? 0);
   const visLabel = $derived(visibilityLabel(group.parsed.visibility));
   const supportedPlatforms = $derived(getSupportedPlatforms(group));
-  const supportedPlatformsLabel = $derived(
-    supportedPlatforms.map((platform) => PLATFORM_META[platform].label).join(", ")
-  );
 
   function handleWorldOpen() {
     onWorldOpen(group);
@@ -67,11 +49,7 @@
     onclick={handleWorldOpen}
   >
     {#if supportedPlatforms.length}
-      <div class="platform-badge" title={`Supported on ${supportedPlatformsLabel}`}>
-        {#each supportedPlatforms as platform (platform)}
-          <Icon icon={PLATFORM_META[platform].icon} width={14} />
-        {/each}
-      </div>
+      <PlatformMeta platforms={supportedPlatforms} />
     {/if}
     {#if thumbnailUrl}
       <img src={thumbnailUrl} alt={worldName} class="world-thumb" loading="lazy" />
@@ -137,21 +115,6 @@
   .world-preview:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -2px;
-  }
-
-  .platform-badge {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.4rem;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.2rem 0.35rem;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    backdrop-filter: blur(6px);
   }
 
   .world-thumb {

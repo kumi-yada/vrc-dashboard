@@ -141,11 +141,11 @@ export type InstanceVisibility =
   | "group+";
 
 export enum Status {
-    Offline = "offline",
-    Active = "active",
-    JoinMe = "join me",
-    AskMe = "ask me",
-    Busy = "busy",
+  Offline = "offline",
+  Active = "active",
+  JoinMe = "join me",
+  AskMe = "ask me",
+  Busy = "busy",
 }
 
 export interface ParsedInstance {
@@ -163,3 +163,18 @@ export interface InstanceGroup {
   ownerName: string;
   friends: Friend[];
 }
+
+export type SupportedPlatform = "standalonewindows" | "android" | "ios";
+
+export const PLATFORM_META: Record<
+  SupportedPlatform,
+  { icon: string; label: string }
+> = {
+  standalonewindows: { icon: "mdi:microsoft-windows", label: "Windows" },
+  android: { icon: "mdi:android", label: "Android" },
+  ios: { icon: "mdi:apple-ios", label: "iOS" },
+};
+
+export const SUPPORTED_PLATFORMS = Object.keys(
+  PLATFORM_META,
+) as SupportedPlatform[];

@@ -1,24 +1,8 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
-  import type { WorldData } from "../types";
-
-  type SupportedPlatform = "standalonewindows" | "android" | "ios";
-
-  const PLATFORM_META: Record<SupportedPlatform, { icon: string; label: string }> = {
-    standalonewindows: {
-      icon: "mdi:microsoft-windows",
-      label: "Windows"
-    },
-    android: {
-      icon: "mdi:android",
-      label: "Android"
-    },
-    ios: {
-      icon: "mdi:apple-ios",
-      label: "iOS"
-    }
-  };
+  import { SUPPORTED_PLATFORMS, type SupportedPlatform, type WorldData } from "../types";
+  import PlatformMeta from "./PlatformMeta.svelte";
 
   interface Props {
     world: WorldData | null;
@@ -32,7 +16,7 @@
   const imageUrl = $derived(world?.imageUrl ?? world?.thumbnailImageUrl ?? "");
   const platformList = $derived(
     [...new Set(world?.unityPackages?.map((pkg) => pkg.platform) ?? [])]
-      .filter((platform): platform is SupportedPlatform => platform in PLATFORM_META)
+      .filter((platform): platform is SupportedPlatform => SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform))
   );
   const statItems = $derived.by(() => {
     if (!world) {
@@ -138,14 +122,7 @@
           <div class="eyebrow-row">
             <span class="eyebrow">World</span>
             {#if platformList.length > 0}
-              <div class="platform-list" title="Supported platforms">
-                {#each platformList as platform (platform)}
-                  <span class="platform-pill">
-                    <Icon icon={PLATFORM_META[platform].icon} width={14} />
-                    {PLATFORM_META[platform].label}
-                  </span>
-                {/each}
-              </div>
+              <PlatformMeta platforms={platformList} showLabels={true} />
             {/if}
           </div>
 
@@ -354,24 +331,6 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-  }
-
-  .platform-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.4rem;
-  }
-
-  .platform-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-height: 28px;
-    padding: 0 0.65rem;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.32);
-    font-size: 0.78rem;
   }
 
   .world-title {
