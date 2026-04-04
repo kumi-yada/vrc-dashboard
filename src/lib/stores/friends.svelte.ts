@@ -62,7 +62,7 @@ export function getFriendsStore() {
   };
 }
 
-export async function fetchFriends(): Promise<void> {
+export async function fetchFriends(reload = false): Promise<void> {
   loading = true;
   error = null;
   const auth = getAuth();
@@ -128,7 +128,7 @@ export async function fetchFriends(): Promise<void> {
       const group: InstanceGroup = { location, parsed, instance: null, ownerName, friends };
       groups.push(group);
 
-      if (instanceCache.has(location)) {
+      if (instanceCache.has(location) && !reload) {
         group.instance = instanceCache.get(location)!;
       } else {
         fetchPromises.push(

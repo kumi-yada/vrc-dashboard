@@ -42,7 +42,7 @@
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
 
-    refreshPromise = Promise.all([refreshCurrentUser(), fetchFriends()])
+    refreshPromise = Promise.all([refreshCurrentUser(), fetchFriends(true)])
       .then(() => undefined)
       .finally(() => {
         refreshPromise = null;
