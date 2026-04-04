@@ -1,7 +1,15 @@
 <script lang="ts">
+  import Icon from "@iconify/svelte";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import { login, getAuth } from "../stores/auth.svelte";
 
   const auth = getAuth();
+  const appWindow = getCurrentWindow();
+  const isDesktop =
+    typeof window !== "undefined" &&
+    "__TAURI_INTERNALS__" in
+      (window as Window & { __TAURI_INTERNALS__?: unknown });
+
   let tokenInput = $state("");
 
   async function handleSubmit(e: Event) {
@@ -9,7 +17,39 @@
     if (!tokenInput.trim()) return;
     await login(tokenInput.trim());
   }
+
+  async function minimizeWindow() {
+    if (!isDesktop) return;
+    await appWindow.minimize();
+  }
+
+  async function toggleMaximizeWindow() {
+    if (!isDesktop) return;
+    await appWindow.toggleMaximize();
+  }
+
+  async function closeWindow() {
+    if (!isDesktop) return;
+    await appWindow.close();
+  }
 </script>
+
+<nav class="topbar small">
+  <div class="window-drag-region" data-tauri-drag-region></div>
+  {#if isDesktop}
+    <div class="window-controls">
+      <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
+        <Icon icon="mdi:window-minimize" width={16} />
+      </button>
+      <button class="window-btn" title="Maximize" onclick={toggleMaximizeWindow}>
+        <Icon icon="mdi:window-maximize" width={14} />
+      </button>
+      <button class="window-btn window-btn-close" title="Close" onclick={closeWindow}>
+        <Icon icon="mdi:close" width={16} />
+      </button>
+    </div>
+  {/if}
+</nav>
 
 <div class="login-container">
   <div class="login-card">
@@ -59,6 +99,56 @@
 </div>
 
 <style>
+  .topbar {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 0.5rem;
+    gap: 0.75rem;
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .topbar.small {
+    height: 36px;
+  }
+
+  .window-drag-region {
+    flex: 1;
+    min-width: 4rem;
+    height: 100%;
+  }
+
+  .window-controls {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: 0.25rem;
+  }
+
+  .window-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    background: transparent;
+    border: none;
+  }
+
+  .window-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .window-btn-close:hover {
+    color: #fff;
+    background: rgba(239, 83, 80, 0.85);
+  }
+
   .login-container {
     display: flex;
     align-items: center;
