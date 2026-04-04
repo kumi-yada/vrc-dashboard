@@ -51,6 +51,11 @@ jobs:
       - name: install frontend dependencies
         run: npm install
 
+      - name: update Cargo.toml version from tag
+        run: npx bun update-version.js
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
