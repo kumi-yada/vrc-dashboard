@@ -34,8 +34,6 @@
   const canLogout = $derived(Boolean(user && onLogout));
   const mutuals: any[] = $derived(mutualFriends ?? []);
 
-  $inspect(mutualFriends, "user");
-
   function getTrustLevel(tags: string[]): string {
     if (tags.includes("system_trust_veteran")) return "Trusted";
     if (tags.includes("system_trust_trusted")) return "Known";

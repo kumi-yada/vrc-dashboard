@@ -14,9 +14,9 @@ jobs:
       matrix:
         include:
           - platform: 'ubuntu-24.04'
-            args: '-d'
-          # - platform: 'windows-latest'
-          #   args: '-d'
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -56,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseAssetNamePattern: 'src-tauri/target/debug/bundle/*'
+          projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
           releaseBody: 'See the assets below to download and install this version.'
           releaseDraft: true

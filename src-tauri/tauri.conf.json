@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' https://api.vrchat.cloud https://assets.vrchat.com asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
+      "csp": "default-src 'self'; img-src 'self' https://api.vrchat.cloud https://assets.vrchat.com https://files.vrchat.cloud asset: http://asset.localhost; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost https://api.iconify.design"
     }
   },
   "bundle": {
