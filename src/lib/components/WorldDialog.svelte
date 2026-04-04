@@ -348,6 +348,7 @@
   .instance-section {
     display: flex;
     gap: 1rem;
+    font-size: 0.8rem;
   }
 
   .section {
@@ -374,10 +375,6 @@
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.8rem 0.95rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border);
   }
 
   .detail-label {
@@ -449,22 +446,9 @@
       flex-direction: column;
     }
 
-    .platform-list {
-      justify-content: flex-start;
-    }
-
     .dialog-body {
       max-height: calc(100vh - 220px - 1.5rem);
       padding: 1rem;
-    }
-
-    .detail-row {
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-
-    .detail-value {
-      text-align: left;
     }
   }
 </style>
