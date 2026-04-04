@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Status, type Friend } from "../types";
+  import FriendEntry from "./FriendEntry.svelte";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
@@ -52,46 +53,23 @@
   {#if sortedPrivateFriends.length > 0}
     <div class="sidebar-col private-col">
       {#each sortedPrivateFriends as friend (friend.id)}
-        <button
-          class="sidebar-avatar"
-          type="button"
-          title={`Open ${friend.displayName} profile`}
-          onclick={() => onFriendProfile(friend)}
-        >
-          <UserAvatar
-            {friend}
-            brightness={friend.location === "offline" ? 0.5 : 1}
-          />
-          <StatusDot
-            status={friend.status}
-            active={friend.location === "offline"}
-            borderWidth={2}
-            borderColor="var(--sidebar-bg)"
-            bottom="-1px"
-            right="-1px"
-          />
-        </button>
+        <FriendEntry
+          {friend}
+          iconOnly
+          onProfileClick={onFriendProfile}
+        />
       {/each}
     </div>
   {/if}
   {#if offlineFriends.length > 0}
     <div class="sidebar-col offline-col">
       {#each offlineFriends as friend (friend.id)}
-        <button
-          class="sidebar-avatar offline"
-          type="button"
-          title={`Open ${friend.displayName} profile`}
-          onclick={() => onFriendProfile(friend)}
-        >
-          <UserAvatar {friend} grayscale={100} brightness={0.5} />
-          <StatusDot
-            status={friend.status}
-            borderWidth={2}
-            borderColor="var(--sidebar-bg)"
-            bottom="-1px"
-            right="-1px"
-          />
-        </button>
+        <FriendEntry
+          {friend}
+          iconOnly
+          grayscale={100}
+          onProfileClick={onFriendProfile}
+        />
       {/each}
     </div>
   {/if}

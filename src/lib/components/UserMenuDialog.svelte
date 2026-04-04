@@ -115,9 +115,12 @@
         <div class="popup-identity">
           <h2 class="popup-displayname" id="user-menu-title">
             {user.displayName}
+            {#if user.pronouns}
+              <span class="popup-pronouns">{user.pronouns}</span>
+            {/if}
           </h2>
-          {#if user.pronouns}
-            <span class="popup-pronouns">{user.pronouns}</span>
+          {#if user.statusDescription}
+            <span class="popup-pronouns">{user.statusDescription}</span>
           {/if}
           <span
             class="popup-trust"
@@ -142,26 +145,13 @@
         </div>
       {/if}
 
-      {#if user.statusDescription}
-        <div class="popup-status-row">
-          <div class="status-dot-wrapper">
-            <StatusDot
-              status={user.status}
-              size={8}
-              borderColor="var(--bg-secondary)"
-            />
-          </div>
-          <span class="popup-status-text">{user.statusDescription}</span>
-        </div>
-      {/if}
-
       {#if user.bio}
         <div class="popup-bio">
           <p>{user.bio}</p>
         </div>
       {/if}
 
-      {#if hasFriendCounts || user.date_joined}
+      {#if hasFriendCounts || user.date_joined || user.last_activity}
         <div class="popup-stats">
           {#if Array.isArray(user.onlineFriends)}
             <div class="stat">
@@ -169,7 +159,7 @@
               <span class="stat-label">Online</span>
             </div>
           {/if}
-          {#if Array.isArray(user.onlineFriends) && (Array.isArray(user.friends) || user.date_joined)}
+          {#if Array.isArray(user.onlineFriends) && (Array.isArray(user.friends) || user.date_joined || user.last_activity)}
             <div class="stat-divider"></div>
           {/if}
           {#if Array.isArray(user.friends)}
@@ -178,7 +168,7 @@
               <span class="stat-label">Friends</span>
             </div>
           {/if}
-          {#if Array.isArray(user.friends) && user.date_joined}
+          {#if Array.isArray(user.friends) && (user.date_joined || user.last_activity)}
             <div class="stat-divider"></div>
           {/if}
           {#if user.date_joined}
@@ -187,6 +177,15 @@
                 >{formatDate(user.date_joined)}</span
               >
               <span class="stat-label">Joined</span>
+            </div>
+          {/if}
+          {#if user.last_activity}
+            <div class="stat-divider"></div>
+            <div class="stat" title={new Date(user.last_activity).toLocaleString()}>
+              <span class="stat-value stat-date"
+                >{formatDate(user.last_activity)}</span
+              >
+              <span class="stat-label">Last Active</span>
             </div>
           {/if}
         </div>

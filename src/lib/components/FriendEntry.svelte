@@ -1,34 +1,21 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import type { Friend } from "../types";
+  import { PLATFORM_META, type Friend, type SupportedPlatform } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
-  type MobilePlatform = "android" | "ios";
-
-  const MOBILE_PLATFORM_META: Record<MobilePlatform, { icon: string; label: string }> = {
-    android: {
-      icon: "mdi:android",
-      label: "Android"
-    },
-    ios: {
-      icon: "mdi:apple-ios",
-      label: "iOS"
-    }
-  };
-
-  function getMobilePlatform(friend: Friend): MobilePlatform | null {
-    const platform = friend.platform ?? friend.last_platform;
-
-    return platform === "android" || platform === "ios" ? platform : null;
+  function getMobilePlatform(friend: Friend): SupportedPlatform | null {
+    return (friend.platform ?? friend.last_platform) as SupportedPlatform;
   }
 
   interface Props {
     friend: Friend;
+    grayscale?: number;
+    iconOnly?: boolean;
     onProfileClick: (friend: Friend) => void;
   }
 
-  let { friend, onProfileClick }: Props = $props();
+  let { friend, grayscale = 0, iconOnly = false, onProfileClick }: Props = $props();
   const mobilePlatform = $derived(getMobilePlatform(friend));
 </script>
 
@@ -39,17 +26,24 @@
     title={`Open ${friend.displayName} profile`}
     onclick={() => onProfileClick(friend)}
   >
-    <UserAvatar friend={friend} />
-    <StatusDot status={friend.status} />
+    <UserAvatar {friend} grayscale={grayscale} brightness={friend.location === "offline" ? 0.5 : 1} />
+    <StatusDot status={friend.status} active={friend.location === "offline"} />
   </button>
-  <div class="details">
-    <span class="name">{friend.displayName}</span>
-    {#if mobilePlatform}
-      <span class="platform-icon" title={MOBILE_PLATFORM_META[mobilePlatform].label}>
-        <Icon icon={MOBILE_PLATFORM_META[mobilePlatform].icon} width={14} />
+  {#if !iconOnly}
+    <div class="details">
+      <span class="name">
+        {friend.displayName}
+        {#if friend.statusDescription}
+          <span class="description">{friend.statusDescription}</span>
+        {/if}
       </span>
-    {/if}
-  </div>
+      {#if mobilePlatform}
+        <span class="platform-icon" title={PLATFORM_META[mobilePlatform].label}>
+          <Icon icon={PLATFORM_META[mobilePlatform].icon} width={14} />
+        </span>
+      {/if}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -79,13 +73,14 @@
 
   .details {
     display: flex;
-    align-items: flex-end;
     gap: 0.35rem;
     min-width: 0;
     flex: 1;
   }
 
   .name {
+    display: flex;
+    flex-direction: column;
     font-size: 0.8rem;
     color: var(--text-primary);
     white-space: nowrap;
@@ -93,6 +88,11 @@
     text-overflow: ellipsis;
     min-width: 0;
     flex: 1;
+  }
+
+  .description {
+    font-size: 0.7rem;
+    color: var(--text-muted);
   }
 
   .platform-icon {

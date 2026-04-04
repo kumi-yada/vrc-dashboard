@@ -18,6 +18,7 @@ export interface UserProfile {
   bio?: string;
   pronouns?: string;
   date_joined?: string;
+  last_activity?: string;
   tags: string[];
   badges?: Badge[];
   friends?: string[];

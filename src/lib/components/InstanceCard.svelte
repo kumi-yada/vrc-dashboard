@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PLATFORM_META, SUPPORTED_PLATFORMS, type Friend, type InstanceGroup, type InstancePlatforms, type SupportedPlatform } from "../types";
+  import { SUPPORTED_PLATFORMS, type Friend, type InstanceGroup, type InstancePlatforms, type SupportedPlatform } from "../types";
   import { visibilityLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
