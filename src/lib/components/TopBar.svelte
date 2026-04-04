@@ -23,8 +23,8 @@
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
-    { id: "worlds", label: "Worlds", icon: "mdi:earth" },
     { id: "photos", label: "Prints", icon: "mdi:image-multiple" },
+    { id: "worlds", label: "Worlds", icon: "mdi:earth", disabled: true },
   ];
 
   async function handleLogout() {
@@ -245,7 +245,6 @@
     position: absolute;
     right: 0;
     top: calc(100% + 8px);
-    z-index: 40;
   }
 
   .popup-card {

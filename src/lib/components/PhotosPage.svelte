@@ -356,7 +356,6 @@
     align-items: center;
     justify-content: center;
     background: rgba(0, 0, 0, 0.6);
-    z-index: 1200;
     padding: 1.5rem;
   }
 

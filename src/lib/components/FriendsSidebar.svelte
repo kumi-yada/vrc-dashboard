@@ -1,8 +1,6 @@
 <script lang="ts">
   import { Status, type Friend } from "../types";
   import FriendEntry from "./FriendEntry.svelte";
-  import StatusDot from "./StatusDot.svelte";
-  import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
     privateFriends: Friend[];
@@ -17,6 +15,9 @@
     activeFriendIds,
     onFriendProfile,
   }: Props = $props();
+
+  let privateShowNames = $state(false);
+  let offlineShowNames = $state(false);
 
   let sortedPrivateFriends = $derived.by(() => {
     const friendOrder = (friend: Friend) => {
@@ -51,22 +52,46 @@
 
 <aside class="sidebar">
   {#if sortedPrivateFriends.length > 0}
-    <div class="sidebar-col private-col">
+    <div
+      class="sidebar-col private-col"
+    >
+      <button
+        class="toggle-btn"
+        onclick={() => (privateShowNames = !privateShowNames)}
+        aria-pressed={privateShowNames}
+        aria-label={privateShowNames ? "Hide names" : "Show names"}
+        title={privateShowNames ? "Hide names" : "Show names"}
+      >
+        {#if privateShowNames}Hide{:else}Show{/if}
+      </button>
+
       {#each sortedPrivateFriends as friend (friend.id)}
         <FriendEntry
           {friend}
-          iconOnly
+          iconOnly={!privateShowNames}
           onProfileClick={onFriendProfile}
         />
       {/each}
     </div>
   {/if}
   {#if offlineFriends.length > 0}
-    <div class="sidebar-col offline-col">
+    <div
+      class="sidebar-col offline-col"
+    >
+      <button
+        class="toggle-btn"
+        onclick={() => (offlineShowNames = !offlineShowNames)}
+        aria-pressed={offlineShowNames}
+        aria-label={offlineShowNames ? "Hide names" : "Show names"}
+        title={offlineShowNames ? "Hide names" : "Show names"}
+      >
+        {#if offlineShowNames}Hide{:else}Show{/if}
+      </button>
+
       {#each offlineFriends as friend (friend.id)}
         <FriendEntry
           {friend}
-          iconOnly
+          iconOnly={!offlineShowNames}
           grayscale={100}
           onProfileClick={onFriendProfile}
         />
@@ -87,6 +112,7 @@
 
   .sidebar-col {
     display: flex;
+    position: relative;
     border-left: 1px solid var(--border);
     padding: 0.5rem 0.35rem;
     flex-direction: column;
@@ -96,16 +122,25 @@
     padding-right: 2px;
   }
 
-  .sidebar-avatar {
-    position: relative;
-    flex-shrink: 0;
-    padding: 0;
-    border-radius: 12px;
+  .toggle-btn {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.15rem 0.45rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    line-height: 1;
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 10;
+    opacity: 0;
   }
 
-  .sidebar-avatar:hover {
-    transform: translateY(-1px);
+  .sidebar-col:hover .toggle-btn {
+    opacity: 1;
   }
 </style>

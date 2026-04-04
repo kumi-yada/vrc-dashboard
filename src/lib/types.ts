@@ -165,7 +165,7 @@ export interface InstanceGroup {
   friends: Friend[];
 }
 
-export type SupportedPlatform = "standalonewindows" | "android" | "ios";
+export type SupportedPlatform = "standalonewindows" | "android" | "ios" | "web";
 
 export const PLATFORM_META: Record<
   SupportedPlatform,
@@ -174,6 +174,7 @@ export const PLATFORM_META: Record<
   standalonewindows: { icon: "mdi:microsoft-windows", label: "Windows" },
   android: { icon: "mdi:android", label: "Android" },
   ios: { icon: "mdi:apple-ios", label: "iOS" },
+  web: { icon: "mdi:web", label: "Web" },
 };
 
 export const SUPPORTED_PLATFORMS = Object.keys(
