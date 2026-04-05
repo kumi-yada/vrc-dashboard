@@ -4,6 +4,7 @@
   import type { UserProfile } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
+  import { formatRelative } from "date-fns";
 
   interface Props {
     user: UserProfile | null;
@@ -183,7 +184,7 @@
             <div class="stat-divider"></div>
             <div class="stat" title={new Date(user.last_activity).toLocaleString()}>
               <span class="stat-value stat-date"
-                >{formatDate(user.last_activity)}</span
+                >{formatRelative(new Date(user.last_activity), new Date())}</span
               >
               <span class="stat-label">Last Active</span>
             </div>
