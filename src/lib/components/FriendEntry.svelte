@@ -15,8 +15,13 @@
     onProfileClick: (friend: Friend) => void;
   }
 
-  let { friend, grayscale = 0, iconOnly = false, onProfileClick }: Props = $props();
-  const mobilePlatform = $derived(getMobilePlatform(friend));
+  let {
+    friend,
+    grayscale = 0,
+    iconOnly = false,
+    onProfileClick,
+  }: Props = $props();
+  const platform = $derived(getMobilePlatform(friend));
 </script>
 
 <div class="friend-entry">
@@ -26,7 +31,11 @@
     title={`Open ${friend.displayName} profile`}
     onclick={() => onProfileClick(friend)}
   >
-    <UserAvatar {friend} grayscale={grayscale} brightness={friend.location === "offline" ? 0.5 : 1} />
+    <UserAvatar
+      {friend}
+      {grayscale}
+      brightness={friend.location === "offline" ? 0.5 : 1}
+    />
     <StatusDot status={friend.status} active={friend.location === "offline"} />
   </button>
   {#if !iconOnly}
@@ -37,9 +46,10 @@
           <span class="description">{friend.statusDescription}</span>
         {/if}
       </span>
-      {#if mobilePlatform}
-        <span class="platform-icon" title={PLATFORM_META[mobilePlatform].label}>
-          <Icon icon={PLATFORM_META[mobilePlatform].icon} width={14} />
+      {#if platform}
+        {@const platformMeta = PLATFORM_META[platform]}
+        <span class="platform-icon" title={platformMeta?.label ?? platform}>
+          <Icon icon={platformMeta?.icon ?? 'mdi:question-mark-circle'} width={14} />
         </span>
       {/if}
     </div>
