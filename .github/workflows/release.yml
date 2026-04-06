@@ -59,6 +59,11 @@ jobs:
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
 
+      - id: changelog
+        uses: kuma-gee/action-godot/changelog@main
+        with:
+          latest-tag: ${{ github.ref_name }}
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -66,7 +71,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
-          releaseBody: 'See the assets below to download and install this version.'
+          releaseBody:  ${{ steps.changelog.outputs.changelog }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
