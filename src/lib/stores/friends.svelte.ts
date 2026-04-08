@@ -73,7 +73,7 @@ export async function fetchFriends(reload = false): Promise<void> {
       invoke<Friend[]>("get_friends", { offline: true }),
     ]);
 
-    onlineFriends = onlineResult;
+    onlineFriends = onlineResult.filter(f => f.location !== "offline");
     offlineFriends = offlineResult;
 
     // Categorize online friends

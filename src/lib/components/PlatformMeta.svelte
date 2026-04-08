@@ -32,7 +32,7 @@
   .platform-list {
     position: absolute;
     top: 0.4rem;
-    right: 0.4rem;
+    left: 0.4rem;
     display: flex;
     align-items: center;
     gap: 0.25rem;

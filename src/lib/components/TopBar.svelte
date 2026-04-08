@@ -148,7 +148,7 @@
 
   .window-drag-region {
     flex: 1;
-    min-width: 4rem;
+    min-width: 3rem;
     height: 100%;
   }
 

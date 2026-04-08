@@ -39,6 +39,13 @@
   let worldDialogOpen = $state(false);
   let worldRequestToken = 0;
 
+  let onlineFriends = $derived(() => auth.user?.onlineFriends.length ?? 0);
+  let activeFriends = $derived(() => auth.user?.activeFriends.length ?? 0);
+  let offlineFriends = $derived(() => auth.user?.offlineFriends.length ?? 0);
+  let totalFriends = $derived(
+    () => activeFriends() + offlineFriends() + onlineFriends(),
+  );
+
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
 
@@ -223,7 +230,7 @@
       </button>
       {#if activeTab === "friends"}
         <span class="online-count"
-          >{friends.onlineCount}/{friends.totalCount} Online</span
+          >{onlineFriends()}/{totalFriends()} Online</span
         >
       {:else if activeTab === "photos"}
         <span class="online-count">Signed in as {auth.user?.displayName}</span>
@@ -404,6 +411,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 0.75rem;
+  }
+
+  @media (max-width: 560px) {
+    .instances-grid {
+      grid-template-columns: minmax(240px, 1fr);
+    }
   }
 
   .loading-state,

@@ -88,7 +88,6 @@
     border-radius: 10px;
     overflow: hidden;
     transition: background 0.2s;
-    min-width: 0;
   }
 
   .instance-card:hover {
@@ -197,4 +196,16 @@
     overflow-y: auto;
     max-height: 160px;
   }
+
+  @media (max-width: 560px) {
+    .instance-card {
+      flex-direction: column;
+    }
+
+    .world-preview {
+      width: 100%;
+      height: 60px;
+    }
+  }
+
 </style>

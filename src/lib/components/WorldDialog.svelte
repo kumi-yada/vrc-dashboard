@@ -91,12 +91,12 @@
         style:background-image={imageUrl ? `url(${imageUrl})` : undefined}
       >
         <div class="hero-scrim"></div>
+        {#if platformList.length > 0}
+          <PlatformMeta platforms={platformList} showLabels={true} />
+        {/if}
         <div class="hero-content">
           <div class="eyebrow-row">
             <span class="eyebrow">World</span>
-            {#if platformList.length > 0}
-              <PlatformMeta platforms={platformList} showLabels={true} />
-            {/if}
           </div>
 
           <h2 class="world-title" id="world-dialog-title">{world.name}</h2>
