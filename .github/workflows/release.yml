@@ -64,7 +64,8 @@ jobs:
         with:
           latest-tag: ${{ github.ref_name }}
 
-      - uses: tauri-apps/tauri-action@v1
+      # v1 not released yet, even though it's documented !?!?!?
+      - uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -133,7 +134,7 @@ jobs:
         with:
           latest-tag: ${{ github.ref_name }}
 
-      - uses: tauri-apps/tauri-action@v1
+      - uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
