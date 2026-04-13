@@ -23,8 +23,8 @@
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
+    { id: "worlds", label: "Worlds", icon: "mdi:earth" },
     { id: "photos", label: "Prints", icon: "mdi:image-multiple" },
-    { id: "worlds", label: "Worlds", icon: "mdi:earth", disabled: true },
   ];
 
   async function handleLogout() {

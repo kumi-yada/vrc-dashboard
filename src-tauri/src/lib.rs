@@ -24,6 +24,7 @@ pub fn run() {
             commands::get_instance,
             commands::get_world,
             commands::get_own_prints,
+            commands::search_worlds,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {

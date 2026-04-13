@@ -99,6 +99,17 @@ export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {
   return invoke<PrintData[]>("get_own_prints", { userId });
 }
 
+export async function searchWorlds(
+  query: string,
+  tags: string[],
+  offset: number,
+  n: number,
+  sortField: string = "popularity",
+  order: "ascending" | "descending" = "descending",
+): Promise<WorldData[]> {
+  return invoke<WorldData[]>("search_worlds", { query, tags, offset, n, sortField, order });
+}
+
 export async function login(authToken: string): Promise<boolean> {
   loading = true;
   error = null;

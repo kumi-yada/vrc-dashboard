@@ -275,3 +275,51 @@ pub async fn get_own_prints(
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn search_worlds(
+    state: State<'_, AuthState>,
+    query: String,
+    tags: Vec<String>,
+    offset: u32,
+    n: u32,
+    sort_field: Option<String>,
+    order: Option<String>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let sort = sort_field.unwrap_or_else(|| "popularity".to_string());
+    let order_val = order.unwrap_or_else(|| "descending".to_string());
+
+    let client = reqwest::Client::new();
+    let mut params: Vec<(&str, String)> = vec![
+        ("n", n.to_string()),
+        ("offset", offset.to_string()),
+        ("sort", sort),
+        ("order", order_val),
+        ("releaseStatus", "public".to_string()),
+    ];
+    if !query.is_empty() {
+        params.push(("search", query));
+    }
+    for tag in &tags {
+        params.push(("tag", tag.clone()));
+    }
+
+    let resp = client
+        .get(format!("{}/worlds", BASE_URL))
+        .headers(build_headers(&token))
+        .query(&params)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
