@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { searchWorlds, fetchWorld } from "../stores/auth.svelte";
+  import { getFavorites } from "../stores/favorites.svelte";
   import type { WorldData } from "../types";
   import WorldCard from "./WorldCard.svelte";
   import WorldDialog from "./WorldDialog.svelte";
@@ -27,6 +28,11 @@
   let lastRefreshToken = -1;
   let loadGeneration = 0;
 
+  // Favorites filter
+  const favorites = getFavorites();
+  let favoriteFilter = $state<string | null>(null);
+  let favFilterOpen = $state(false);
+
   // World dialog state
   let selectedWorld = $state<WorldData | null>(null);
   let worldLoading = $state(false);
@@ -52,20 +58,38 @@
     }
 
     try {
-      const results = await searchWorlds(
-        "",
-        tags,
-        currentOffset,
-        PAGE_SIZE,
-        sortField,
-        order,
-      );
-      if (gen !== loadGeneration) return;
-
-      worlds = reset ? results : [...worlds, ...results];
-      offset = currentOffset + results.length;
-      hasMore = results.length === PAGE_SIZE;
-      error = null;
+      if (favoriteFilter) {
+        const group = favorites.groups.find((g) => g.id === favoriteFilter);
+        if (!group || group.worldIds.length === 0) {
+          if (gen !== loadGeneration) return;
+          worlds = [];
+          offset = 0;
+          hasMore = false;
+          error = null;
+          return;
+        }
+        const ids = group.worldIds.slice(currentOffset, currentOffset + PAGE_SIZE);
+        const results = await Promise.all(ids.map((id) => fetchWorld(id)));
+        if (gen !== loadGeneration) return;
+        worlds = reset ? results : [...worlds, ...results];
+        offset = currentOffset + results.length;
+        hasMore = currentOffset + results.length < group.worldIds.length;
+        error = null;
+      } else {
+        const results = await searchWorlds(
+          "",
+          tags,
+          currentOffset,
+          PAGE_SIZE,
+          sortField,
+          order,
+        );
+        if (gen !== loadGeneration) return;
+        worlds = reset ? results : [...worlds, ...results];
+        offset = currentOffset + results.length;
+        hasMore = results.length === PAGE_SIZE;
+        error = null;
+      }
     } catch (e) {
       if (gen !== loadGeneration) return;
       error = e instanceof Error ? e.message : String(e);
@@ -135,6 +159,20 @@
     };
   }
 
+  function clickOutsideFavFilter(node: HTMLElement) {
+    function handle(event: MouseEvent) {
+      if (!node.contains(event.target as Node)) {
+        favFilterOpen = false;
+      }
+    }
+    document.addEventListener("mousedown", handle, true);
+    return {
+      destroy() {
+        document.removeEventListener("mousedown", handle, true);
+      },
+    };
+  }
+
   $effect(() => {
     // track tags reactively
     tags.length;
@@ -144,6 +182,11 @@
   $effect(() => {
     sortField;
     order;
+    scheduleReload();
+  });
+
+  $effect(() => {
+    favoriteFilter;
     scheduleReload();
   });
 
@@ -335,6 +378,71 @@
       </button>
     </div>
     <div class="controls">
+      <div class="preset-dropdown" use:clickOutsideFavFilter>
+        <button
+          type="button"
+          class="preset-btn"
+          class:fav-filter-active={favoriteFilter !== null}
+          title="Filter by favorite group"
+          onclick={() => (favFilterOpen = !favFilterOpen)}
+        >
+          <Icon
+            icon={favoriteFilter !== null ? "mdi:star" : "mdi:star-outline"}
+            width={16}
+            class={favoriteFilter !== null ? "fav-star-active" : ""}
+          />
+          <span class="sort-label">
+            {favoriteFilter
+              ? (favorites.groups.find((g) => g.id === favoriteFilter)?.name ?? "Favorites")
+              : "Favorites"}
+          </span>
+          <Icon icon="mdi:chevron-down" width={13} class="chevron" />
+        </button>
+        {#if favFilterOpen}
+          <div class="preset-panel fav-filter-panel">
+            <button
+              type="button"
+              class="preset-item"
+              class:active={favoriteFilter === null}
+              onclick={() => {
+                favoriteFilter = null;
+                favFilterOpen = false;
+              }}
+            >
+              <Icon
+                icon={favoriteFilter === null ? "mdi:check-circle" : "mdi:circle-outline"}
+                width={14}
+              />
+              All worlds
+            </button>
+            {#if favorites.groups.length > 0}
+              <div class="fav-filter-separator"></div>
+              {#each favorites.groups as group (group.id)}
+                <button
+                  type="button"
+                  class="preset-item"
+                  class:active={favoriteFilter === group.id}
+                  onclick={() => {
+                    favoriteFilter = group.id;
+                    favFilterOpen = false;
+                  }}
+                >
+                  <Icon
+                    icon={favoriteFilter === group.id
+                      ? "mdi:check-circle"
+                      : "mdi:circle-outline"}
+                    width={14}
+                  />
+                  {group.name}
+                  <span class="fav-filter-count">{group.worldIds.length}</span>
+                </button>
+              {/each}
+            {:else}
+              <p class="fav-filter-empty">No favorite groups yet</p>
+            {/if}
+          </div>
+        {/if}
+      </div>
       <button
         class="refresh-btn"
         onclick={onRefresh}
@@ -715,6 +823,39 @@
 
   :global(.spinning) {
     animation: spin 1s linear infinite;
+  }
+
+  :global(.fav-star-active) {
+    color: #ffd740;
+  }
+
+  .fav-filter-active {
+    border-color: #ffd740 !important;
+    color: #ffd740 !important;
+  }
+
+  .fav-filter-panel {
+    left: auto;
+    right: 0;
+  }
+
+  .fav-filter-separator {
+    height: 1px;
+    background: var(--border);
+    margin: 0.2rem 0;
+  }
+
+  .fav-filter-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .fav-filter-empty {
+    margin: 0;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
   }
 
   @keyframes spin {
