@@ -59,10 +59,10 @@ jobs:
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
 
-      - id: changelog
-        uses: kuma-gee/action-godot/changelog@main
-        with:
-          latest-tag: ${{ github.ref_name }}
+      # - id: changelog
+      #   uses: kuma-gee/action-godot/changelog@main
+      #   with:
+      #     latest-tag: ${{ github.ref_name }}
 
       # v1 not released yet, even though it's documented !?!?!?
       - uses: tauri-apps/tauri-action@dev
@@ -72,7 +72,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
-          releaseBody:  ${{ steps.changelog.outputs.changelog }}
+          # releaseBody:  ${{ steps.changelog.outputs.changelog }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
@@ -129,10 +129,18 @@ jobs:
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
 
-      - id: changelog
-        uses: kuma-gee/action-godot/changelog@main
-        with:
-          latest-tag: ${{ github.ref_name }}
+      - name: Setup Android signing
+        run: |
+          cd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_RELEASE_KEYSTORE_USER }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_RELEASE_KEYSTORE_PW }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+
+      # - id: changelog
+      #   uses: kuma-gee/action-godot/changelog@main
+      #   with:
+      #     latest-tag: ${{ github.ref_name }}
 
       - uses: tauri-apps/tauri-action@dev
         env:
@@ -142,7 +150,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
-          releaseBody: ${{ steps.changelog.outputs.changelog }}
+          # releaseBody: ${{ steps.changelog.outputs.changelog }}
           releaseDraft: true
           prerelease: false
           mobile: 'android'
