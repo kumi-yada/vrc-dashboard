@@ -6,9 +6,10 @@
 
   interface Props {
     refreshToken: number;
+    onRefresh?: () => void;
   }
 
-  let { refreshToken }: Props = $props();
+  let { refreshToken, onRefresh }: Props = $props();
 
   const auth = getAuth();
   let prints = $state.raw<PrintData[]>([]);
@@ -124,7 +125,29 @@
 
 <svelte:document on:keydown={handleKeydown} />
 <div class="photos-page">
-  {#if loading && prints.length === 0}
+  <div class="subheader">
+    <div class="section-label">
+      <Icon icon="mdi:image-multiple" width={18} />
+      <span>Your VRChat Prints</span>
+    </div>
+    <div class="online-info">
+      <button
+        class="refresh-btn"
+        onclick={onRefresh}
+        disabled={loading}
+        title="Refresh"
+      >
+        <Icon
+          icon="mdi:refresh"
+          width={20}
+          class={loading ? "spinning" : ""}
+        />
+      </button>
+      <span class="online-count">Signed in as {auth.user?.displayName}</span>
+    </div>
+  </div>
+  <div class="content">
+    {#if loading && prints.length === 0}
     <div class="state-panel">
       <Icon
         icon="mdi:loading"
@@ -230,11 +253,75 @@
       </div>
     </div>
   {/if}
+  </div>
 </div>
 
 <style>
   .photos-page {
-    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .subheader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text-secondary);
+    min-height: 38px;
+  }
+
+  .online-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .refresh-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+
+  .refresh-btn:disabled {
+    opacity: 0.5;
+  }
+
+  .online-count {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1rem 1rem;
+  }
+
+  :global(.spinning) {
+    animation: spin 1s linear infinite;
   }
 
   .photos-grid {
