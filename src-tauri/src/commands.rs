@@ -323,3 +323,28 @@ pub async fn search_worlds(
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn invite_myself_to_instance(
+    state: State<'_, AuthState>,
+    location: String,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{}/invite/myself/to/{}", BASE_URL, location))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}

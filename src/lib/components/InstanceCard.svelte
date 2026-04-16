@@ -1,20 +1,31 @@
 <script lang="ts">
-  import { SUPPORTED_PLATFORMS, type Friend, type InstanceGroup, type InstancePlatforms, type SupportedPlatform } from "../types";
+  import {
+    SUPPORTED_PLATFORMS,
+    type Friend,
+    type InstanceGroup,
+    type InstancePlatforms,
+    type SupportedPlatform,
+  } from "../types";
   import { visibilityLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
+  import { invoke } from "@tauri-apps/api/core";
 
   import PlatformMeta from "./PlatformMeta.svelte";
 
   function getSupportedPlatforms(group: InstanceGroup): SupportedPlatform[] {
-    const worldPlatforms = group.instance?.world?.unityPackages?.map((pkg) => pkg.platform);
+    const worldPlatforms = group.instance?.world?.unityPackages?.map(
+      (pkg) => pkg.platform,
+    );
 
     if (!worldPlatforms?.length) {
       return [];
     }
 
-    return [...new Set(worldPlatforms)]
-      .filter((platform): platform is SupportedPlatform => SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform));
+    return [...new Set(worldPlatforms)].filter(
+      (platform): platform is SupportedPlatform =>
+        SUPPORTED_PLATFORMS.includes(platform as SupportedPlatform),
+    );
   }
 
   interface Props {
@@ -28,8 +39,8 @@
   const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
   const thumbnailUrl = $derived(
     group.instance?.world?.thumbnailImageUrl ??
-    group.instance?.world?.imageUrl ??
-    ""
+      group.instance?.world?.imageUrl ??
+      "",
   );
   const userCount = $derived(group.instance?.n_users ?? group.friends.length);
   const capacity = $derived(group.instance?.capacity ?? 0);
@@ -39,19 +50,60 @@
   function handleWorldOpen() {
     onWorldOpen(group);
   }
+
+  type InviteState = "idle" | "loading" | "success" | "error";
+  let inviteState = $state<InviteState>("idle");
+
+  async function handleInvite(e: MouseEvent) {
+    e.stopPropagation();
+    if (inviteState === "loading") return;
+    inviteState = "loading";
+    try {
+      await invoke("invite_myself_to_instance", { location: group.location });
+      inviteState = "success";
+    } catch {
+      inviteState = "error";
+    } finally {
+      setTimeout(() => {
+        inviteState = "idle";
+      }, 2000);
+    }
+  }
 </script>
 
 <div class="instance-card">
-  <button
-    class="world-preview"
-    type="button"
-    onclick={handleWorldOpen}
-  >
+  <button class="world-preview" type="button" onclick={handleWorldOpen}>
     {#if supportedPlatforms.length}
       <PlatformMeta platforms={supportedPlatforms} />
+      <span
+        class="invite-btn invite-btn--{inviteState}"
+        role="button"
+        tabindex="0"
+        title="Invite myself to this instance"
+        onclick={handleInvite}
+        onkeydown={(e) => {
+          if (e.key === "Enter" || e.key === " ")
+            handleInvite(e as unknown as MouseEvent);
+        }}
+      >
+        {#if inviteState === "loading"}
+          <Icon icon="mdi:loading" width={12} class="spin" />
+        {:else if inviteState === "success"}
+          <Icon icon="mdi:check" width={12} />
+        {:else if inviteState === "error"}
+          <Icon icon="mdi:alert" width={12} />
+        {:else}
+          <Icon icon="mdi:email-arrow-right-outline" width={12} />
+        {/if}
+      </span>
     {/if}
     {#if thumbnailUrl}
-      <img src={thumbnailUrl} alt={worldName} class="world-thumb" loading="lazy" />
+      <img
+        src={thumbnailUrl}
+        alt={worldName}
+        class="world-thumb"
+        loading="lazy"
+      />
     {:else}
       <div class="world-thumb-placeholder">
         <Icon icon="mdi:earth" width={32} />
@@ -186,6 +238,47 @@
     color: var(--text-secondary);
   }
 
+  .invite-btn {
+    display: flex;
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.72);
+    padding: 0.2rem 0.35rem;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .invite-btn:hover {
+    color: #fff;
+  }
+
+  .invite-btn--success {
+    color: var(--accent);
+  }
+
+  .invite-btn--error {
+    color: #ff6b6b;
+  }
+
+  :global(.invite-btn .spin) {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .friends-list {
     display: flex;
     flex-direction: column;
@@ -207,5 +300,4 @@
       height: 60px;
     }
   }
-
 </style>
