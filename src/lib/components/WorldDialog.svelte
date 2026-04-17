@@ -127,6 +127,16 @@
 
     {#if world}
       <div class="fav-dropdown" use:clickOutsideFav>
+        {#if world.id}
+          <button
+            class="copy-id-btn"
+            title="Copy world id"
+            onclick={() => navigator.clipboard.writeText(world.id)}
+            type="button"
+          >
+            <Icon icon="mdi:content-copy" width={16} />
+          </button>
+        {/if}
         <button
           class="fav-btn"
           class:fav-active={isFavorited}
@@ -134,7 +144,10 @@
           title={isFavorited ? "Edit favorites" : "Add to favorites"}
           onclick={() => (favOpen = !favOpen)}
         >
-          <Icon icon={isFavorited ? "mdi:star" : "mdi:star-outline"} width={18} />
+          <Icon
+            icon={isFavorited ? "mdi:star" : "mdi:star-outline"}
+            width={18}
+          />
         </button>
         {#if favOpen}
           <div class="fav-panel">
@@ -197,6 +210,8 @@
           </div>
         {/if}
       </div>
+
+      
     {/if}
 
     {#if world}
@@ -213,10 +228,6 @@
           <PlatformMeta platforms={platformList} showLabels={true} />
         {/if}
         <div class="hero-content">
-          <div class="eyebrow-row">
-            <span class="eyebrow">World</span>
-          </div>
-
           <h2 class="world-title" id="world-dialog-title">{world.name}</h2>
 
           <div class="hero-meta">
@@ -348,6 +359,7 @@
     border-radius: 999px;
     color: #fff;
     background: rgba(0, 0, 0, 0.28);
+    z-index: 100;
     transition:
       background 0.15s,
       color 0.15s;
@@ -363,6 +375,12 @@
     top: 0.9rem;
     right: calc(0.9rem + 32px + 0.4rem);
     z-index: 10;
+  }
+
+  .fav-dropdown {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
   }
 
   .fav-btn {
@@ -606,6 +624,25 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
+  }
+
+  .copy-id-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.28);
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .copy-id-btn:hover {
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
   }
 
   .dialog-body {
