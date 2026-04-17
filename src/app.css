@@ -41,8 +41,23 @@ body,
   color: var(--text-primary);
 }
 
+/* Slim, auto-hiding scrollbars */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* When actively scrolling (toggled by JS) or hovering, show subtle thumb */
+.is-scrolling,
+.is-scrolling * {
+  scrollbar-color: rgba(176,228,204,0.45) transparent;
+}
+
+/* WebKit-based browsers */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -50,12 +65,20 @@ body,
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 3px;
+  background: rgba(176,228,204,0.35);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  opacity: 0;
+  transition: opacity 160ms linear, background-color 120ms linear;
 }
 
+/* Show when scrolling or when hovering the scrollable element */
+.is-scrolling ::-webkit-scrollbar-thumb,
+*:hover ::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  opacity: 1;
+  background: rgba(176,228,204,0.55);
 }
 
 button {
