@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { logout, getAuth } from "../stores/auth.svelte";
+  import { showDesktopWindowControls } from "../utils/platform";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
@@ -14,10 +15,6 @@
 
   const auth = getAuth();
   const appWindow = getCurrentWindow();
-  const isDesktop =
-    typeof window !== "undefined" &&
-    "__TAURI_INTERNALS__" in
-      (window as Window & { __TAURI_INTERNALS__?: unknown });
   let showUserMenu = $state(false);
   let showNotifications = $state(false);
 
@@ -33,17 +30,17 @@
   }
 
   async function minimizeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.minimize();
   }
 
   async function toggleMaximizeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.toggleMaximize();
   }
 
   async function closeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.close();
   }
 </script>
@@ -105,7 +102,7 @@
       </div>
     {/if}
 
-    {#if isDesktop}
+    {#if showDesktopWindowControls}
       <div class="window-controls">
         <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
           <Icon icon="mdi:window-minimize" width={16} />

@@ -2,13 +2,10 @@
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { login, getAuth } from "../stores/auth.svelte";
+  import { showDesktopWindowControls } from "../utils/platform";
 
   const auth = getAuth();
   const appWindow = getCurrentWindow();
-  const isDesktop =
-    typeof window !== "undefined" &&
-    "__TAURI_INTERNALS__" in
-      (window as Window & { __TAURI_INTERNALS__?: unknown });
 
   let tokenInput = $state("");
 
@@ -19,24 +16,24 @@
   }
 
   async function minimizeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.minimize();
   }
 
   async function toggleMaximizeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.toggleMaximize();
   }
 
   async function closeWindow() {
-    if (!isDesktop) return;
+    if (!showDesktopWindowControls) return;
     await appWindow.close();
   }
 </script>
 
 <nav class="topbar small">
   <div class="window-drag-region" data-tauri-drag-region></div>
-  {#if isDesktop}
+  {#if showDesktopWindowControls}
     <div class="window-controls">
       <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
         <Icon icon="mdi:window-minimize" width={16} />
