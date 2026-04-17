@@ -170,13 +170,14 @@
           class={friends.loading ? "spinning" : ""}
         />
       </button>
-      <span
+      <button
+        type="button"
         class="online-count"
         bind:this={popoverTriggerEl}
         onclick={toggleOnlinePopover}
       >
         {friends.onlineCount}/{friends.totalCount} Online
-      </span>
+      </button>
       {#if showOnlinePopover}
         <div class="online-popover" bind:this={popoverEl}>
           <div class="popover-item"><strong>Online:</strong> {friends.onlineCount}</div>
@@ -245,6 +246,7 @@
     loading={worldLoading}
     error={worldError}
     onClose={closeWorldDialog}
+    onOpenInstance={handleWorldOpen}
   />
 {/if}
 
@@ -316,9 +318,13 @@
   }
 
   .online-count {
+    border: none;
+    background: transparent;
+    padding: 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
     white-space: nowrap;
+    cursor: pointer;
   }
 
   .content-row {

@@ -111,6 +111,18 @@ export interface InstanceData {
   world: WorldData;
 }
 
+export type CreateInstanceRegion = "eu" | "jp" | "us" | "use";
+
+export type CreateInstanceType = "friends" | "hidden" | "private" | "public" | "privateplus";
+
+export interface CreateInstanceRequest {
+  worldId: string;
+  type: CreateInstanceType;
+  region: CreateInstanceRegion;
+  ownerId?: string;
+  canRequestInvite?: boolean;
+}
+
 export interface CurrentUser extends UserProfile {
   id: string;
   displayName: string;

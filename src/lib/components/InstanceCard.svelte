@@ -3,7 +3,6 @@
     SUPPORTED_PLATFORMS,
     type Friend,
     type InstanceGroup,
-    type InstancePlatforms,
     type SupportedPlatform,
   } from "../types";
   import { visibilityLabel } from "../utils/instance";

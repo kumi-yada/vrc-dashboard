@@ -1,13 +1,19 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { invoke } from "@tauri-apps/api/core";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import {
     SUPPORTED_PLATFORMS,
+    type CreateInstanceRegion,
+    type CreateInstanceType,
+    type InstanceData,
     type InstanceGroup,
     type SupportedPlatform,
     type WorldData,
   } from "../types";
   import PlatformMeta from "./PlatformMeta.svelte";
+  import { createInstance, getAuth } from "../stores/auth.svelte";
+  import { parseInstanceId, visibilityLabel } from "../utils/instance";
   import {
     getFavorites,
     createGroup,
@@ -20,6 +26,7 @@
     world: WorldData | null;
     group?: InstanceGroup | null;
     onClose: () => void;
+    onOpenInstance?: (group: InstanceGroup) => void | Promise<void>;
     loading?: boolean;
     error?: string | null;
   }
@@ -28,6 +35,7 @@
     world,
     group,
     onClose,
+    onOpenInstance,
     loading = false,
     error = null,
   }: Props = $props();
@@ -47,6 +55,34 @@
     ),
   );
   const instanceCount = $derived(world?.slimInstances?.length ?? 0);
+  const auth = getAuth();
+
+  const CREATE_INSTANCE_REGIONS: CreateInstanceRegion[] = [
+    "us",
+    "use",
+    "eu",
+    "jp",
+  ];
+  const CREATE_INSTANCE_REGION_LABELS: Record<CreateInstanceRegion, string> = {
+    us: "US West",
+    use: "US East",
+    eu: "Europe",
+    jp: "Japan",
+  };
+  const CREATE_INSTANCE_TYPES: CreateInstanceType[] = [
+    "friends",
+    "hidden",
+    "private",
+    "privateplus",
+    "public",
+  ];
+  const CREATE_INSTANCE_TYPE_LABELS: Record<CreateInstanceType, string> = {
+    friends: "Friends",
+    hidden: "Friends+",
+    private: "Invite",
+    privateplus: "Invite+",
+    public: "Public",
+  };
 
   // Favorites
   const favorites = getFavorites();
@@ -55,10 +91,28 @@
   const activeGroupIds = $derived(world ? getGroupsForWorld(world.id) : []);
   const isFavorited = $derived(activeGroupIds.length > 0);
 
+  // Create instance
+  let createOpen = $state(false);
+  let createRegion = $state<CreateInstanceRegion>("us");
+  let createType = $state<CreateInstanceType>("friends");
+  let createInvitePlus = $state(false);
+  let createLoading = $state(false);
+  let createError = $state<string | null>(null);
+  type InviteState = "idle" | "loading" | "success" | "error";
+  let inviteState = $state<InviteState>("idle");
+  const inviteLocation = $derived(group?.location ?? "");
+  const requiresOwnerId = $derived(createType !== "public");
+  const createDisabled = $derived(
+    createLoading ||
+      !world?.id ||
+      (requiresOwnerId && !auth.user?.id),
+  );
+
   function clickOutsideFav(node: HTMLElement) {
     function handle(event: MouseEvent) {
       if (!node.contains(event.target as Node)) {
         favOpen = false;
+        createOpen = false;
       }
     }
     document.addEventListener("mousedown", handle, true);
@@ -78,6 +132,120 @@
         toggleWorldInGroup(group.id, world.id);
         newGroupName = "";
       }
+    }
+  }
+
+  function resetCreateForm() {
+    createRegion = "us";
+    createType = "friends";
+    createInvitePlus = false;
+    createError = null;
+  }
+
+  function toggleFavPanel() {
+    if (!favOpen) {
+      createOpen = false;
+      createError = null;
+    }
+    favOpen = !favOpen;
+  }
+
+  function toggleCreatePanel() {
+    if (createLoading) return;
+    if (!createOpen) {
+      favOpen = false;
+      createError = null;
+    }
+    createOpen = !createOpen;
+    if (!createOpen) {
+      resetCreateForm();
+    }
+  }
+
+  function getErrorMessage(value: unknown): string {
+    return value instanceof Error ? value.message : String(value);
+  }
+
+  function buildCreatedGroup(created: InstanceData): InstanceGroup | null {
+    const location = created.id || `${created.worldId}:${created.instanceId}`;
+    const parsed = parseInstanceId(location);
+    if (!parsed) {
+      return null;
+    }
+
+    let ownerName = "";
+    if (parsed.ownerId && auth.user?.id === parsed.ownerId) {
+      ownerName = auth.user.displayName;
+    }
+
+    return {
+      location,
+      parsed,
+      instance: created,
+      ownerName,
+      friends: [],
+    };
+  }
+
+  async function handleInviteInstance() {
+    if (!inviteLocation || inviteState === "loading") return;
+    inviteState = "loading";
+
+    try {
+      await invoke("invite_myself_to_instance", { location: inviteLocation });
+      inviteState = "success";
+    } catch {
+      inviteState = "error";
+    } finally {
+      setTimeout(() => {
+        inviteState = "idle";
+      }, 2000);
+    }
+  }
+
+  async function handleCreateInstance() {
+    if (!world?.id || createLoading) {
+      return;
+    }
+
+    const ownerId = createType === "public" ? undefined : auth.user?.id;
+    if (createType !== "public" && !ownerId) {
+      createError = "You need to be logged in to create non-public instances.";
+      return;
+    }
+
+    createLoading = true;
+    createError = null;
+
+    try {
+      const created = await createInstance({
+        worldId: world.id,
+        type: createType === "privateplus" ? "private" : createType,
+        region: createRegion,
+        ownerId,
+        canRequestInvite: createType === "privateplus",
+      });
+
+      const createdGroup = buildCreatedGroup(created);
+      if (!createdGroup) {
+        createError = "Created instance could not be opened from this dialog.";
+        return;
+      }
+
+      createOpen = false;
+      resetCreateForm();
+
+      if (onOpenInstance) {
+        onClose();
+        queueMicrotask(() => {
+          void onOpenInstance(createdGroup);
+        });
+      }
+
+    } catch (e) {
+      createError = getErrorMessage(e);
+    } finally {
+      createLoading = false;
     }
   }
 
@@ -101,7 +269,10 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {
-      if (favOpen) {
+      if (createOpen) {
+        createOpen = false;
+        createError = null;
+      } else if (favOpen) {
         favOpen = false;
       } else {
         onClose();
@@ -142,13 +313,40 @@
           class:fav-active={isFavorited}
           type="button"
           title={isFavorited ? "Edit favorites" : "Add to favorites"}
-          onclick={() => (favOpen = !favOpen)}
+          onclick={toggleFavPanel}
         >
           <Icon
             icon={isFavorited ? "mdi:star" : "mdi:star-outline"}
             width={18}
           />
         </button>
+        <button
+          class="create-instance-btn"
+          class:active={createOpen}
+          type="button"
+          title="Create instance"
+          onclick={toggleCreatePanel}
+        >
+          <Icon icon="mdi:server-plus" width={18} />
+        </button>
+        {#if inviteLocation}
+          <button
+            class="invite-instance-btn invite-instance-btn--{inviteState}"
+            type="button"
+            title="Invite myself to this instance"
+            onclick={handleInviteInstance}
+          >
+            {#if inviteState === "loading"}
+              <Icon icon="mdi:loading" width={16} class="spinning" />
+            {:else if inviteState === "success"}
+              <Icon icon="mdi:check" width={16} />
+            {:else if inviteState === "error"}
+              <Icon icon="mdi:alert" width={16} />
+            {:else}
+              <Icon icon="mdi:email-arrow-right-outline" width={16} />
+            {/if}
+          </button>
+        {/if}
         {#if favOpen}
           <div class="fav-panel">
             <p class="fav-panel-title">Favorite Groups</p>
@@ -207,6 +405,66 @@
                 <Icon icon="mdi:plus" width={16} />
               </button>
             </div>
+          </div>
+        {/if}
+        {#if createOpen}
+          <div class="create-panel">
+            <p class="fav-panel-title">Create Instance</p>
+
+            <label class="create-field" for="create-region-select">
+              <span>Region</span>
+              <select
+                id="create-region-select"
+                class="create-select"
+                bind:value={createRegion}
+              >
+                {#each CREATE_INSTANCE_REGIONS as regionOption (regionOption)}
+                  <option value={regionOption}>
+                    {CREATE_INSTANCE_REGION_LABELS[regionOption]}
+                  </option>
+                {/each}
+              </select>
+            </label>
+
+            <label class="create-field" for="create-type-select">
+              <span>Type</span>
+              <select
+                id="create-type-select"
+                class="create-select"
+                bind:value={createType}
+              >
+                {#each CREATE_INSTANCE_TYPES as typeOption (typeOption)}
+                  <option value={typeOption}>
+                    {CREATE_INSTANCE_TYPE_LABELS[typeOption]}
+                  </option>
+                {/each}
+              </select>
+            </label>
+
+            {#if createType !== "public" && !auth.user?.id}
+              <p class="create-help create-help-error">
+                Current user id is required for non-public instances.
+              </p>
+            {/if}
+
+            {#if createError}
+              <p class="create-help create-help-error">{createError}</p>
+            {/if}
+
+            <button
+              type="button"
+              class="create-submit-btn"
+              disabled={createDisabled}
+              onclick={handleCreateInstance}
+            >
+              {#if createLoading}
+                <Icon icon="mdi:loading" width={14} class="spinning" />
+                Creating...
+              {:else}
+                <Icon icon="mdi:plus" width={14} />
+                Create
+              {/if}
+            </button>
           </div>
         {/if}
       </div>
@@ -277,6 +535,13 @@
               <div class="detail-label">Users</div>
               <div class="detail-value">
                 {group.instance?.n_users ?? 0}/{group.instance?.capacity}
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">Type</div>
+              <div class="detail-value">
+                {visibilityLabel(group.parsed.visibility)}
               </div>
             </div>
           </section>
@@ -406,6 +671,56 @@
     color: #ffd740;
   }
 
+  .create-instance-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.28);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+
+  .create-instance-btn:hover {
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+  }
+
+  .create-instance-btn.active {
+    color: #81c784;
+  }
+
+  .invite-instance-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.28);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+
+  .invite-instance-btn:hover {
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+  }
+
+  .invite-instance-btn--success {
+    color: var(--accent);
+  }
+
+  .invite-instance-btn--error {
+    color: #ff6b6b;
+  }
+
   .fav-panel {
     position: absolute;
     top: calc(100% + 6px);
@@ -420,6 +735,91 @@
     min-width: 220px;
     max-width: 280px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .create-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg-card, #1e1e2e);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 240px;
+    max-width: 300px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  .create-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .create-select {
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    padding: 0 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .create-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .create-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .create-checkbox input {
+    margin: 0;
+  }
+
+  .create-help {
+    margin: 0;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+  }
+
+  .create-help-error {
+    color: #ef9a9a;
+  }
+
+  .create-submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+
+  .create-submit-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .create-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
 
   .fav-panel-title {
@@ -585,26 +985,6 @@
     color: #fff;
   }
 
-  .eyebrow-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-  }
-
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    min-height: 28px;
-    padding: 0 0.7rem;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
   .world-title {
     margin: 0.85rem 0 0;
     font-size: clamp(1.6rem, 3vw, 2.4rem);
@@ -765,10 +1145,6 @@
 
     .hero {
       min-height: 220px;
-    }
-
-    .eyebrow-row {
-      flex-direction: column;
     }
 
     .dialog-body {

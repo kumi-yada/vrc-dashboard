@@ -1,5 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CurrentUser, PrintData, UserProfile, WorldData } from "../types";
+import type {
+  CreateInstanceRequest,
+  CurrentUser,
+  InstanceData,
+  PrintData,
+  UserProfile,
+  WorldData,
+} from "../types";
 
 interface GroupProfile {
   id: string;
@@ -93,6 +100,18 @@ export async function fetchGroupProfile(groupId: string): Promise<GroupProfile> 
 
 export async function fetchWorld(worldId: string): Promise<WorldData> {
   return invoke<WorldData>("get_world", { worldId });
+}
+
+export async function createInstance(
+  payload: CreateInstanceRequest,
+): Promise<InstanceData> {
+  return invoke<InstanceData>("create_instance", {
+    worldId: payload.worldId,
+    instanceType: payload.type,
+    region: payload.region,
+    ownerId: payload.ownerId ?? null,
+    canRequestInvite: payload.canRequestInvite ?? false,
+  });
 }
 
 export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {

@@ -2,7 +2,7 @@
   import Icon from "@iconify/svelte";
   import { searchWorlds, fetchWorld } from "../stores/auth.svelte";
   import { getFavorites } from "../stores/favorites.svelte";
-  import type { WorldData } from "../types";
+  import type { InstanceGroup, WorldData } from "../types";
   import WorldCard from "./WorldCard.svelte";
   import WorldDialog from "./WorldDialog.svelte";
 
@@ -35,6 +35,7 @@
 
   // World dialog state
   let selectedWorld = $state<WorldData | null>(null);
+  let selectedGroup = $state<InstanceGroup | null>(null);
   let worldLoading = $state(false);
   let worldError = $state<string | null>(null);
   let worldDialogOpen = $state(false);
@@ -242,11 +243,13 @@
     worldLoading = false;
     worldError = null;
     selectedWorld = null;
+    selectedGroup = null;
   }
 
   async function handleWorldOpen(world: WorldData) {
     worldDialogOpen = true;
     selectedWorld = world;
+    selectedGroup = null;
     worldLoading = true;
     worldError = null;
 
@@ -258,6 +261,32 @@
       selectedWorld = full;
     } catch (e) {
       if (requestToken !== worldRequestToken) return;
+      worldError = e instanceof Error ? e.message : String(e);
+    } finally {
+      if (requestToken === worldRequestToken) {
+        worldLoading = false;
+      }
+    }
+  }
+
+  async function handleInstanceOpen(group: InstanceGroup) {
+    worldDialogOpen = true;
+    selectedWorld = group.instance?.world ?? null;
+    selectedGroup = group;
+    worldLoading = true;
+    worldError = null;
+
+    const requestToken = ++worldRequestToken;
+
+    try {
+      const full = await fetchWorld(group.parsed.worldId);
+      if (requestToken !== worldRequestToken) return;
+      selectedWorld = full;
+    } catch (e) {
+      if (requestToken !== worldRequestToken) return;
+      if (!selectedWorld) {
+        selectedWorld = group.instance?.world ?? null;
+      }
       worldError = e instanceof Error ? e.message : String(e);
     } finally {
       if (requestToken === worldRequestToken) {
@@ -519,10 +548,11 @@
 {#if worldDialogOpen}
   <WorldDialog
     world={selectedWorld}
-    group={null}
+    group={selectedGroup}
     loading={worldLoading}
     error={worldError}
     onClose={closeWorldDialog}
+    onOpenInstance={handleInstanceOpen}
   />
 {/if}
 

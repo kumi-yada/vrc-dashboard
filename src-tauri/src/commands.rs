@@ -348,3 +348,47 @@ pub async fn invite_myself_to_instance(
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn create_instance(
+    state: State<'_, AuthState>,
+    world_id: String,
+    instance_type: String,
+    region: String,
+    owner_id: Option<String>,
+    can_request_invite: Option<bool>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let mut payload = json!({
+        "worldId": world_id,
+        "type": instance_type,
+        "region": region,
+        "canRequestInvite": can_request_invite.unwrap_or(false),
+    });
+
+    if let Some(owner) = owner_id
+        .map(|id| id.trim().to_string())
+        .filter(|id| !id.is_empty())
+    {
+        payload["ownerId"] = json!(owner);
+    }
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{}/instances", BASE_URL))
+        .headers(build_headers(&token))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
