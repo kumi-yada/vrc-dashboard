@@ -102,6 +102,20 @@ export async function fetchWorld(worldId: string): Promise<WorldData> {
   return invoke<WorldData>("get_world", { worldId });
 }
 
+export async function fetchInstance(instanceId: string): Promise<InstanceData> {
+  return invoke<InstanceData>("get_instance", { instanceId });
+}
+
+export async function fetchRecentInstances(): Promise<string[]> {
+  const result = await invoke<unknown>("get_recent_instances");
+  if (Array.isArray(result)) {
+    return result.map((item) =>
+      typeof item === "string" ? item : String((item as Record<string, unknown>).location ?? (item as Record<string, unknown>).id ?? item),
+    );
+  }
+  return [];
+}
+
 export async function createInstance(
   payload: CreateInstanceRequest,
 ): Promise<InstanceData> {

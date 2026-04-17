@@ -188,3 +188,22 @@ export async function fetchFriends(reload = false): Promise<void> {
 export async function fetchMutualFriends(userId: string): Promise<UserProfile[]> {
     return invoke<UserProfile[]>("get_mutual_friends", { userId });
 }
+
+export async function resolveOwnerName(ownerId: string): Promise<string> {
+  if (ownerNameCache.has(ownerId)) {
+    return ownerNameCache.get(ownerId)!;
+  }
+  try {
+    if (ownerId.startsWith("grp_")) {
+      const group = await fetchGroupProfile(ownerId);
+      ownerNameCache.set(ownerId, group.name);
+      return group.name;
+    }
+    const profile = await fetchUserProfile(ownerId);
+    ownerNameCache.set(ownerId, profile.displayName);
+    return profile.displayName;
+  } catch {
+    ownerNameCache.set(ownerId, ownerId);
+    return ownerId;
+  }
+}

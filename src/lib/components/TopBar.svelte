@@ -21,6 +21,7 @@
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
     { id: "worlds", label: "Worlds", icon: "mdi:earth" },
+    { id: "recent", label: "Recent", icon: "mdi:history" },
     { id: "photos", label: "Prints", icon: "mdi:image-multiple" },
   ];
 
