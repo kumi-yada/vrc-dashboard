@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { onMount } from "svelte";
   import {
     getFriendsStore,
     fetchFriends,
@@ -22,6 +23,30 @@
   const friends = getFriendsStore();
   const auth = getAuth();
   let lastRefreshToken = -1;
+
+  // Online count popover state
+  let showOnlinePopover = $state(false);
+  let popoverTriggerEl = $state<HTMLElement | null>(null);
+  let popoverEl = $state<HTMLElement | null>(null);
+
+  function toggleOnlinePopover(e: MouseEvent) {
+    e.stopPropagation();
+    showOnlinePopover = !showOnlinePopover;
+  }
+
+  function handleDocumentClick(e: MouseEvent) {
+    if (!showOnlinePopover) return;
+    if (
+      !(popoverEl?.contains(e.target as Node) || popoverTriggerEl?.contains(e.target as Node))
+    ) {
+      showOnlinePopover = false;
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener("click", handleDocumentClick);
+    return () => document.removeEventListener("click", handleDocumentClick);
+  });
 
   // Profile dialog state
   let selectedMutualFriends = $state<UserProfile[] | null>(null);
@@ -145,9 +170,20 @@
           class={friends.loading ? "spinning" : ""}
         />
       </button>
-      <span class="online-count"
-        >{friends.onlineCount}/{friends.totalCount} Online</span
+      <span
+        class="online-count"
+        bind:this={popoverTriggerEl}
+        onclick={toggleOnlinePopover}
       >
+        {friends.onlineCount}/{friends.totalCount} Online
+      </span>
+      {#if showOnlinePopover}
+        <div class="online-popover" bind:this={popoverEl}>
+          <div class="popover-item"><strong>Online:</strong> {friends.onlineCount}</div>
+          <div class="popover-item"><strong>Active:</strong> {friends.activeCount}</div>
+          <div class="popover-item"><strong>Offline:</strong> {Math.max(0, friends.totalCount - friends.onlineCount)}</div>
+        </div>
+      {/if}
     </div>
   </div>
   <div class="content-row">
@@ -256,6 +292,7 @@
     align-items: center;
     gap: 0.75rem;
     flex-shrink: 0;
+    position: relative;
   }
 
   .refresh-btn {
@@ -339,6 +376,26 @@
 
   :global(.spinning) {
     animation: spin 1s linear infinite;
+  }
+
+  .online-popover {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    min-width: 180px;
+    z-index: 20;
+    color: var(--text-primary);
+  }
+
+  .online-popover .popover-item {
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
   }
 
   @keyframes spin {

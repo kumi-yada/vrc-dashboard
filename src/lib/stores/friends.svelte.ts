@@ -53,7 +53,8 @@ export function getFriendsStore() {
     get instanceGroups() { return filteredGroups; },
     get privateFriends() { return filteredPrivate; },
     get offlineFriends() { return filteredOffline; },
-    get onlineCount() { return onlineFriends.length; },
+    get onlineCount() { return onlineFriends.filter(f => f.location !== "offline").length; },
+    get activeCount() { return onlineFriends.filter(l => l.location === "offline").length; },
     get totalCount() { return onlineFriends.length + offlineFriends.length; },
     get loading() { return loading; },
     get error() { return error; },
@@ -73,7 +74,7 @@ export async function fetchFriends(reload = false): Promise<void> {
       invoke<Friend[]>("get_friends", { offline: true }),
     ]);
 
-    onlineFriends = onlineResult.filter(f => f.location !== "offline");
+    onlineFriends = onlineResult;
     offlineFriends = offlineResult;
 
     // Categorize online friends
