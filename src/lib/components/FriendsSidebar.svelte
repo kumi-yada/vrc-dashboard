@@ -48,13 +48,24 @@
       return leftOrder < rightOrder ? 1 : -1;
     });
   });
+  let sortedOfflineFriends = $derived.by(() => {
+    const activityTime = (friend: Friend) => {
+      const v = (friend as any).last_activity;
+      if (!v) return 0;
+      if (typeof v === "number") return v;
+      const t = Date.parse(String(v));
+      return Number.isFinite(t) ? t : 0;
+    };
+
+    return [...offlineFriends].sort(
+      (a, b) => activityTime(b) - activityTime(a),
+    );
+  });
 </script>
 
 <aside class="sidebar">
   {#if sortedPrivateFriends.length > 0}
-    <div
-      class="sidebar-col private-col"
-    >
+    <div class="sidebar-col private-col">
       <button
         class="toggle-btn"
         onclick={() => (privateShowNames = !privateShowNames)}
@@ -75,9 +86,7 @@
     </div>
   {/if}
   {#if offlineFriends.length > 0}
-    <div
-      class="sidebar-col offline-col"
-    >
+    <div class="sidebar-col offline-col">
       <button
         class="toggle-btn"
         onclick={() => (offlineShowNames = !offlineShowNames)}
@@ -88,7 +97,7 @@
         {#if offlineShowNames}Hide{:else}Show{/if}
       </button>
 
-      {#each offlineFriends as friend (friend.id)}
+      {#each sortedOfflineFriends as friend (friend.id)}
         <FriendEntry
           {friend}
           iconOnly={!offlineShowNames}
@@ -135,7 +144,9 @@
     font-size: 0.65rem;
     line-height: 1;
     cursor: pointer;
-    transition: opacity 0.12s ease, transform 0.12s ease;
+    transition:
+      opacity 0.12s ease,
+      transform 0.12s ease;
     z-index: 10;
     opacity: 0;
   }
