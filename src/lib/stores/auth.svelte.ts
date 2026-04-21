@@ -3,6 +3,7 @@ import type {
   CreateInstanceRequest,
   CurrentUser,
   InstanceData,
+  Notification,
   PrintData,
   UserProfile,
   WorldData,
@@ -20,6 +21,14 @@ interface CurrentUserIdentifier {
 interface CurrentUserProfile extends UserProfile {
   location?: string;
   state?: string;
+}
+
+interface NotificationQueryOptions {
+  notificationType?: string;
+  sent?: boolean;
+  hidden?: boolean;
+  offset?: number;
+  n?: number;
 }
 
 let token = $state<string | null>(null);
@@ -153,6 +162,34 @@ export async function fetchRecentInstances(): Promise<string[]> {
     );
   }
   return [];
+}
+
+export async function fetchNotifications(
+  options: NotificationQueryOptions = {},
+): Promise<Notification[]> {
+  const {
+    notificationType = "all",
+    sent = false,
+    hidden = false,
+    offset = 0,
+    n = 40,
+  } = options;
+
+  return invoke<Notification[]>("get_notifications", {
+    notificationType,
+    sent,
+    hidden,
+    offset,
+    n,
+  });
+}
+
+export async function deleteNotification(notificationId: string): Promise<void> {
+  await invoke("delete_notification", { notificationId });
+}
+
+export async function clearAllNotifications(): Promise<void> {
+  await invoke("clear_all_notifications");
 }
 
 export async function createInstance(

@@ -91,6 +91,17 @@ export interface PrintData {
   worldName: string;
 }
 
+export interface Notification {
+  id: string;
+  created_at: string;
+  message: string;
+  seen: boolean;
+  senderUserId: string;
+  senderUsername: string;
+  type: string;
+  details: string;
+}
+
 export interface InstancePlatforms {
   android?: number;
   ios?: number;

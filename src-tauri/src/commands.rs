@@ -82,6 +82,113 @@ pub async fn get_current_user(state: State<'_, AuthState>) -> Result<Value, Stri
 }
 
 #[tauri::command]
+pub async fn get_notifications(
+    state: State<'_, AuthState>,
+    notification_type: Option<String>,
+    sent: Option<bool>,
+    hidden: Option<bool>,
+    offset: Option<u32>,
+    n: Option<u32>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let mut params: Vec<(&str, String)> = Vec::new();
+
+    if let Some(value) = notification_type
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    {
+        params.push(("type", value));
+    }
+
+    if let Some(value) = sent {
+        params.push(("sent", value.to_string()));
+    }
+
+    if let Some(value) = hidden {
+        params.push(("hidden", value.to_string()));
+    }
+
+    if let Some(value) = offset {
+        params.push(("offset", value.to_string()));
+    }
+
+    if let Some(value) = n {
+        params.push(("n", value.to_string()));
+    }
+
+    let client = reqwest::Client::new();
+    let mut req = client
+        .get(format!("{}/auth/user/notifications", BASE_URL))
+        .headers(build_headers(&token));
+
+    if !params.is_empty() {
+        req = req.query(&params);
+    }
+
+    let resp = req.send().await.map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn delete_notification(
+    state: State<'_, AuthState>,
+    notification_id: String,
+) -> Result<(), String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .put(format!(
+            "{}/auth/user/notifications/{}/hide",
+            BASE_URL, notification_id
+        ))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn clear_all_notifications(state: State<'_, AuthState>) -> Result<(), String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .put(format!("{}/auth/user/notifications/clear", BASE_URL))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn get_user(
     state: State<'_, AuthState>,
     user_id: String,
