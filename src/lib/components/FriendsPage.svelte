@@ -232,6 +232,7 @@
   <UserMenuDialog
     user={selectedProfile}
     mutualFriends={selectedMutualFriends}
+    showInvite={true}
     loading={profileLoading}
     error={profileError}
     onClose={closeProfileDialog}

@@ -26,6 +26,7 @@ pub fn run() {
             commands::get_own_prints,
             commands::search_worlds,
             commands::invite_myself_to_instance,
+            commands::invite_user,
             commands::create_instance,
             commands::get_recent_instances,
         ])

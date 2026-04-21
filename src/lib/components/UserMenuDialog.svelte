@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
+  import { getAuth, inviteUserToInstance } from "../stores/auth.svelte";
   import type { UserProfile } from "../types";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
@@ -12,6 +13,7 @@
     onClose: () => void;
     onUserSelected?: (user: UserProfile) => void;
     onLogout?: () => Promise<void> | void;
+    showInvite?: boolean;
     loading?: boolean;
     error?: string | null;
   }
@@ -22,10 +24,12 @@
     onClose,
     onUserSelected,
     onLogout,
+    showInvite = false,
     loading = false,
     error = null,
   }: Props = $props();
 
+  const auth = getAuth();
   const showcasedBadges = $derived(
     user?.badges?.filter((badge) => badge.showcased) ?? [],
   );
@@ -34,6 +38,25 @@
   );
   const canLogout = $derived(Boolean(user && onLogout));
   const mutuals: any[] = $derived(mutualFriends ?? []);
+  type InviteState = "idle" | "loading" | "success" | "error";
+  let inviteState = $state<InviteState>("idle");
+  const currentLocation = $derived(auth.user?.location?.trim() ?? "");
+  const inviteDisabled = $derived(
+    inviteState === "loading" ||
+      !showInvite ||
+      !user?.id ||
+      !currentLocation ||
+      currentLocation === "offline",
+  );
+  const inviteTitle = $derived(
+    !showInvite
+      ? "Invite unavailable"
+      : !currentLocation || currentLocation === "offline"
+        ? "You must be online to send invites"
+        : "Invite user to your current instance",
+  );
+
+  $inspect(auth);
 
   function getTrustLevel(tags: string[]): string {
     if (tags.includes("system_trust_veteran")) return "Trusted";
@@ -74,6 +97,22 @@
     );
   }
 
+  async function handleInviteUser() {
+    if (inviteDisabled || !user?.id || !currentLocation) return;
+
+    inviteState = "loading";
+    try {
+      await inviteUserToInstance(user.id, currentLocation);
+      inviteState = "success";
+    } catch {
+      inviteState = "error";
+    } finally {
+      setTimeout(() => {
+        inviteState = "idle";
+      }, 2000);
+    }
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       onClose();
@@ -92,9 +131,30 @@
   aria-labelledby="user-menu-title"
 >
   <div class="user-dialog">
-    <button class="close-btn" type="button" title="Close" onclick={onClose}>
-      <Icon icon="mdi:close" width={18} />
-    </button>
+    <div class="dialog-actions">
+      {#if showInvite}
+        <button
+          class="invite-btn invite-btn--{inviteState}"
+          type="button"
+          title={inviteTitle}
+          disabled={inviteDisabled}
+          onclick={handleInviteUser}
+        >
+          {#if inviteState === "loading"}
+            <Icon icon="mdi:loading" width={16} class="spinning" />
+          {:else if inviteState === "success"}
+            <Icon icon="mdi:check" width={16} />
+          {:else if inviteState === "error"}
+            <Icon icon="mdi:alert" width={16} />
+          {:else}
+            <Icon icon="mdi:email-arrow-right-outline" width={16} />
+          {/if}
+        </button>
+      {/if}
+      <button class="close-btn" type="button" title="Close" onclick={onClose}>
+        <Icon icon="mdi:close" width={18} />
+      </button>
+    </div>
 
     {#if user}
       <div class="popup-header">
@@ -282,10 +342,16 @@
     pointer-events: auto;
   }
 
-  .close-btn {
+  .dialog-actions {
     position: absolute;
     top: 0.9rem;
     right: 0.9rem;
+    display: flex;
+    gap: 0.4rem;
+    z-index: 20;
+  }
+
+  .close-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -302,6 +368,39 @@
   .close-btn:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.1);
+  }
+
+  .invite-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    transition:
+      background 0.15s,
+      color 0.15s,
+      opacity 0.15s;
+  }
+
+  .invite-btn:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .invite-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .invite-btn--success {
+    color: var(--accent);
+  }
+
+  .invite-btn--error {
+    color: #ef9a9a;
   }
 
   .dialog-state {

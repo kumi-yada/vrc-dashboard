@@ -372,6 +372,39 @@ pub async fn invite_myself_to_instance(
 }
 
 #[tauri::command]
+pub async fn invite_user(
+    state: State<'_, AuthState>,
+    user_id: String,
+    instance_id: String,
+    message_slot: Option<u32>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let payload = json!({
+        "instanceId": instance_id,
+        "messageSlot": message_slot.unwrap_or(0),
+    });
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{}/invite/{}", BASE_URL, user_id))
+        .headers(build_headers(&token))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn create_instance(
     state: State<'_, AuthState>,
     world_id: String,

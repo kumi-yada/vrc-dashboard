@@ -140,6 +140,7 @@ export interface CurrentUser extends UserProfile {
   onlineFriends: string[];
   offlineFriends: string[];
   activeFriends: string[];
+  location?: string;
   state: string;
   status: string;
 }

@@ -128,6 +128,18 @@ export async function createInstance(
   });
 }
 
+export async function inviteUserToInstance(
+  userId: string,
+  instanceId: string,
+  messageSlot: number = 0,
+): Promise<unknown> {
+  return invoke("invite_user", {
+    userId,
+    instanceId,
+    messageSlot,
+  });
+}
+
 export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {
   return invoke<PrintData[]>("get_own_prints", { userId });
 }
