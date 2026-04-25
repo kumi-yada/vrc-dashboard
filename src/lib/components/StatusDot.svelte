@@ -41,9 +41,9 @@
 <span
   class="status-dot"
   style:background-color={color}
-  style:width={`${size}px`}
-  style:height={`${size}px`}
-  style:border-width={`${borderWidth}px`}
+  style:width={`calc(${size}px * var(--ui-scale, 1))`}
+  style:height={`calc(${size}px * var(--ui-scale, 1))`}
+  style:border-width={`calc(${borderWidth}px * var(--ui-scale, 1))`}
   style:border-color={borderColor}
   style:bottom={bottom}
   style:right={right}

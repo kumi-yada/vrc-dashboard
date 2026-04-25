@@ -237,7 +237,7 @@
         class:active={activeTab === tab.id}
         onclick={() => onTabChange(tab.id)}
       >
-        <Icon icon={tab.icon} width={18} />
+        <Icon icon={tab.icon} width="1.125rem" />
         {tab.label}
       </button>
     {/each}
@@ -253,7 +253,7 @@
         title="Notifications"
         onclick={() => void handleToggleNotifications()}
       >
-        <Icon icon="mdi:bell-outline" width={22} />
+        <Icon icon="mdi:bell-outline" width="1.375rem" />
       </button>
 
       {#if showNotifications}
@@ -350,21 +350,21 @@
     {#if showDesktopWindowControls}
       <div class="window-controls">
         <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
-          <Icon icon="mdi:window-minimize" width={16} />
+          <Icon icon="mdi:window-minimize" width="1rem" />
         </button>
         <button
           class="window-btn"
           title="Maximize"
           onclick={toggleMaximizeWindow}
         >
-          <Icon icon="mdi:window-maximize" width={14} />
+          <Icon icon="mdi:window-maximize" width="0.875rem" />
         </button>
         <button
           class="window-btn window-btn-close"
           title="Close"
           onclick={closeWindow}
         >
-          <Icon icon="mdi:close" width={16} />
+          <Icon icon="mdi:close" width="1rem" />
         </button>
       </div>
     {/if}
@@ -431,8 +431,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: var(--ui-control-size-lg);
+    height: var(--ui-control-size-lg);
     border-radius: 8px;
     color: var(--text-secondary);
     transition: all 0.15s;
@@ -452,8 +452,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--ui-control-size-md);
+    height: var(--ui-control-size-md);
     border-radius: 8px;
     color: var(--text-secondary);
     transition: all 0.15s;
@@ -476,8 +476,6 @@
   }
 
   .avatar-btn :global(.user-avatar) {
-    width: 28px;
-    height: 28px;
     border-radius: 10px;
     display: block;
   }
@@ -501,14 +499,14 @@
     border: 1px solid var(--border);
     padding: 0.6rem 0.75rem;
     border-radius: 8px;
-    min-width: 160px;
+    min-width: var(--ui-popup-min-width);
     box-shadow: 0 6px 18px rgba(0,0,0,0.35);
     font-size: 0.9rem;
   }
 
   .notifications-card {
-    width: min(420px, calc(100vw - 2rem));
-    min-width: 300px;
+    width: min(var(--ui-notifications-width), calc(100vw - 2rem));
+    min-width: var(--ui-popup-wide-min-width);
     text-align: left;
     display: flex;
     flex-direction: column;

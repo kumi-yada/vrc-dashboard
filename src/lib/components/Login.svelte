@@ -36,13 +36,13 @@
   {#if showDesktopWindowControls}
     <div class="window-controls">
       <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
-        <Icon icon="mdi:window-minimize" width={16} />
+        <Icon icon="mdi:window-minimize" width="1rem" />
       </button>
       <button class="window-btn" title="Maximize" onclick={toggleMaximizeWindow}>
-        <Icon icon="mdi:window-maximize" width={14} />
+        <Icon icon="mdi:window-maximize" width="0.875rem" />
       </button>
       <button class="window-btn window-btn-close" title="Close" onclick={closeWindow}>
-        <Icon icon="mdi:close" width={16} />
+        <Icon icon="mdi:close" width="1rem" />
       </button>
     </div>
   {/if}
@@ -99,7 +99,7 @@
   .topbar {
     display: flex;
     align-items: center;
-    height: 36px;
+    height: var(--ui-control-size-lg);
     padding: 0 0.5rem;
     gap: 0.75rem;
     background: var(--topbar-bg);
@@ -108,7 +108,7 @@
   }
 
   .topbar.small {
-    height: 36px;
+    height: var(--ui-control-size-lg);
   }
 
   .window-drag-region {
@@ -127,8 +127,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--ui-control-size-md);
+    height: var(--ui-control-size-md);
     border-radius: 8px;
     color: var(--text-secondary);
     transition: all 0.15s;
@@ -185,6 +185,7 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0.75rem 1rem;
+    min-height: var(--ui-input-min-height);
     font-size: 0.95rem;
     color: var(--text-primary);
     transition: border-color 0.2s;
@@ -199,6 +200,7 @@
     color: #fff;
     border-radius: 8px;
     padding: 0.75rem;
+    min-height: var(--ui-input-min-height);
     font-size: 1rem;
     font-weight: 600;
     transition: background 0.2s;

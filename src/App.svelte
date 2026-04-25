@@ -1,13 +1,64 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import Login from "./lib/components/Login.svelte";
   import Dashboard from "./lib/components/Dashboard.svelte";
   import { getAuth, restoreSession } from "./lib/stores/auth.svelte";
-  import { isAndroid } from "./lib/utils/platform";
+  import {
+    initializeUiScale,
+    refreshAutoScale,
+  } from "./lib/stores/ui-scale.svelte";
+  import { isAndroid, isDesktop } from "./lib/utils/platform";
 
   const auth = getAuth();
 
+  function updateAutoScale(): void {
+    if (!isDesktop || typeof window === "undefined") {
+      return;
+    }
+
+    refreshAutoScale({
+      dpr: window.devicePixelRatio || 1,
+      screenWidth: window.screen?.width ?? window.innerWidth,
+      screenHeight: window.screen?.height ?? window.innerHeight,
+    });
+  }
+
+  function handleWindowResize(): void {
+    updateAutoScale();
+  }
+
+  onMount(() => {
+    initializeUiScale();
+    updateAutoScale();
+
+    if (!isDesktop || typeof window === "undefined") {
+      return;
+    }
+
+    let resolutionMediaQuery = window.matchMedia(
+      `(resolution: ${window.devicePixelRatio}dppx)`,
+    );
+
+    const handleResolutionChange = () => {
+      updateAutoScale();
+      resolutionMediaQuery.removeEventListener("change", handleResolutionChange);
+      resolutionMediaQuery = window.matchMedia(
+        `(resolution: ${window.devicePixelRatio}dppx)`,
+      );
+      resolutionMediaQuery.addEventListener("change", handleResolutionChange);
+    };
+
+    resolutionMediaQuery.addEventListener("change", handleResolutionChange);
+
+    return () => {
+      resolutionMediaQuery.removeEventListener("change", handleResolutionChange);
+    };
+  });
+
   restoreSession();
 </script>
+
+<svelte:window onresize={handleWindowResize} />
 
 <div class="app-shell">
   {#if isAndroid}

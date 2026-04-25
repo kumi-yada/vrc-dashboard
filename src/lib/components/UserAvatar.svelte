@@ -37,8 +37,8 @@
   class="user-avatar"
   loading="lazy"
   title={friend.displayName}
-  style:width={`${size}px`}
-  style:height={`${size}px`}
+  style:width={`calc(${size}px * var(--ui-scale, 1))`}
+  style:height={`calc(${size}px * var(--ui-scale, 1))`}
   style:border-radius={radius}
   style:filter={filter}
 />

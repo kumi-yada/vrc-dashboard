@@ -2,7 +2,16 @@
   import Icon from "@iconify/svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import { getAuth, inviteUserToInstance } from "../stores/auth.svelte";
+  import {
+    USER_SCALE_MAX,
+    USER_SCALE_MIN,
+    USER_SCALE_STEP,
+    getUiScale,
+    resetUserScale,
+    setUserScale,
+  } from "../stores/ui-scale.svelte";
   import type { UserProfile } from "../types";
+  import { isDesktop } from "../utils/platform";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import { formatRelative } from "date-fns";
@@ -30,6 +39,7 @@
   }: Props = $props();
 
   const auth = getAuth();
+  const uiScale = getUiScale();
   const showcasedBadges = $derived(
     user?.badges?.filter((badge) => badge.showcased) ?? [],
   );
@@ -55,6 +65,9 @@
         ? "You must be online to send invites"
         : "Invite user to your current instance",
   );
+  const scalePercent = $derived(Math.round(uiScale.effectiveScale * 100));
+  const autoScalePercent = $derived(Math.round(uiScale.autoScale * 100));
+  const userScalePercent = $derived(Math.round(uiScale.userScale * 100));
 
   $inspect(auth);
 
@@ -118,6 +131,19 @@
       onClose();
     }
   }
+
+  function handleScaleInput(event: Event): void {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLInputElement)) {
+      return;
+    }
+
+    setUserScale(Number.parseFloat(target.value));
+  }
+
+  function handleScaleReset(): void {
+    resetUserScale();
+  }
 </script>
 
 <svelte:document onkeydown={handleKeydown} />
@@ -141,18 +167,18 @@
           onclick={handleInviteUser}
         >
           {#if inviteState === "loading"}
-            <Icon icon="mdi:loading" width={16} class="spinning" />
+            <Icon icon="mdi:loading" width="1rem" class="spinning" />
           {:else if inviteState === "success"}
-            <Icon icon="mdi:check" width={16} />
+            <Icon icon="mdi:check" width="1rem" />
           {:else if inviteState === "error"}
-            <Icon icon="mdi:alert" width={16} />
+            <Icon icon="mdi:alert" width="1rem" />
           {:else}
-            <Icon icon="mdi:email-arrow-right-outline" width={16} />
+            <Icon icon="mdi:email-arrow-right-outline" width="1rem" />
           {/if}
         </button>
       {/if}
       <button class="close-btn" type="button" title="Close" onclick={onClose}>
-        <Icon icon="mdi:close" width={18} />
+        <Icon icon="mdi:close" width="1.125rem" />
       </button>
     </div>
 
@@ -194,14 +220,14 @@
 
       {#if loading}
         <div class="loading-banner">
-          <Icon icon="mdi:loading" width={16} class="spinning" />
+          <Icon icon="mdi:loading" width="1rem" class="spinning" />
           Refreshing profile...
         </div>
       {/if}
 
       {#if error}
         <div class="message-row error-row">
-          <Icon icon="mdi:alert-circle-outline" width={16} />
+          <Icon icon="mdi:alert-circle-outline" width="1rem" />
           <span>{error}</span>
         </div>
       {/if}
@@ -242,9 +268,15 @@
           {/if}
           {#if user.last_activity}
             <div class="stat-divider"></div>
-            <div class="stat" title={new Date(user.last_activity).toLocaleString()}>
+            <div
+              class="stat"
+              title={new Date(user.last_activity).toLocaleString()}
+            >
               <span class="stat-value stat-date"
-                >{formatRelative(new Date(user.last_activity), new Date())}</span
+                >{formatRelative(
+                  new Date(user.last_activity),
+                  new Date(),
+                )}</span
               >
               <span class="stat-label">Last Active</span>
             </div>
@@ -288,21 +320,58 @@
       {/if}
 
       {#if canLogout}
+        {#if isDesktop}
+          <div class="scale-panel">
+            <div class="scale-panel-header">
+              <h3>Interface Scale</h3>
+              <button
+                class="scale-reset-btn"
+                type="button"
+                disabled={uiScale.userScale === 1}
+                onclick={handleScaleReset}
+              >
+                Reset
+              </button>
+            </div>
+
+            <input
+              class="scale-slider"
+              type="range"
+              min={USER_SCALE_MIN}
+              max={USER_SCALE_MAX}
+              step={USER_SCALE_STEP}
+              value={uiScale.userScale}
+              oninput={handleScaleInput}
+              aria-label="Interface scale override"
+            />
+
+            <div class="scale-panel-meta">
+              <span>Override {userScalePercent}%</span>
+              <span>Auto {autoScalePercent}%</span>
+              <span>Effective {scalePercent}%</span>
+            </div>
+
+            <p class="scale-panel-note">
+              Automatic scale is capped at 150% for high-density displays.
+            </p>
+          </div>
+        {/if}
+
         <div class="popup-footer">
           <button class="logout-btn" type="button" onclick={handleLogout}>
-            <Icon icon="mdi:logout" width={15} />
+            <Icon icon="mdi:logout" width="0.9375rem" />
             Sign Out
           </button>
         </div>
       {/if}
     {:else if loading}
       <div class="dialog-state">
-        <Icon icon="mdi:loading" width={24} class="spinning" />
+        <Icon icon="mdi:loading" width="1.5rem" class="spinning" />
         <h2 class="dialog-title" id="user-menu-title">Loading profile</h2>
       </div>
     {:else}
       <div class="dialog-state">
-        <Icon icon="mdi:account-off-outline" width={24} />
+        <Icon icon="mdi:account-off-outline" width="1.5rem" />
         <h2 class="dialog-title" id="user-menu-title">Profile unavailable</h2>
         {#if error}
           <p class="dialog-copy">{error}</p>
@@ -355,8 +424,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--ui-control-size-md);
+    height: var(--ui-control-size-md);
     border-radius: 999px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.04);
@@ -374,8 +443,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: var(--ui-control-size-md);
+    height: var(--ui-control-size-md);
     border-radius: 999px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.04);
@@ -409,7 +478,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.65rem;
-    min-height: 220px;
+    min-height: 13.75rem;
     padding: 2rem 1.5rem;
     color: var(--text-secondary);
     text-align: center;
@@ -534,7 +603,7 @@
   .popup-bio {
     padding: 0.75rem 1.25rem;
     border-top: 1px solid var(--border);
-    max-height: 400px;
+    max-height: 25rem;
     overflow-y: auto;
   }
 
@@ -581,7 +650,7 @@
 
   .stat-divider {
     width: 1px;
-    height: 28px;
+    height: 1.75rem;
     background: var(--border);
   }
 
@@ -594,10 +663,74 @@
   }
 
   .badge-img {
-    width: 34px;
-    height: 34px;
+    width: 2.125rem;
+    height: 2.125rem;
     border-radius: 8px;
     object-fit: contain;
+  }
+
+  .scale-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .scale-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .scale-panel-header h3 {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+
+  .scale-reset-btn {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .scale-reset-btn:hover:enabled {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .scale-reset-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .scale-slider {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .scale-panel-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+  }
+
+  .scale-panel-note {
+    margin: 0;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    line-height: 1.35;
   }
 
   .popup-footer {
