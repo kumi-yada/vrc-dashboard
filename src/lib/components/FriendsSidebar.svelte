@@ -21,20 +21,23 @@
 
   let sortedPrivateFriends = $derived.by(() => {
     const friendOrder = (friend: Friend) => {
-      if (activeFriendIds.includes(friend.id)) {
-        return 1;
-      }
+      const isOffline = friend.location === "offline";
+      let value = isOffline ? -10 : 0;
       switch (friend.status) {
         case Status.JoinMe:
-          return 5;
+          value += 5;
+          break;
         case Status.Active:
-          return 4;
+          value += 4;
+          break;
         case Status.AskMe:
-          return 3;
+          value += 3;
+          break;
         case Status.Busy:
-          return 2;
+          value += 2;
+          break;
       }
-      return 0;
+      return value;
     };
 
     return [...privateFriends].sort((left, right) => {
