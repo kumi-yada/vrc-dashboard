@@ -73,7 +73,7 @@ jobs:
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
           # releaseBody:  ${{ steps.changelog.outputs.changelog }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
@@ -151,7 +151,7 @@ jobs:
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
           # releaseBody: ${{ steps.changelog.outputs.changelog }}
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           mobile: 'android'
           args: '--apk'
