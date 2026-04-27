@@ -50,7 +50,8 @@ body,
 }
 
 html {
-  font-size: calc(16px * var(--ui-scale));
+  font-size: 16px;
+  zoom: var(--ui-scale);
 }
 
 /* Slim, auto-hiding scrollbars */
