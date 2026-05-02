@@ -6,16 +6,26 @@
   import WorldsPage from "./WorldsPage.svelte";
   import RecentPage from "./RecentPage.svelte";
   import { refreshCurrentUser } from "../stores/auth.svelte";
+
+  const REFRESH_COOLDOWN_MS = 30_000;
+
   let activeTab = $state("friends");
   let photosRefreshToken = $state(0);
   let friendsRefreshToken = $state(0);
   let worldsRefreshToken = $state(0);
   let recentRefreshToken = $state(0);
   let refreshPromise: Promise<void> | null = null;
+  let lastRefreshTime = 0;
+
+  function isCoolingDown(): boolean {
+    return Date.now() - lastRefreshTime < REFRESH_COOLDOWN_MS;
+  }
 
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
+    if (isCoolingDown()) return;
 
+    lastRefreshTime = Date.now();
     friendsRefreshToken += 1;
     worldsRefreshToken += 1;
     recentRefreshToken += 1;
@@ -37,6 +47,9 @@
   }
 
   function handleWindowFocus() {
+    if (isCoolingDown()) return;
+
+    lastRefreshTime = Date.now();
     if (activeTab === "photos") {
       void refreshCurrentUser();
       photosRefreshToken += 1;
@@ -53,7 +66,9 @@
 
   function handleVisibilityChange() {
     if (document.visibilityState !== "visible") return;
+    if (isCoolingDown()) return;
 
+    lastRefreshTime = Date.now();
     if (activeTab === "photos") {
       void refreshCurrentUser();
       photosRefreshToken += 1;
