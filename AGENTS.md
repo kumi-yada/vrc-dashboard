@@ -1,56 +1,45 @@
-## Frameworks
+# VRC Dashboard — Agent Instructions
 
-- Tauri Desktop Application using Svelte
-- Iconify for the icons
+**Stack**: Svelte 5 + Tauri 2.x (Rust backend) + Vite 8.x + TypeScript 6.x + pnpm 10+  
+**Icons**: `@iconify/svelte` (`mdi:` prefix) | **Dates**: `date-fns`  
+**No** test, lint, typecheck, or format infrastructure exists. No codegen.
 
-## LLMS
+## Dev Commands
 
-Get infos about the various tools and frameworks at
+| Command | Effect |
+|---|---|
+| `pnpm start` | `tauri dev` — native window, hot-reload |
+| `pnpm dev` | `vite` — browser-only at `:1420`; Tauri IPC will fail |
+| `pnpm build` | `vite build` → `dist/` |
+| `pnpm tauri` | Raw Tauri CLI passthrough |
 
-- [tauri.txt](./.github/llms/tauri.txt)
-- [svelte.txt](./.github/llms/svelte.txt)
+Android: `pnpm tauri android dev` / `pnpm tauri android build --apk`
 
-## Example Data
+**Lockfile required** — CI runs `pnpm install --frozen-lockfile`. Add/update with `pnpm install` (no flag).
 
-- /auth/user - Get the info of the current user [me.json](./data/me.json)
-- /users/usr_** - Get the info of a user [user.json](./data/user.json)
-- /instances/wrld_**:** - Get the info of a instance [user.json](./data/instance.json)
+## Architecture
 
-## Instance ID
+```
+src/                          # Svelte 5 + TypeScript frontend
+  main.ts → App.svelte
+  app.css                     # Dark-theme CSS custom properties on :root
+  lib/
+    types.ts                  # All TS interfaces (Friend, WorldData, InstanceData, etc.)
+    stores/
+      auth.svelte.ts          # Token, user, login/logout, ALL API wrappers
+      friends.svelte.ts       # Online/offline/private friends, instance grouping
+      favorites.svelte.ts     # localStorage key "vrc-dashboard-favorites"
+      ui-scale.svelte.ts      # DPI-aware zoom
+    utils/
+      instance.ts             # Instance ID parsing (visibility, region, owner)
+      platform.ts             # isDesktop / isAndroid detection
+    components/               # 17 Svelte components (see src/lib/components/)
+src-tauri/                    # Rust backend
+  src/main.rs → app_lib::run()
+  src/lib.rs                  # Tauri Builder: manages AuthState, 18 commands
+  src/commands.rs             # All proxied VRChat API calls via reqwest
+```
 
-`wrld_5993198d-e869-414b-bf97-deb424bff63c:09605~hidden(usr_d35eff2e-3229-447b-94d4-7f24bb61fbd8)~region(jp)`
+## Linux Quirk (Rust)
 
-A instance ID contains various information about it.
-
-### World ID
-
-The instance ID starts with the world ID until the colon.
-
-### Visibility
-
-The visibility of the instance can be determined like this:
-if it contains any of the below in the ID
-
-- `~friends(` - It's friend only
-- `~hidden(` - It's friend+
-- `~private(` and `~canRequestInvite` - It's invite+
-- `~private(` - It's invite only
-- `~groupAccessType(public)` - It's group public
-- `~groupAccessType(plus)` or `~group(` - It's group+
-- if none of the above it's public
-
-### Owner ID
-
-In friend-only and friend+, you can get the user_id of the owner between the parenthesis of `~friends()` or `~hidden()`
-
-In group public and group+, the group_id can be found between the parenthesis of `~group()`
-
-Public instances don't have owners
-
-### Region
-
-Region can be parsed from the `~region()` part
-
-## Authentication
-
-We use a single token the user have to get from the VRChat website and paste it into the application.
+`lib.rs` sets `WEBKIT_DISABLE_DMABUF_RENDERER=1` before initializing the webview. Required on some Linux GPU combos — do not remove.
