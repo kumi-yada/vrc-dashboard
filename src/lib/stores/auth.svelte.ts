@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type {
+  ApiFavorite,
+  ApiFavoriteGroup,
   CreateInstanceRequest,
   CurrentUser,
   InstanceData,
@@ -218,6 +220,17 @@ export async function inviteUserToInstance(
 
 export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {
   return invoke<PrintData[]>("get_own_prints", { userId });
+}
+
+export async function fetchFavoriteGroups(): Promise<ApiFavoriteGroup[]> {
+  return invoke<ApiFavoriteGroup[]>("get_favorite_groups");
+}
+
+export async function fetchFavorites(
+  type?: string,
+  tag?: string,
+): Promise<ApiFavorite[]> {
+  return invoke<ApiFavorite[]>("get_favorites", { type, tag: tag ?? null });
 }
 
 export async function searchWorlds(

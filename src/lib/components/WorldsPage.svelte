@@ -1,8 +1,8 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { searchWorlds, fetchWorld } from "../stores/auth.svelte";
+  import { searchWorlds, fetchWorld, fetchFavoriteGroups, fetchFavorites } from "../stores/auth.svelte";
   import { getFavorites } from "../stores/favorites.svelte";
-  import type { InstanceGroup, WorldData } from "../types";
+  import type { ApiFavoriteGroup, InstanceGroup, WorldData } from "../types";
   import WorldCard from "./WorldCard.svelte";
   import WorldDialog from "./WorldDialog.svelte";
 
@@ -32,6 +32,22 @@
   const favorites = getFavorites();
   let favoriteFilter = $state<string | null>(null);
   let favFilterOpen = $state(false);
+  let apiGroups = $state<ApiFavoriteGroup[]>([]);
+  let apiWorldIdsCache = $state<Record<string, string[]>>({});
+
+  let dropdownItems = $derived.by(() => {
+    const items: Array<{ id: string; name: string; count: number; type: 'local' | 'api'; tag?: string }> = [];
+    for (const g of favorites.groups) {
+      items.push({ id: g.id, name: g.name, count: g.worldIds.length, type: 'local' });
+    }
+    for (const g of apiGroups) {
+      items.push({ id: g.id, name: g.displayName, count: 0, type: 'api', tag: g.name });
+    }
+    return items;
+  });
+
+  let localDropdownItems = $derived(dropdownItems.filter((i) => i.type === 'local'));
+  let apiDropdownItems = $derived(dropdownItems.filter((i) => i.type === 'api'));
 
   // World dialog state
   let selectedWorld = $state<WorldData | null>(null);
@@ -60,8 +76,8 @@
 
     try {
       if (favoriteFilter) {
-        const group = favorites.groups.find((g) => g.id === favoriteFilter);
-        if (!group || group.worldIds.length === 0) {
+        const item = dropdownItems.find((i) => i.id === favoriteFilter);
+        if (!item) {
           if (gen !== loadGeneration) return;
           worlds = [];
           offset = 0;
@@ -69,12 +85,40 @@
           error = null;
           return;
         }
-        const ids = group.worldIds.slice(currentOffset, currentOffset + PAGE_SIZE);
+
+        let worldIds: string[];
+        if (item.type === 'local') {
+          const group = favorites.groups.find((g) => g.id === favoriteFilter);
+          worldIds = group?.worldIds ?? [];
+        } else {
+          const tag = item.tag ?? item.name;
+          if (!apiWorldIdsCache[tag]) {
+            try {
+              const favs = await fetchFavorites('world', tag);
+              if (gen !== loadGeneration) return;
+              apiWorldIdsCache = { ...apiWorldIdsCache, [tag]: favs.map((f) => f.favoriteId) };
+            } catch {
+              if (gen !== loadGeneration) return;
+              apiWorldIdsCache = { ...apiWorldIdsCache, [tag]: [] };
+            }
+          }
+          worldIds = apiWorldIdsCache[tag] ?? [];
+        }
+
+        if (worldIds.length === 0) {
+          if (gen !== loadGeneration) return;
+          worlds = [];
+          offset = 0;
+          hasMore = false;
+          error = null;
+          return;
+        }
+        const ids = worldIds.slice(currentOffset, currentOffset + PAGE_SIZE);
         const results = await Promise.all(ids.map((id) => fetchWorld(id)));
         if (gen !== loadGeneration) return;
         worlds = reset ? results : [...worlds, ...results];
         offset = currentOffset + results.length;
-        hasMore = currentOffset + results.length < group.worldIds.length;
+        hasMore = currentOffset + results.length < worldIds.length;
         error = null;
       } else {
         const results = await searchWorlds(
@@ -201,6 +245,7 @@
         debounceTimer = null;
       }
       void loadWorlds(true);
+      void loadApiGroups();
     }
   });
 
@@ -244,6 +289,16 @@
     worldError = null;
     selectedWorld = null;
     selectedGroup = null;
+  }
+
+  async function loadApiGroups() {
+    try {
+      const groups = await fetchFavoriteGroups();
+      apiGroups = groups.filter((g) => g.type === "world");
+      apiWorldIdsCache = {};
+    } catch {
+      apiGroups = [];
+    }
   }
 
   async function handleWorldOpen(world: WorldData) {
@@ -422,7 +477,7 @@
           />
           <span class="sort-label">
             {favoriteFilter
-              ? (favorites.groups.find((g) => g.id === favoriteFilter)?.name ?? "Favorites")
+              ? (dropdownItems.find((i) => i.id === favoriteFilter)?.name ?? "Favorites")
               : "Favorites"}
           </span>
           <Icon icon="mdi:chevron-down" width={13} class="chevron" />
@@ -444,28 +499,52 @@
               />
               All worlds
             </button>
-            {#if favorites.groups.length > 0}
-              <div class="fav-filter-separator"></div>
-              {#each favorites.groups as group (group.id)}
-                <button
-                  type="button"
-                  class="preset-item"
-                  class:active={favoriteFilter === group.id}
-                  onclick={() => {
-                    favoriteFilter = group.id;
-                    favFilterOpen = false;
-                  }}
-                >
-                  <Icon
-                    icon={favoriteFilter === group.id
-                      ? "mdi:check-circle"
-                      : "mdi:circle-outline"}
-                    width={14}
-                  />
-                  {group.name}
-                  <span class="fav-filter-count">{group.worldIds.length}</span>
-                </button>
-              {/each}
+            {#if dropdownItems.length > 0}
+              {#if localDropdownItems.length > 0}
+                <div class="fav-filter-separator"></div>
+                {#each localDropdownItems as item (item.id)}
+                  <button
+                    type="button"
+                    class="preset-item"
+                    class:active={favoriteFilter === item.id}
+                    onclick={() => {
+                      favoriteFilter = item.id;
+                      favFilterOpen = false;
+                    }}
+                  >
+                    <Icon
+                      icon={favoriteFilter === item.id
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"}
+                      width={14}
+                    />
+                    {item.name}
+                    <span class="fav-filter-count">{item.count}</span>
+                  </button>
+                {/each}
+              {/if}
+              {#if apiDropdownItems.length > 0}
+                <div class="fav-filter-separator"></div>
+                {#each apiDropdownItems as item (item.id)}
+                  <button
+                    type="button"
+                    class="preset-item"
+                    class:active={favoriteFilter === item.id}
+                    onclick={() => {
+                      favoriteFilter = item.id;
+                      favFilterOpen = false;
+                    }}
+                  >
+                    <Icon
+                      icon={favoriteFilter === item.id
+                        ? "mdi:check-circle"
+                        : "mdi:circle-outline"}
+                      width={14}
+                    />
+                    {item.name}
+                  </button>
+                {/each}
+              {/if}
             {:else}
               <p class="fav-filter-empty">No favorite groups yet</p>
             {/if}

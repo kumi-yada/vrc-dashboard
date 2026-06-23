@@ -32,6 +32,8 @@ pub fn run() {
             commands::invite_user,
             commands::create_instance,
             commands::get_recent_instances,
+            commands::get_favorite_groups,
+            commands::get_favorites,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {

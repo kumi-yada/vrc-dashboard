@@ -479,6 +479,83 @@ pub async fn invite_myself_to_instance(
 }
 
 #[tauri::command]
+pub async fn get_favorite_groups(
+    state: State<'_, AuthState>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("{}/favorite/groups", BASE_URL))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_favorites(
+    state: State<'_, AuthState>,
+    r#type: Option<String>,
+    tag: Option<String>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let page_size = 100;
+    let mut offset = 0;
+    let mut all_favorites: Vec<Value> = Vec::new();
+
+    loop {
+        let mut params: Vec<(&str, String)> = vec![
+            ("n", page_size.to_string()),
+            ("offset", offset.to_string()),
+        ];
+        if let Some(ref val) = r#type {
+            params.push(("type", val.clone()));
+        }
+        if let Some(ref val) = tag {
+            params.push(("tag", val.clone()));
+        }
+
+        let resp = client
+            .get(format!("{}/favorites", BASE_URL))
+            .headers(build_headers(&token))
+            .query(&params)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if !resp.status().is_success() {
+            return Err(format!("API error: {}", resp.status()));
+        }
+
+        let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
+        let count = page.len();
+        all_favorites.extend(page);
+
+        if count < page_size {
+            break;
+        }
+        offset += page_size;
+    }
+
+    Ok(Value::Array(all_favorites))
+}
+
+#[tauri::command]
 pub async fn invite_user(
     state: State<'_, AuthState>,
     user_id: String,

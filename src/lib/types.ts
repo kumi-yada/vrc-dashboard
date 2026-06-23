@@ -204,3 +204,21 @@ export const PLATFORM_META: Record<
 export const SUPPORTED_PLATFORMS = Object.keys(
   PLATFORM_META,
 ) as SupportedPlatform[];
+
+export interface ApiFavoriteGroup {
+  id: string;
+  name: string;
+  displayName: string;
+  type: string;
+  ownerId: string;
+  ownerDisplayName: string;
+  tags: string[];
+  visibility: string;
+}
+
+export interface ApiFavorite {
+  id: string;
+  type: string;
+  favoriteId: string;
+  tags: string[];
+}
