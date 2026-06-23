@@ -9,6 +9,7 @@
   import { fetchUserProfile, fetchWorld, getAuth } from "../stores/auth.svelte";
   import type { InstanceGroup, UserProfile, WorldData } from "../types";
   import InstanceCard from "./InstanceCard.svelte";
+  import TravelingCard from "./TravelingCard.svelte";
   import FriendsSidebar from "./FriendsSidebar.svelte";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import WorldDialog from "./WorldDialog.svelte";
@@ -202,13 +203,19 @@
             Retry
           </button>
         </div>
-      {:else if friends.instanceGroups.length === 0 && friends.privateFriends.length === 0}
+      {:else if friends.instanceGroups.length === 0 && friends.privateFriends.length === 0 && friends.travelingFriends.length === 0}
         <div class="empty-state">
           <Icon icon="mdi:account-off-outline" width={48} />
           <p>No friends online</p>
         </div>
       {:else}
         <div class="instances-grid">
+          {#if friends.travelingFriends.length > 0}
+            <TravelingCard
+              friends={friends.travelingFriends}
+              onFriendProfile={handleFriendProfile}
+            />
+          {/if}
           {#each friends.instanceGroups as group (group.location)}
             <InstanceCard
               {group}

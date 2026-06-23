@@ -6,6 +6,7 @@ import { parseInstanceId } from "../utils/instance";
 let onlineFriends = $state.raw<Friend[]>([]);
 let offlineFriends = $state.raw<Friend[]>([]);
 let privateFriends = $state.raw<Friend[]>([]);
+let travelingFriends = $state.raw<Friend[]>([]);
 let instanceGroups = $state.raw<InstanceGroup[]>([]);
 let loading = $state(false);
 let error = $state<string | null>(null);
@@ -49,10 +50,19 @@ export function getFriendsStore() {
     );
   });
 
+  const filteredTraveling = $derived.by(() => {
+    if (!searchQuery.trim()) return travelingFriends;
+    const q = searchQuery.toLowerCase();
+    return travelingFriends.filter((f) =>
+      f.displayName.toLowerCase().includes(q)
+    );
+  });
+
   return {
     get instanceGroups() { return filteredGroups; },
     get privateFriends() { return filteredPrivate; },
     get offlineFriends() { return filteredOffline; },
+    get travelingFriends() { return filteredTraveling; },
     get onlineCount() { return onlineFriends.filter(f => f.location !== "offline").length; },
     get activeCount() { return onlineFriends.filter(l => l.location === "offline").length; },
     get totalCount() { return onlineFriends.length + offlineFriends.length; },
@@ -80,9 +90,12 @@ export async function fetchFriends(reload = false): Promise<void> {
     // Categorize online friends
     const inInstance: Friend[] = [];
     const inPrivate: Friend[] = [];
+    const traveling: Friend[] = [];
 
     for (const friend of onlineResult) {
-      if (
+      if (friend.location === "traveling") {
+        traveling.push(friend);
+      } else if (
         !friend.location ||
         friend.location === "private" ||
         friend.location === "offline" ||
@@ -95,6 +108,7 @@ export async function fetchFriends(reload = false): Promise<void> {
     }
 
     privateFriends = inPrivate;
+    travelingFriends = traveling;
 
     // Group by location
     const groupMap = new Map<string, Friend[]>();
