@@ -23,9 +23,6 @@
 
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
-    if (isCoolingDown()) return;
-
-    lastRefreshTime = Date.now();
     friendsRefreshToken += 1;
     worldsRefreshToken += 1;
     recentRefreshToken += 1;
