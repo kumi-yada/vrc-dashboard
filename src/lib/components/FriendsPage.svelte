@@ -318,7 +318,7 @@
     border-radius: 8px;
     padding: 0.4rem 0.75rem;
     flex: 1;
-    max-width: 800px;
+    max-width: 400px;
     color: var(--text-muted);
   }
 
