@@ -26,7 +26,6 @@ pub fn run() {
             commands::get_friends,
             commands::get_instance,
             commands::get_world,
-            commands::get_own_prints,
             commands::search_worlds,
             commands::invite_myself_to_instance,
             commands::invite_user,

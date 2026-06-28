@@ -6,7 +6,6 @@ import type {
   CurrentUser,
   InstanceData,
   Notification,
-  PrintData,
   UserProfile,
   WorldData,
 } from "../types";
@@ -216,10 +215,6 @@ export async function inviteUserToInstance(
     instanceId,
     messageSlot,
   });
-}
-
-export async function fetchOwnPrints(userId: string): Promise<PrintData[]> {
-  return invoke<PrintData[]>("get_own_prints", { userId });
 }
 
 export async function fetchFavoriteGroups(): Promise<ApiFavoriteGroup[]> {

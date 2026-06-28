@@ -72,25 +72,6 @@ export interface WorldUnityPackage {
   platform: string;
 }
 
-export interface PrintFiles {
-  fileId: string;
-  image: string;
-}
-
-export interface PrintData {
-  id: string;
-  authorId: string;
-  authorName: string;
-  createdAt: string;
-  files: PrintFiles;
-  note: string;
-  ownerId: string;
-  sharedBy: string;
-  timestamp: string;
-  worldId: string;
-  worldName: string;
-}
-
 export interface Notification {
   id: string;
   created_at: string;

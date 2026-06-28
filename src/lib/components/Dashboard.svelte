@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import TopBar from "./TopBar.svelte";
   import FriendsPage from "./FriendsPage.svelte";
-  import PhotosPage from "./PhotosPage.svelte";
   import WorldsPage from "./WorldsPage.svelte";
   import RecentPage from "./RecentPage.svelte";
   import { refreshCurrentUser } from "../stores/auth.svelte";
@@ -10,7 +9,6 @@
   const REFRESH_COOLDOWN_MS = 30_000;
 
   let activeTab = $state("friends");
-  let photosRefreshToken = $state(0);
   let friendsRefreshToken = $state(0);
   let worldsRefreshToken = $state(0);
   let recentRefreshToken = $state(0);
@@ -47,11 +45,6 @@
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
-    if (activeTab === "photos") {
-      void refreshCurrentUser();
-      photosRefreshToken += 1;
-      return;
-    }
     if (activeTab === "recent") {
       void refreshCurrentUser();
       return;
@@ -66,11 +59,6 @@
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
-    if (activeTab === "photos") {
-      void refreshCurrentUser();
-      photosRefreshToken += 1;
-      return;
-    }
     if (activeTab === "recent") {
       void refreshCurrentUser();
       return;
@@ -92,8 +80,6 @@
   <div class="content-area">
     {#if activeTab === "friends"}
       <FriendsPage refreshToken={friendsRefreshToken} onRefresh={refreshDashboardData} />
-    {:else if activeTab === "photos"}
-      <PhotosPage refreshToken={photosRefreshToken} onRefresh={async () => { await refreshCurrentUser(); photosRefreshToken += 1; }} />
     {:else if activeTab === "worlds"}
       <WorldsPage refreshToken={worldsRefreshToken} onRefresh={handleRefresh} />
     {:else if activeTab === "recent"}
