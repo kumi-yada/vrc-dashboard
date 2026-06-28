@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { onMount } from "svelte";
+  import { formatDistanceToNow } from "date-fns";
   import {
     getFriendsStore,
     fetchFriends,
@@ -10,9 +10,11 @@
   import type { InstanceGroup, UserProfile, WorldData } from "../types";
   import InstanceCard from "./InstanceCard.svelte";
   import TravelingCard from "./TravelingCard.svelte";
-  import FriendsSidebar from "./FriendsSidebar.svelte";
+  import PrivateCard from "./PrivateCard.svelte";
+  import ActiveCard from "./ActiveCard.svelte";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import WorldDialog from "./WorldDialog.svelte";
+  import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
     refreshToken: number;
@@ -25,28 +27,27 @@
   const auth = getAuth();
   let lastRefreshToken = -1;
 
-  // Online count popover state
-  let showOnlinePopover = $state(false);
-  let popoverTriggerEl = $state<HTMLElement | null>(null);
-  let popoverEl = $state<HTMLElement | null>(null);
+  // Offline tab toggle state
+  let showOfflineTab = $state(false);
 
-  function toggleOnlinePopover(e: MouseEvent) {
+  function toggleOfflineTab(e: MouseEvent) {
     e.stopPropagation();
-    showOnlinePopover = !showOnlinePopover;
+    showOfflineTab = !showOfflineTab;
   }
 
-  function handleDocumentClick(e: MouseEvent) {
-    if (!showOnlinePopover) return;
-    if (
-      !(popoverEl?.contains(e.target as Node) || popoverTriggerEl?.contains(e.target as Node))
-    ) {
-      showOnlinePopover = false;
-    }
-  }
+  // Sort offline friends by last activity (most recent first)
+  let sortedOfflineFriends = $derived.by(() => {
+    const activityTime = (friend: any) => {
+      const v = friend.last_activity;
+      if (!v) return 0;
+      if (typeof v === "number") return v;
+      const t = Date.parse(String(v));
+      return Number.isFinite(t) ? t : 0;
+    };
 
-  onMount(() => {
-    document.addEventListener("click", handleDocumentClick);
-    return () => document.removeEventListener("click", handleDocumentClick);
+    return [...friends.offlineFriends].sort(
+      (a, b) => activityTime(b) - activityTime(a)
+    );
   });
 
   // Profile dialog state
@@ -174,22 +175,49 @@
       <button
         type="button"
         class="online-count"
-        bind:this={popoverTriggerEl}
-        onclick={toggleOnlinePopover}
+        class:active={showOfflineTab}
+        onclick={toggleOfflineTab}
       >
         {friends.onlineCount}/{friends.totalCount} Online
       </button>
-      {#if showOnlinePopover}
-        <div class="online-popover" bind:this={popoverEl}>
-          <div class="popover-item"><strong>Online:</strong> {friends.onlineCount}</div>
-          <div class="popover-item"><strong>Active:</strong> {friends.activeCount}</div>
-          <div class="popover-item"><strong>Offline:</strong> {Math.max(0, friends.totalCount - friends.onlineCount)}</div>
-        </div>
-      {/if}
     </div>
   </div>
-  <div class="content-row">
-    <div class="main-content">
+  <div class="main-content">
+    {#if showOfflineTab}
+      <!-- Offline friends grid -->
+      {#if friends.loading && sortedOfflineFriends.length === 0}
+        <div class="loading-state">
+          <Icon icon="mdi:loading" width={32} class="spinning" />
+          <p>Loading offline friends...</p>
+        </div>
+      {:else if sortedOfflineFriends.length === 0}
+        <div class="empty-state">
+          <Icon icon="mdi:account-off-outline" width={48} />
+          <p>No offline friends</p>
+        </div>
+      {:else}
+        <div class="offline-grid">
+          {#each sortedOfflineFriends as friend (friend.id)}
+            <button class="offline-friend-item" onclick={() => handleFriendProfile(friend)}>
+              <div class="offline-avatar">
+                <UserAvatar {friend} grayscale={100} />
+              </div>
+              <div class="offline-info">
+                <span class="offline-name">{friend.displayName}</span>
+                <span class="offline-time">
+                  {#if friend.last_activity}
+                    {formatDistanceToNow(new Date(friend.last_activity), { addSuffix: true })}
+                  {:else}
+                    Unknown
+                  {/if}
+                </span>
+              </div>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    {:else}
+      <!-- Instance/friends cards grid -->
       {#if friends.loading && friends.instanceGroups.length === 0}
         <div class="loading-state">
           <Icon icon="mdi:loading" width={32} class="spinning" />
@@ -203,7 +231,7 @@
             Retry
           </button>
         </div>
-      {:else if friends.instanceGroups.length === 0 && friends.privateFriends.length === 0 && friends.travelingFriends.length === 0}
+      {:else if friends.instanceGroups.length === 0 && friends.privateFriends.length === 0 && friends.activeFriends.length === 0 && friends.travelingFriends.length === 0}
         <div class="empty-state">
           <Icon icon="mdi:account-off-outline" width={48} />
           <p>No friends online</p>
@@ -216,6 +244,18 @@
               onFriendProfile={handleFriendProfile}
             />
           {/if}
+          {#if friends.privateFriends.length > 0}
+            <PrivateCard
+              friends={friends.privateFriends}
+              onFriendProfile={handleFriendProfile}
+            />
+          {/if}
+          {#if friends.activeFriends.length > 0}
+            <ActiveCard
+              friends={friends.activeFriends}
+              onFriendProfile={handleFriendProfile}
+            />
+          {/if}
           {#each friends.instanceGroups as group (group.location)}
             <InstanceCard
               {group}
@@ -225,13 +265,7 @@
           {/each}
         </div>
       {/if}
-    </div>
-    <FriendsSidebar
-      privateFriends={friends.privateFriends}
-      offlineFriends={friends.offlineFriends}
-      activeFriendIds={auth.user?.activeFriends || []}
-      onFriendProfile={handleFriendProfile}
-    />
+    {/if}
   </div>
 </div>
 
@@ -327,18 +361,24 @@
 
   .online-count {
     border: none;
-    background: transparent;
-    padding: 0;
+    background: var(--bg-input);
+    padding: 0.4rem 0.75rem;
     font-size: 0.9rem;
     color: var(--text-secondary);
     white-space: nowrap;
     cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
   }
 
-  .content-row {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
+  .online-count:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+
+  .online-count.active {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--accent);
   }
 
   .main-content {
@@ -392,24 +432,60 @@
     animation: spin 1s linear infinite;
   }
 
-  .online-popover {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    padding: 0.5rem;
-    border-radius: 8px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    min-width: 180px;
-    z-index: 20;
-    color: var(--text-primary);
+  .offline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
   }
 
-  .online-popover .popover-item {
-    padding: 0.25rem 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+  .offline-friend-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-align: center;
+  }
+
+  .offline-friend-item:hover {
+    background: var(--bg-card-hover);
+  }
+
+  .offline-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .offline-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .offline-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
+  }
+
+  .offline-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
   }
 
   @keyframes spin {

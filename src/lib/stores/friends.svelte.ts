@@ -6,6 +6,7 @@ import { parseInstanceId } from "../utils/instance";
 let onlineFriends = $state.raw<Friend[]>([]);
 let offlineFriends = $state.raw<Friend[]>([]);
 let privateFriends = $state.raw<Friend[]>([]);
+let activeFriends = $state.raw<Friend[]>([]);
 let travelingFriends = $state.raw<Friend[]>([]);
 let instanceGroups = $state.raw<InstanceGroup[]>([]);
 let loading = $state(false);
@@ -42,6 +43,14 @@ export function getFriendsStore() {
     );
   });
 
+  const filteredActive = $derived.by(() => {
+    if (!searchQuery.trim()) return activeFriends;
+    const q = searchQuery.toLowerCase();
+    return activeFriends.filter((f) =>
+      f.displayName.toLowerCase().includes(q)
+    );
+  });
+
   const filteredOffline = $derived.by(() => {
     if (!searchQuery.trim()) return offlineFriends;
     const q = searchQuery.toLowerCase();
@@ -61,6 +70,7 @@ export function getFriendsStore() {
   return {
     get instanceGroups() { return filteredGroups; },
     get privateFriends() { return filteredPrivate; },
+    get activeFriends() { return filteredActive; },
     get offlineFriends() { return filteredOffline; },
     get travelingFriends() { return filteredTraveling; },
     get onlineCount() { return onlineFriends.filter(f => f.location !== "offline").length; },
@@ -90,24 +100,27 @@ export async function fetchFriends(reload = false): Promise<void> {
     // Categorize online friends
     const inInstance: Friend[] = [];
     const inPrivate: Friend[] = [];
+    const active: Friend[] = [];
     const traveling: Friend[] = [];
 
     for (const friend of onlineResult) {
       if (friend.location === "traveling") {
         traveling.push(friend);
+      } else if (friend.location === "private") {
+        inPrivate.push(friend);
       } else if (
         !friend.location ||
-        friend.location === "private" ||
         friend.location === "offline" ||
         friend.location === ""
       ) {
-        inPrivate.push(friend);
+        active.push(friend);
       } else {
         inInstance.push(friend);
       }
     }
 
     privateFriends = inPrivate;
+    activeFriends = active;
     travelingFriends = traveling;
 
     // Group by location
