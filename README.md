@@ -13,6 +13,8 @@ other apps. Improved UX for my personal needs
 - Friends Page: see who is online, where they are, what platform they are on etc.
 - Worlds Page: search for worlds using tags
 - Recent Page: recent instances you have been to
+- Utilities
+    - URL resolver for sites like bilibili so they can be put in VRC
 
 ## Tools
 

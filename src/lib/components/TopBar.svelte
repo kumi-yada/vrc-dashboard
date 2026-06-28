@@ -12,6 +12,7 @@
   import { showDesktopWindowControls } from "../utils/platform";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import UserAvatar from "./UserAvatar.svelte";
+  import UtilityDialog from "./UtilityDialog.svelte";
 
   interface Props {
     activeTab: string;
@@ -24,6 +25,7 @@
   const appWindow = getCurrentWindow();
   let showUserMenu = $state(false);
   let showNotifications = $state(false);
+  let showUtility = $state(false);
   let notifications = $state.raw<Notification[]>([]);
   let notificationsLoading = $state(false);
   let notificationsError = $state<string | null>(null);
@@ -32,6 +34,7 @@
   let deletingNotifications = $state.raw<Record<string, boolean>>({});
   let notificationsWrapperEl = $state<HTMLElement | null>(null);
   let userMenuWrapperEl = $state<HTMLElement | null>(null);
+  let utilityWrapperEl = $state<HTMLElement | null>(null);
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
@@ -42,6 +45,7 @@
   async function handleLogout() {
     showUserMenu = false;
     showNotifications = false;
+    showUtility = false;
     await logout();
   }
 
@@ -134,6 +138,7 @@
   async function handleToggleNotifications(): Promise<void> {
     showNotifications = !showNotifications;
     showUserMenu = false;
+    showUtility = false;
 
     if (showNotifications) {
       await loadNotifications();
@@ -144,6 +149,15 @@
     showUserMenu = !showUserMenu;
     if (showUserMenu) {
       showNotifications = false;
+      showUtility = false;
+    }
+  }
+
+  function handleToggleUtility(): void {
+    showUtility = !showUtility;
+    if (showUtility) {
+      showNotifications = false;
+      showUserMenu = false;
     }
   }
 
@@ -201,13 +215,15 @@
 
     if (
       notificationsWrapperEl?.contains(target) ||
-      userMenuWrapperEl?.contains(target)
+      userMenuWrapperEl?.contains(target) ||
+      utilityWrapperEl?.contains(target)
     ) {
       return;
     }
 
     showNotifications = false;
     showUserMenu = false;
+    showUtility = false;
   }
 
   async function minimizeWindow() {
@@ -245,6 +261,20 @@
   <div class="window-drag-region" data-tauri-drag-region></div>
 
   <div class="actions">
+    <div class="utility-wrapper" bind:this={utilityWrapperEl}>
+      <button
+        class="icon-btn"
+        class:active={showUtility}
+        title="Utilities"
+        onclick={handleToggleUtility}
+      >
+        <Icon icon="mdi:tools" width="1.375rem" />
+      </button>
+
+      {#if showUtility}
+        <UtilityDialog onClose={() => (showUtility = false)} />
+      {/if}
+    </div>
     <div class="notifications-wrapper" bind:this={notificationsWrapperEl}>
       <button
         class="icon-btn"
@@ -480,6 +510,12 @@
   }
 
   .notifications-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .utility-wrapper {
     position: relative;
     display: flex;
     align-items: center;
