@@ -21,6 +21,23 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges)
+          fi
+          {
+            echo "changelog<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
@@ -59,11 +76,6 @@ jobs:
         env:
           GITHUB_REF_NAME: ${{ github.ref_name }}
 
-      # - id: changelog
-      #   uses: kuma-gee/action-godot/changelog@main
-      #   with:
-      #     latest-tag: ${{ github.ref_name }}
-
       # v1 not released yet, even though it's documented !?!?!?
       - uses: tauri-apps/tauri-action@dev
         env:
@@ -72,7 +84,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
-          # releaseBody:  ${{ steps.changelog.outputs.changelog }}
+          releaseBody: ${{ steps.changelog.outputs.changelog }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
@@ -83,6 +95,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s" --no-merges)
+          fi
+          {
+            echo "changelog<<EOF"
+            echo "$CHANGELOG"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -150,7 +179,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           projectPath: 'src-tauri'
           releaseName: 'VRC Dashboard ${{ github.ref_name }}'
-          # releaseBody: ${{ steps.changelog.outputs.changelog }}
+          releaseBody: ${{ steps.changelog.outputs.changelog }}
           releaseDraft: false
           prerelease: false
           mobile: 'android'
