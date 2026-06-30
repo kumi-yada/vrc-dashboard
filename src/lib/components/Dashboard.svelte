@@ -21,6 +21,13 @@
     return Date.now() - lastRefreshTime < REFRESH_COOLDOWN_MS;
   }
 
+  function refreshActiveTab() {
+    if (activeTab === "friends") friendsRefreshToken += 1;
+    else if (activeTab === "worlds") worldsRefreshToken += 1;
+    else if (activeTab === "recent") recentRefreshToken += 1;
+    else if (activeTab === "avatars") avatarsRefreshToken += 1;
+  }
+
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
     friendsRefreshToken += 1;
@@ -48,12 +55,7 @@
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
-    if (activeTab === "recent") {
-      void refreshCurrentUser();
-      return;
-    }
-
-    friendsRefreshToken += 1;
+    refreshActiveTab();
     void refreshCurrentUser();
   }
 
@@ -62,12 +64,7 @@
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
-    if (activeTab === "recent") {
-      void refreshCurrentUser();
-      return;
-    }
-
-    friendsRefreshToken += 1;
+    refreshActiveTab();
     void refreshCurrentUser();
   }
 
