@@ -166,7 +166,7 @@
       ]);
       apiGroups = groups.filter(g => g.type === "world");
       const match = allFavs.find(f => f.favoriteId === world!.id);
-      apiCurrentFavorite = match ? { id: match.id, tag: match.tags[0] } : null;
+      apiCurrentFavorite = match?.tags[0] ? { id: match.id, tag: match.tags[0] } : null;
     } catch {
       // silently ignore
     } finally {
@@ -184,7 +184,7 @@
   }
 
   async function toggleApiGroup(group: ApiFavoriteGroup) {
-    const groupTag = group.tags[0];
+    const groupTag = group.name;
     if (apiCurrentFavorite?.tag === groupTag) {
       await removeApiFavorite(apiCurrentFavorite.id);
       apiCurrentFavorite = null;
@@ -439,11 +439,11 @@
                   <button
                     type="button"
                     class="fav-group-btn"
-                    class:active={apiCurrentFavorite?.tag === group.tags[0]}
+                    class:active={apiCurrentFavorite?.tag === group.name}
                     onclick={() => toggleApiGroup(group)}
                   >
                     <Icon
-                      icon={apiCurrentFavorite?.tag === group.tags[0] ? "mdi:star" : "mdi:star-outline"}
+                      icon={apiCurrentFavorite?.tag === group.name ? "mdi:star" : "mdi:star-outline"}
                       width={14}
                     />
                     {group.displayName}
