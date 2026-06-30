@@ -9,9 +9,7 @@
 | Command | Effect |
 |---|---|
 | `pnpm start` | `tauri dev` — native window, hot-reload |
-| `pnpm dev` | `vite` — browser-only at `:1420`; Tauri IPC will fail |
 | `pnpm build` | `vite build` → `dist/` |
-| `pnpm tauri` | Raw Tauri CLI passthrough |
 
 Android: `pnpm tauri android dev` / `pnpm tauri android build --apk`
 
