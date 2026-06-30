@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Login from "./lib/components/Login.svelte";
-  import Dashboard from "./lib/components/Dashboard.svelte";
+  import Login from "./lib/components/pages/Login.svelte";
+  import Dashboard from "./lib/components/pages/Dashboard.svelte";
   import { getAuth, restoreSession } from "./lib/stores/auth.svelte";
   import {
     initializeUiScale,

@@ -1,8 +1,8 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
-  import { login, getAuth } from "../stores/auth.svelte";
-  import { showDesktopWindowControls } from "../utils/platform";
+  import { login, getAuth } from "../../stores/auth.svelte";
+  import { showDesktopWindowControls } from "../../utils/platform";
 
   const auth = getAuth();
   const appWindow = getCurrentWindow();

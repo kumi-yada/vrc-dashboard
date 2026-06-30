@@ -1,11 +1,11 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { fetchRecentInstances, fetchInstance, fetchWorld, getAuth } from "../stores/auth.svelte";
-  import { resolveOwnerName } from "../stores/friends.svelte";
-  import { parseInstanceId } from "../utils/instance";
-  import type { InstanceGroup, WorldData } from "../types";
-  import RecentInstanceCard from "./RecentInstanceCard.svelte";
-  import WorldDialog from "./WorldDialog.svelte";
+  import { fetchRecentInstances, fetchInstance, fetchWorld, getAuth } from "../../stores/auth.svelte";
+  import { resolveOwnerName } from "../../stores/friends.svelte";
+  import { parseInstanceId } from "../../utils/instance";
+  import type { InstanceGroup, WorldData } from "../../types";
+  import RecentInstanceCard from "../RecentInstanceCard.svelte";
+  import WorldDialog from "../WorldDialog.svelte";
 
   interface Props {
     refreshToken: number;

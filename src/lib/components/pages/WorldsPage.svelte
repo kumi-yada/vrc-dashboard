@@ -1,10 +1,10 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { searchWorlds, fetchWorld, fetchFavoriteGroups, fetchFavorites } from "../stores/auth.svelte";
-  import { getFavorites } from "../stores/favorites.svelte";
-  import type { ApiFavoriteGroup, InstanceGroup, WorldData } from "../types";
-  import WorldCard from "./WorldCard.svelte";
-  import WorldDialog from "./WorldDialog.svelte";
+  import { searchWorlds, fetchWorld, fetchFavoriteGroups, fetchFavorites } from "../../stores/auth.svelte";
+  import { getFavorites } from "../../stores/favorites.svelte";
+  import type { ApiFavoriteGroup, InstanceGroup, WorldData } from "../../types";
+  import WorldCard from "../WorldCard.svelte";
+  import WorldDialog from "../WorldDialog.svelte";
 
   interface Props {
     refreshToken: number;

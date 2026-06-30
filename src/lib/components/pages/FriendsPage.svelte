@@ -5,16 +5,16 @@
     getFriendsStore,
     fetchFriends,
     fetchMutualFriends,
-  } from "../stores/friends.svelte";
-  import { fetchUserProfile, fetchWorld, getAuth } from "../stores/auth.svelte";
-  import type { InstanceGroup, UserProfile, WorldData } from "../types";
-  import InstanceCard from "./InstanceCard.svelte";
-  import TravelingCard from "./TravelingCard.svelte";
-  import PrivateCard from "./PrivateCard.svelte";
-  import ActiveCard from "./ActiveCard.svelte";
-  import UserMenuDialog from "./UserMenuDialog.svelte";
-  import WorldDialog from "./WorldDialog.svelte";
-  import UserAvatar from "./UserAvatar.svelte";
+  } from "../../stores/friends.svelte";
+  import { fetchUserProfile, fetchWorld, getAuth } from "../../stores/auth.svelte";
+  import type { InstanceGroup, UserProfile, WorldData } from "../../types";
+  import InstanceCard from "../InstanceCard.svelte";
+  import TravelingCard from "../TravelingCard.svelte";
+  import PrivateCard from "../PrivateCard.svelte";
+  import ActiveCard from "../ActiveCard.svelte";
+  import UserMenuDialog from "../UserMenuDialog.svelte";
+  import WorldDialog from "../WorldDialog.svelte";
+  import UserAvatar from "../UserAvatar.svelte";
 
   interface Props {
     refreshToken: number;

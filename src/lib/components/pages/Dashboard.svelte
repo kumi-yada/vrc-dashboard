@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import TopBar from "./TopBar.svelte";
+  import TopBar from "../TopBar.svelte";
   import FriendsPage from "./FriendsPage.svelte";
   import WorldsPage from "./WorldsPage.svelte";
   import RecentPage from "./RecentPage.svelte";
   import AvatarsPage from "./AvatarsPage.svelte";
-  import { refreshCurrentUser } from "../stores/auth.svelte";
+  import { refreshCurrentUser } from "../../stores/auth.svelte";
 
   const REFRESH_COOLDOWN_MS = 30_000;
 

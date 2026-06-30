@@ -1,9 +1,9 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { getAuth, fetchMyAvatars } from "../stores/auth.svelte";
-  import type { AvatarData } from "../types";
-  import AvatarCard from "./AvatarCard.svelte";
-  import AvatarDialog from "./AvatarDialog.svelte";
+  import { getAuth, fetchMyAvatars } from "../../stores/auth.svelte";
+  import type { AvatarData } from "../../types";
+  import AvatarCard from "../AvatarCard.svelte";
+  import AvatarDialog from "../AvatarDialog.svelte";
 
   interface Props {
     refreshToken: number;
