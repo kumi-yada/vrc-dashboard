@@ -12,7 +12,14 @@
     type WorldData,
   } from "../types";
   import PlatformMeta from "./PlatformMeta.svelte";
-  import { createInstance, getAuth } from "../stores/auth.svelte";
+  import {
+    createInstance,
+    getAuth,
+    fetchFavoriteGroups,
+    fetchFavorites,
+    addApiFavorite,
+    removeApiFavorite,
+  } from "../stores/auth.svelte";
   import { parseInstanceId, visibilityLabel } from "../utils/instance";
   import {
     getFavorites,
@@ -21,6 +28,7 @@
     deleteGroup,
     getGroupsForWorld,
   } from "../stores/favorites.svelte";
+  import type { ApiFavoriteGroup } from "../types";
 
   interface Props {
     world: WorldData | null;
@@ -89,7 +97,13 @@
   let favOpen = $state(false);
   let newGroupName = $state("");
   const activeGroupIds = $derived(world ? getGroupsForWorld(world.id) : []);
-  const isFavorited = $derived(activeGroupIds.length > 0);
+
+  // VRChat API favorites
+  let apiGroups = $state<ApiFavoriteGroup[]>([]);
+  let apiCurrentFavorite = $state<{ id: string; tag: string } | null>(null);
+  let apiLoading = $state(false);
+
+  const isFavorited = $derived(activeGroupIds.length > 0 || apiCurrentFavorite !== null);
 
   // Create instance
   let createOpen = $state(false);
@@ -142,12 +156,45 @@
     createError = null;
   }
 
+  async function loadApiGroupData() {
+    if (!world?.id) return;
+    apiLoading = true;
+    try {
+      const [groups, allFavs] = await Promise.all([
+        fetchFavoriteGroups(),
+        fetchFavorites("world"),
+      ]);
+      apiGroups = groups.filter(g => g.type === "world");
+      const match = allFavs.find(f => f.favoriteId === world!.id);
+      apiCurrentFavorite = match ? { id: match.id, tag: match.tags[0] } : null;
+    } catch {
+      // silently ignore
+    } finally {
+      apiLoading = false;
+    }
+  }
+
   function toggleFavPanel() {
     if (!favOpen) {
       createOpen = false;
       createError = null;
+      loadApiGroupData();
     }
     favOpen = !favOpen;
+  }
+
+  async function toggleApiGroup(group: ApiFavoriteGroup) {
+    const groupTag = group.tags[0];
+    if (apiCurrentFavorite?.tag === groupTag) {
+      await removeApiFavorite(apiCurrentFavorite.id);
+      apiCurrentFavorite = null;
+    } else {
+      if (apiCurrentFavorite) {
+        await removeApiFavorite(apiCurrentFavorite.id);
+      }
+      const result = await addApiFavorite(world!.id, "world", [groupTag]);
+      apiCurrentFavorite = { id: result.id, tag: groupTag };
+    }
   }
 
   function toggleCreatePanel() {
@@ -377,6 +424,29 @@
                     onclick={() => deleteGroup(group.id)}
                   >
                     <Icon icon="mdi:trash-can-outline" width={13} />
+                  </button>
+                </div>
+              {/each}
+            {/if}
+            <p class="fav-panel-title" style="margin-top: 8px">VRChat Favorites</p>
+            {#if apiLoading}
+              <p class="fav-empty">Loading…</p>
+            {:else if apiGroups.length === 0}
+              <p class="fav-empty">No VRChat groups found.</p>
+            {:else}
+              {#each apiGroups as group (group.id)}
+                <div class="fav-group-row">
+                  <button
+                    type="button"
+                    class="fav-group-btn"
+                    class:active={apiCurrentFavorite?.tag === group.tags[0]}
+                    onclick={() => toggleApiGroup(group)}
+                  >
+                    <Icon
+                      icon={apiCurrentFavorite?.tag === group.tags[0] ? "mdi:star" : "mdi:star-outline"}
+                      width={14}
+                    />
+                    {group.displayName}
                   </button>
                 </div>
               {/each}

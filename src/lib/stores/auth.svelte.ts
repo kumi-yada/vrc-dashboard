@@ -228,6 +228,14 @@ export async function fetchFavorites(
   return invoke<ApiFavorite[]>("get_favorites", { type, tag: tag ?? null });
 }
 
+export async function addApiFavorite(favoriteId: string, type: string, tags: string[]): Promise<ApiFavorite> {
+  return invoke<ApiFavorite>("add_favorite", { favoriteId, type, tags });
+}
+
+export async function removeApiFavorite(favoriteId: string): Promise<void> {
+  await invoke("remove_favorite", { favoriteId });
+}
+
 export async function searchWorlds(
   query: string,
   tags: string[],

@@ -33,6 +33,8 @@ pub fn run() {
             commands::get_recent_instances,
             commands::get_favorite_groups,
             commands::get_favorites,
+            commands::add_favorite,
+            commands::remove_favorite,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {

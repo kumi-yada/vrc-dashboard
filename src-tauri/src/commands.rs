@@ -531,6 +531,60 @@ pub async fn get_favorites(
 }
 
 #[tauri::command]
+pub async fn add_favorite(
+    state: State<'_, AuthState>,
+    favorite_id: String,
+    r#type: String,
+    tags: Vec<String>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let payload = json!({ "favoriteId": favorite_id, "type": r#type, "tags": tags });
+    let resp = client
+        .post(format!("{}/favorites", BASE_URL))
+        .headers(build_headers(&token))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn remove_favorite(
+    state: State<'_, AuthState>,
+    favorite_id: String,
+) -> Result<(), String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .delete(format!("{}/favorites/{}", BASE_URL, favorite_id))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn invite_user(
     state: State<'_, AuthState>,
     user_id: String,
