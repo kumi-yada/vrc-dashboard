@@ -35,6 +35,8 @@ pub fn run() {
             commands::get_favorites,
             commands::add_favorite,
             commands::remove_favorite,
+            commands::get_my_avatars,
+            commands::get_file_analysis,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {

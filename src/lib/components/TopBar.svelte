@@ -40,6 +40,7 @@
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
     { id: "worlds", label: "Worlds", icon: "mdi:earth" },
     { id: "recent", label: "Recent", icon: "mdi:history" },
+    { id: "avatars", label: "Avatars", icon: "mdi:human" },
   ];
 
   async function handleLogout() {

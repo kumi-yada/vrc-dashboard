@@ -2,8 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   ApiFavorite,
   ApiFavoriteGroup,
+  AvatarData,
   CreateInstanceRequest,
   CurrentUser,
+  FileVersionAnalysis,
   InstanceData,
   Notification,
   UserProfile,
@@ -245,6 +247,17 @@ export async function searchWorlds(
   order: "ascending" | "descending" = "descending",
 ): Promise<WorldData[]> {
   return invoke<WorldData[]>("search_worlds", { query, tags, offset, n, sortField, order });
+}
+
+export async function fetchMyAvatars(userId: string): Promise<AvatarData[]> {
+  return invoke<AvatarData[]>("get_my_avatars", { userId });
+}
+
+export async function fetchFileAnalysis(
+  fileId: string,
+  versionNumber: number,
+): Promise<FileVersionAnalysis> {
+  return invoke<FileVersionAnalysis>("get_file_analysis", { fileId, versionNumber });
 }
 
 export async function login(authToken: string): Promise<boolean> {

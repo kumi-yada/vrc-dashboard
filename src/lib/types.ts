@@ -197,6 +197,86 @@ export interface ApiFavoriteGroup {
   visibility: string;
 }
 
+export interface AvatarUnityPackage {
+  id: string;
+  assetUrl: string;
+  platform: string;
+  unityVersion?: string;
+  assetVersion?: number;
+}
+
+export interface AvatarData {
+  id: string;
+  name: string;
+  authorId: string;
+  authorName: string;
+  imageUrl: string;
+  thumbnailImageUrl: string;
+  releaseStatus: string;
+  performanceRating?: string;
+  updated_at?: string;
+  created_at?: string;
+  version?: number;
+  unityPackages?: AvatarUnityPackage[];
+}
+
+export interface AvatarStats {
+  animatorCount: number;
+  audioSourceCount: number;
+  blendShapeCount: number;
+  boneCount: number;
+  bounds: unknown[];
+  cameraCount?: number;
+  clothCount: number;
+  constraintCount: number;
+  constraintDepth: number;
+  contactCount: number;
+  customExpressions: boolean;
+  customizeAnimationLayers: boolean;
+  enableEyeLook: boolean;
+  lightCount: number;
+  lineRendererCount: number;
+  lipSync: number;
+  materialCount: number;
+  materialSlotsUsed: number;
+  meshCount: number;
+  meshIndices: number;
+  meshParticleMaxPolygons: number;
+  meshPolygons: number;
+  meshVertices: number;
+  particleCollisionEnabled: boolean;
+  particleSystemCount: number;
+  particleTrailsEnabled: boolean;
+  physBoneColliderCount: number;
+  physBoneCollisionCheckCount: number;
+  physBoneComponentCount: number;
+  physBoneTransformCount: number;
+  physicsColliders: number;
+  physicsRigidbodies: number;
+  skinnedMeshCount: number;
+  skinnedMeshIndices: number;
+  skinnedMeshPolygons: number;
+  skinnedMeshVertices: number;
+  totalClothVertices: number;
+  totalIndices: number;
+  totalMaxParticles: number;
+  totalPolygons: number;
+  totalTextureUsage: number;
+  totalVertices: number;
+  trailRendererCount: number;
+  writeDefaultsUsed: boolean;
+}
+
+export interface FileVersionAnalysis {
+  success: boolean;
+  fileSize: number;
+  uncompressedSize: number;
+  performanceRating?: string;
+  created_at?: string;
+  encryptionKey?: string;
+  avatarStats?: AvatarStats;
+}
+
 export interface ApiFavorite {
   id: string;
   type: string;

@@ -618,6 +618,78 @@ pub async fn invite_user(
 }
 
 #[tauri::command]
+pub async fn get_my_avatars(
+    state: State<'_, AuthState>,
+    user_id: String,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let mut all_avatars: Vec<Value> = Vec::new();
+    let page_size = 100;
+    let mut offset = 0;
+
+    loop {
+        let resp = client
+            .get(format!("{}/avatars", BASE_URL))
+            .headers(build_headers(&token))
+            .query(&[
+                ("user", user_id.as_str()),
+                ("releaseStatus", "all"),
+                ("n", &page_size.to_string()),
+                ("offset", &offset.to_string()),
+            ])
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if !resp.status().is_success() {
+            return Err(format!("API error: {}", resp.status()));
+        }
+
+        let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
+        let count = page.len();
+        all_avatars.extend(page);
+
+        if count < page_size {
+            break;
+        }
+        offset += page_size;
+    }
+
+    Ok(Value::Array(all_avatars))
+}
+
+#[tauri::command]
+pub async fn get_file_analysis(
+    state: State<'_, AuthState>,
+    file_id: String,
+    version_number: u32,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("{}/file/{}/{}/analysis", BASE_URL, file_id, version_number))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn create_instance(
     state: State<'_, AuthState>,
     world_id: String,
