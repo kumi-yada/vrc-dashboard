@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { openUrl } from "@tauri-apps/plugin-opener";
   import type { AvatarData, AvatarUnityPackage, FileVersionAnalysis } from "../types";
   import { fetchFileAnalysis } from "../stores/auth.svelte";
 
@@ -84,8 +85,12 @@
     android: "mdi:android",
   };
 
+  function isSupportedPackage(pkg: AvatarUnityPackage): boolean {
+    return pkg.variant !== "impostor";
+  }
+
   const platforms = $derived(
-    [...new Set((avatar?.unityPackages ?? []).map((p) => p.platform))].filter(
+    [...new Set((avatar?.unityPackages ?? []).filter(isSupportedPackage).map((p) => p.platform))].filter(
       (p) => p === "standalonewindows" || p === "android",
     ),
   );
@@ -105,21 +110,19 @@
 
   $effect(() => {
     if (!selectedPlatform || !avatar) return;
+    if (loadingPlatforms[selectedPlatform]) return;
     if (analysisCache[selectedPlatform] !== undefined) return;
     void loadAnalysis(selectedPlatform);
   });
 
   function getPackageForPlatform(platform: string): AvatarUnityPackage | undefined {
-    return avatar?.unityPackages?.find((p) => p.platform === platform);
+    return avatar?.unityPackages?.find((p) => p.platform === platform && isSupportedPackage(p));
   }
 
-  function extractFileInfo(assetUrl: string): { fileId: string; version: number } | null {
-    const parts = assetUrl.split("/");
-    const fileIdx = parts.findIndex((p) => p.startsWith("file_"));
-    if (fileIdx === -1 || fileIdx + 1 >= parts.length) return null;
-    const version = parseInt(parts[fileIdx + 1], 10);
-    if (Number.isNaN(version)) return null;
-    return { fileId: parts[fileIdx], version };
+  function extractFileInfo(pkg: AvatarUnityPackage): { fileId: string; version: number } | null {
+    const match = pkg.assetUrl.match(/\/file\/(file_[^/]+)\/(\d+)(?:\/|$)/);
+    if (!match) return null;
+    return { fileId: match[1], version: Number.parseInt(match[2], 10) };
   }
 
   async function loadAnalysis(platform: string) {
@@ -130,10 +133,10 @@
       return;
     }
 
-    const info = extractFileInfo(pkg.assetUrl);
+    const info = extractFileInfo(pkg);
     if (!info) {
       analysisCache = { ...analysisCache, [platform]: null };
-      errorPlatforms = { ...errorPlatforms, [platform]: "Could not parse file URL" };
+      errorPlatforms = { ...errorPlatforms, [platform]: "Could not determine file ID/version" };
       return;
     }
 
@@ -218,6 +221,12 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Escape") onClose();
   }
+
+  async function handleAvatarOpen() {
+    if (!avatar?.id) return;
+
+    await openUrl(`https://vrchat.com/home/avatar/${encodeURIComponent(avatar.id)}`);
+  }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -233,7 +242,12 @@
   <div class="dialog">
     <div class="dialog-header">
       <div class="header-info">
-        <div class="header-thumbnail">
+        <button
+          class="header-thumbnail thumbnail-link"
+          type="button"
+          onclick={() => void handleAvatarOpen()}
+          aria-label={`Open ${avatar?.name ?? "avatar"} in VRChat`}
+        >
           {#if imageUrl}
             <img src={imageUrl} alt={avatar?.name} />
           {:else}
@@ -241,7 +255,7 @@
               <Icon icon="mdi:human" width={24} />
             </div>
           {/if}
-        </div>
+        </button>
         <div class="header-text">
           <h2 class="dialog-title">{avatar?.name ?? ""}</h2>
           <div class="header-badges">
@@ -266,7 +280,7 @@
       </button>
     </div>
 
-    {#if platforms.length > 1}
+    {#if platforms.length > 0}
       <div class="platform-tabs">
         {#each platforms as platform (platform)}
           <button
@@ -419,6 +433,22 @@
     height: 56px;
     border-radius: 8px;
     overflow: hidden;
+  }
+
+  .thumbnail-link {
+    padding: 0;
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .thumbnail-link:hover,
+  .thumbnail-link:focus-visible {
+    border-color: var(--accent);
+    transform: translateY(-1px);
   }
 
   .header-thumbnail img {

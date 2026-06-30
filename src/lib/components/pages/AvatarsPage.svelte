@@ -26,6 +26,12 @@
     return allAvatars.filter((a) => a.name.toLowerCase().includes(q));
   });
 
+  function getUpdatedAtTime(avatar: AvatarData): number {
+    if (!avatar.updated_at) return Number.NEGATIVE_INFINITY;
+    const time = new Date(avatar.updated_at).getTime();
+    return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time;
+  }
+
   let selectedAvatar = $state<AvatarData | null>(null);
   let dialogOpen = $state(false);
 
@@ -46,7 +52,9 @@
     error = null;
 
     try {
-      allAvatars = await fetchMyAvatars(userId);
+      allAvatars = (await fetchMyAvatars(userId)).sort(
+        (a, b) => getUpdatedAtTime(b) - getUpdatedAtTime(a),
+      );
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
     } finally {

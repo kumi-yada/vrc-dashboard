@@ -1,4 +1,5 @@
 use reqwest::header::{HeaderMap, HeaderValue, COOKIE, USER_AGENT};
+use reqwest::StatusCode;
 use serde_json::json;
 use serde_json::Value;
 use std::sync::Mutex;
@@ -637,7 +638,7 @@ pub async fn get_my_avatars(
             .get(format!("{}/avatars", BASE_URL))
             .headers(build_headers(&token))
             .query(&[
-                ("user", user_id.as_str()),
+                ("user", "me"),
                 ("releaseStatus", "all"),
                 ("n", &page_size.to_string()),
                 ("offset", &offset.to_string()),
@@ -676,14 +677,25 @@ pub async fn get_file_analysis(
 
     let client = reqwest::Client::new();
     let resp = client
-        .get(format!("{}/file/{}/{}/analysis", BASE_URL, file_id, version_number))
+        .get(format!("{}/analysis/{}/{}", BASE_URL, file_id, version_number))
         .headers(build_headers(&token))
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+    let status = resp.status();
+    if status != StatusCode::OK {
+        let body = resp.text().await.unwrap_or_default();
+
+        if status == StatusCode::ACCEPTED {
+            return Err("Analysis not yet available".to_string());
+        }
+
+        if body.is_empty() {
+            return Err(format!("API error: {}", status));
+        }
+
+        return Err(format!("API error: {} {}", status, body));
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())

@@ -201,6 +201,7 @@ export interface AvatarUnityPackage {
   id: string;
   assetUrl: string;
   platform: string;
+  variant?: string;
   unityVersion?: string;
   assetVersion?: number;
 }
