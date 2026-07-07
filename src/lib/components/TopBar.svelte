@@ -254,7 +254,7 @@
         onclick={() => onTabChange(tab.id)}
       >
         <Icon icon={tab.icon} width="1.125rem" />
-        {tab.label}
+        <span class="tab-label">{tab.label}</span>
       </button>
     {/each}
   </div>
@@ -443,6 +443,20 @@
   .tab.active {
     color: var(--text-primary);
     background: rgba(76, 175, 80, 0.15);
+  }
+
+  @media (max-width: 560px) {
+    .tabs {
+      gap: 0.1rem;
+    }
+
+    .tab {
+      padding: 0.35rem;
+    }
+
+    .tab-label {
+      display: none;
+    }
   }
 
   .actions {
