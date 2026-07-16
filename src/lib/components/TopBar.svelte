@@ -19,6 +19,8 @@
     onTabChange: (tab: string) => void;
   }
 
+  const NOTIFICATION_REFRESH_COOLDOWN_MS = 30_000;
+
   let { activeTab, onTabChange }: Props = $props();
 
   const auth = getAuth();
@@ -37,6 +39,9 @@
   let userMenuWrapperEl = $state<HTMLElement | null>(null);
   let utilityWrapperEl = $state<HTMLElement | null>(null);
   let topbarEl = $state<HTMLElement | null>(null);
+  let lastNotificationRefreshTime = 0;
+  let notificationCount = $derived(notifications.length);
+  let notificationBadgeLabel = $derived(notificationCount > 99 ? "99+" : String(notificationCount));
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
@@ -168,6 +173,16 @@
     await loadNotifications(true);
   }
 
+  function handleWindowFocus(): void {
+    const now = Date.now();
+    if (now - lastNotificationRefreshTime < NOTIFICATION_REFRESH_COOLDOWN_MS) {
+      return;
+    }
+
+    lastNotificationRefreshTime = now;
+    void loadNotifications(true);
+  }
+
   async function handleDeleteNotification(notificationId: string): Promise<void> {
     if (isDeletingNotification(notificationId) || clearingNotifications) {
       return;
@@ -256,7 +271,7 @@
 </script>
 
 <svelte:document onclick={handleDocumentClick} />
-<svelte:window onresize={resetTopbarScroll} />
+<svelte:window onresize={resetTopbarScroll} onfocus={handleWindowFocus} />
 
 <nav class="topbar" bind:this={topbarEl}>
   <div class="tabs">
@@ -291,12 +306,17 @@
     </div>
     <div class="notifications-wrapper" bind:this={notificationsWrapperEl}>
       <button
-        class="icon-btn"
+        class="icon-btn notification-btn"
         class:active={showNotifications}
-        title="Notifications"
+        title={notificationCount > 0 ? `${notificationCount} notifications` : "Notifications"}
         onclick={() => void handleToggleNotifications()}
       >
         <Icon icon="mdi:bell-outline" width="1.375rem" />
+        {#if notificationCount > 0}
+          <span class="notification-badge" aria-label={`${notificationCount} notifications`}>
+            {notificationBadgeLabel}
+          </span>
+        {/if}
       </button>
     </div>
     {#if auth.user}
@@ -521,6 +541,28 @@
   .icon-btn.active {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.06);
+  }
+
+  .notification-btn {
+    position: relative;
+  }
+
+  .notification-badge {
+    position: absolute;
+    right: 0.1rem;
+    bottom: 0.05rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.22rem;
+    border: 1px solid var(--bg-primary);
+    border-radius: 999px;
+    background: #ef5350;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 0.95rem;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   }
 
   .window-btn {
