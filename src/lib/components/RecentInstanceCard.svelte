@@ -21,7 +21,7 @@
       group.instance?.world?.imageUrl ??
       "",
   );
-  const userCount = $derived(group.instance?.n_users ?? 0);
+  const userCount = $derived(group.instance?.userCount ?? 0);
   const capacity = $derived(group.instance?.capacity ?? 0);
   const visLabel = $derived(visibilityLabel(group.parsed.visibility));
   const region = $derived(regionLabel(group.parsed.region));

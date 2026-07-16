@@ -41,7 +41,7 @@
       group.instance?.world?.imageUrl ??
       "",
   );
-  const userCount = $derived(group.instance?.n_users ?? group.friends.length);
+  const userCount = $derived(group.instance?.userCount ?? 0);
   const capacity = $derived(group.instance?.capacity ?? 0);
   const visLabel = $derived(visibilityLabel(group.parsed.visibility));
   const supportedPlatforms = $derived(getSupportedPlatforms(group));

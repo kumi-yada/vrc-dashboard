@@ -604,7 +604,7 @@
             <div class="detail-row">
               <div class="detail-label">Users</div>
               <div class="detail-value">
-                {group.instance?.n_users ?? 0}/{group.instance?.capacity}
+                {group.instance?.userCount ?? 0}/{group.instance?.capacity}
               </div>
             </div>
 

@@ -79,7 +79,7 @@
       <ol>
         <li>
           Go to <strong>vrchat.com</strong> and log in - <a
-            href="https://vrchat.com"
+            href="https://vrchat.com/home"
             target="_blank">Link</a
           >
         </li>
