@@ -19,7 +19,7 @@
     onTabChange: (tab: string) => void;
   }
 
-  const NOTIFICATION_REFRESH_COOLDOWN_MS = 30_000;
+  const NOTIFICATION_REFRESH_COOLDOWN_MS = 10_000;
 
   let { activeTab, onTabChange }: Props = $props();
 
@@ -62,7 +62,10 @@
       case "friendRequest":
         return "sent you a friend request.";
       case "invite":
+      case "invite.instance.contentGated":
         return "sent you an invite.";
+      case "group.invite":
+        return "sent you a group invite.";
       default:
         return "sent you a notification.";
     }
@@ -70,7 +73,8 @@
 
   function getNotificationMessage(notification: Notification): string {
     const message = notification.message.trim();
-    return message || getNotificationFallbackMessage(notification.type);
+    const title = notification.title?.trim() ?? "";
+    return message || title || getNotificationFallbackMessage(notification.type);
   }
 
   function formatNotificationDate(createdAt: string): string {
@@ -85,26 +89,44 @@
     }).format(date);
   }
 
-  function formatNotificationDetails(details: string): string {
-    const text = details.trim();
-    if (!text || text === "{}") {
+  function stringifyNotificationValue(value: unknown): string {
+    if (value === null || value === undefined) {
       return "";
     }
 
-    try {
-      const parsed = JSON.parse(text);
-      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        return String(parsed);
+    if (typeof value === "string") {
+      const text = value.trim();
+      if (!text || text === "{}") {
+        return "";
       }
 
-      const entries = Object.entries(parsed as Record<string, unknown>)
-        .map(([key, value]) => `${key}: ${typeof value === "string" ? value : JSON.stringify(value)}`)
-        .filter((entry) => entry.length > 0);
-
-      return entries.join(" | ");
-    } catch {
-      return text;
+      try {
+        return stringifyNotificationValue(JSON.parse(text)) || text;
+      } catch {
+        return text;
+      }
     }
+
+    if (typeof value !== "object" || Array.isArray(value)) {
+      return String(value);
+    }
+
+    return Object.entries(value as Record<string, unknown>)
+      .map(([key, entryValue]) => `${key}: ${typeof entryValue === "string" ? entryValue : JSON.stringify(entryValue)}`)
+      .filter((entry) => entry.length > 0)
+      .join(" | ");
+  }
+
+  function getNotificationDetails(notification: Notification): string {
+    return stringifyNotificationValue(notification.details) || stringifyNotificationValue(notification.data);
+  }
+
+  function getNotificationCreatedAt(notification: Notification): string {
+    return notification.createdAt ?? notification.created_at ?? "";
+  }
+
+  function getNotificationSender(notification: Notification): string {
+    return notification.senderUsername?.trim() || notification.title?.trim() || "VRChat";
   }
 
   function isDeletingNotification(notificationId: string): boolean {
@@ -401,13 +423,13 @@
       {:else}
         <div class="notification-list">
           {#each notifications as notification (notification.id)}
-            {@const detailsText = formatNotificationDetails(notification.details)}
+            {@const detailsText = getNotificationDetails(notification)}
             <article class="notification-row">
               <div class="notification-main">
                 <div class="notification-topline">
-                  <span class="notification-sender">{notification.senderUsername}</span>
+                  <span class="notification-sender">{getNotificationSender(notification)}</span>
                   <span class="notification-time">
-                    {formatNotificationDate(notification.created_at)}
+                    {formatNotificationDate(getNotificationCreatedAt(notification))}
                   </span>
                 </div>
                 <p class="notification-message">

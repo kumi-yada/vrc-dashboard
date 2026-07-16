@@ -40,6 +40,19 @@ fn build_headers(token: &str) -> HeaderMap {
     headers
 }
 
+fn append_unique_notification(notifications: &mut Vec<Value>, notification: Value) {
+    let id = notification.get("id").and_then(Value::as_str);
+    let exists = id.is_some_and(|id| {
+        notifications
+            .iter()
+            .any(|item| item.get("id").and_then(Value::as_str) == Some(id))
+    });
+
+    if !exists {
+        notifications.push(notification);
+    }
+}
+
 #[tauri::command]
 pub async fn set_auth_token(
     app: AppHandle,
@@ -96,47 +109,116 @@ pub async fn get_notifications(
         auth.clone().ok_or_else(|| "Not authenticated".to_string())?
     };
 
-    let mut params: Vec<(&str, String)> = Vec::new();
+    let mut v2_params: Vec<(&str, String)> = Vec::new();
+
+    if let Some(value) = n {
+        v2_params.push(("limit", value.to_string()));
+    }
+
+    let client = reqwest::Client::new();
+    let mut v2_req = client
+        .get(format!("{}/notifications", BASE_URL))
+        .headers(build_headers(&token));
+
+    if !v2_params.is_empty() {
+        v2_req = v2_req.query(&v2_params);
+    }
+
+    let v2_resp = v2_req.send().await.map_err(|e| e.to_string())?;
+
+    if !v2_resp.status().is_success() {
+        return Err(format!("API error: {}", v2_resp.status()));
+    }
+
+    let mut notifications = v2_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
+
+    let mut legacy_params: Vec<(&str, String)> = Vec::new();
 
     if let Some(value) = notification_type
         .map(|value| value.trim().to_string())
         .filter(|value| !value.is_empty())
     {
-        params.push(("type", value));
+        legacy_params.push(("type", value));
     }
 
     if let Some(value) = sent {
-        params.push(("sent", value.to_string()));
+        legacy_params.push(("sent", value.to_string()));
     }
 
     if let Some(value) = hidden {
-        params.push(("hidden", value.to_string()));
+        legacy_params.push(("hidden", value.to_string()));
     }
 
     if let Some(value) = offset {
-        params.push(("offset", value.to_string()));
+        legacy_params.push(("offset", value.to_string()));
     }
 
     if let Some(value) = n {
-        params.push(("n", value.to_string()));
+        legacy_params.push(("n", value.to_string()));
     }
 
-    let client = reqwest::Client::new();
-    let mut req = client
+    let mut legacy_req = client
         .get(format!("{}/auth/user/notifications", BASE_URL))
         .headers(build_headers(&token));
 
-    if !params.is_empty() {
-        req = req.query(&params);
+    if !legacy_params.is_empty() {
+        legacy_req = legacy_req.query(&legacy_params);
     }
 
-    let resp = req.send().await.map_err(|e| e.to_string())?;
+    let legacy_resp = legacy_req.send().await.map_err(|e| e.to_string())?;
 
-    if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+    if !legacy_resp.status().is_success() {
+        return Ok(Value::Array(notifications));
     }
 
-    resp.json::<Value>().await.map_err(|e| e.to_string())
+    let legacy_notifications = legacy_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
+    for notification in legacy_notifications {
+        append_unique_notification(&mut notifications, notification);
+    }
+
+    let current_user_resp = client
+        .get(format!("{}/auth/user", BASE_URL))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !current_user_resp.status().is_success() {
+        return Ok(Value::Array(notifications));
+    }
+
+    let current_user = current_user_resp.json::<Value>().await.map_err(|e| e.to_string())?;
+    let Some(current_user_id) = current_user.get("id").and_then(Value::as_str) else {
+        return Ok(Value::Array(notifications));
+    };
+
+    let self_invite_resp = client
+        .get(format!("{}/auth/user/notifications", BASE_URL))
+        .headers(build_headers(&token))
+        .query(&[
+            ("type", "invite"),
+            ("sent", "true"),
+            ("hidden", "false"),
+            ("offset", "0"),
+            ("n", "40"),
+        ])
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !self_invite_resp.status().is_success() {
+        return Ok(Value::Array(notifications));
+    }
+
+    let self_invites = self_invite_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
+    for notification in self_invites {
+        let receiver_user_id = notification.get("receiverUserId").and_then(Value::as_str);
+        if receiver_user_id == Some(current_user_id) {
+            append_unique_notification(&mut notifications, notification);
+        }
+    }
+
+    Ok(Value::Array(notifications))
 }
 
 #[tauri::command]
@@ -151,6 +233,18 @@ pub async fn delete_notification(
 
     let client = reqwest::Client::new();
     let resp = client
+        .delete(format!("{}/notifications/{}", BASE_URL, notification_id))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if resp.status().is_success() {
+        return Ok(());
+    }
+
+    let v2_status = resp.status();
+    let legacy_resp = client
         .put(format!(
             "{}/auth/user/notifications/{}/hide",
             BASE_URL, notification_id
@@ -160,8 +254,12 @@ pub async fn delete_notification(
         .await
         .map_err(|e| e.to_string())?;
 
-    if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+    if !legacy_resp.status().is_success() {
+        return Err(format!(
+            "API error: {} (legacy: {})",
+            v2_status,
+            legacy_resp.status()
+        ));
     }
 
     Ok(())
@@ -176,14 +274,25 @@ pub async fn clear_all_notifications(state: State<'_, AuthState>) -> Result<(), 
 
     let client = reqwest::Client::new();
     let resp = client
+        .delete(format!("{}/notifications", BASE_URL))
+        .headers(build_headers(&token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let legacy_resp = client
         .put(format!("{}/auth/user/notifications/clear", BASE_URL))
         .headers(build_headers(&token))
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
-    if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+    if !resp.status().is_success() && !legacy_resp.status().is_success() {
+        return Err(format!(
+            "API error: {} (legacy: {})",
+            resp.status(),
+            legacy_resp.status()
+        ));
     }
 
     Ok(())

@@ -74,13 +74,17 @@ export interface WorldUnityPackage {
 
 export interface Notification {
   id: string;
-  created_at: string;
+  created_at?: string;
+  createdAt?: string;
   message: string;
   seen: boolean;
+  receiverUserId?: string;
   senderUserId: string;
-  senderUsername: string;
+  senderUsername?: string | null;
   type: string;
-  details: string;
+  title?: string;
+  details?: unknown;
+  data?: unknown;
 }
 
 export interface InstancePlatforms {
