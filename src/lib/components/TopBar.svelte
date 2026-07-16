@@ -33,8 +33,10 @@
   let clearingNotifications = $state(false);
   let deletingNotifications = $state.raw<Record<string, boolean>>({});
   let notificationsWrapperEl = $state<HTMLElement | null>(null);
+  let notificationsPopupEl = $state<HTMLElement | null>(null);
   let userMenuWrapperEl = $state<HTMLElement | null>(null);
   let utilityWrapperEl = $state<HTMLElement | null>(null);
+  let topbarEl = $state<HTMLElement | null>(null);
 
   const tabs = [
     { id: "friends", label: "Friends", icon: "mdi:account-group" },
@@ -216,6 +218,7 @@
 
     if (
       notificationsWrapperEl?.contains(target) ||
+      notificationsPopupEl?.contains(target) ||
       userMenuWrapperEl?.contains(target) ||
       utilityWrapperEl?.contains(target)
     ) {
@@ -235,17 +238,27 @@
   async function toggleMaximizeWindow() {
     if (!showDesktopWindowControls) return;
     await appWindow.toggleMaximize();
+    resetTopbarScroll();
   }
 
   async function closeWindow() {
     if (!showDesktopWindowControls) return;
     await appWindow.close();
   }
+
+  function resetTopbarScroll(): void {
+    requestAnimationFrame(() => {
+      if (topbarEl) {
+        topbarEl.scrollLeft = 0;
+      }
+    });
+  }
 </script>
 
 <svelte:document onclick={handleDocumentClick} />
+<svelte:window onresize={resetTopbarScroll} />
 
-<nav class="topbar">
+<nav class="topbar" bind:this={topbarEl}>
   <div class="tabs">
     {#each tabs as tab (tab.id)}
       <button
@@ -285,75 +298,6 @@
       >
         <Icon icon="mdi:bell-outline" width="1.375rem" />
       </button>
-
-      {#if showNotifications}
-        <div class="notifications-popup">
-          <div class="popup-card notifications-card">
-            <div class="notifications-header">
-              <h3>Notifications</h3>
-              <div class="notifications-header-actions">
-                <button
-                  class="popup-action-btn"
-                  type="button"
-                  disabled={notificationsLoading || refetchingNotifications || clearingNotifications}
-                  onclick={() => void handleRefetchNotifications()}
-                >
-                  {refetchingNotifications ? "Refreshing..." : "Refetch"}
-                </button>
-                <button
-                  class="popup-action-btn danger"
-                  type="button"
-                  disabled={notificationsLoading || clearingNotifications || notifications.length === 0}
-                  onclick={() => void handleClearAllNotifications()}
-                >
-                  {clearingNotifications ? "Clearing..." : "Clear all"}
-                </button>
-              </div>
-            </div>
-
-            {#if notificationsLoading}
-              <div class="notifications-state">Loading notifications...</div>
-            {:else if notificationsError}
-              <div class="notifications-state notifications-state-error">
-                {notificationsError}
-              </div>
-            {:else if notifications.length === 0}
-              <div class="notifications-state">No notifications right now.</div>
-            {:else}
-              <div class="notification-list">
-                {#each notifications as notification (notification.id)}
-                  {@const detailsText = formatNotificationDetails(notification.details)}
-                  <article class="notification-row">
-                    <div class="notification-main">
-                      <div class="notification-topline">
-                        <span class="notification-sender">{notification.senderUsername}</span>
-                        <span class="notification-time">
-                          {formatNotificationDate(notification.created_at)}
-                        </span>
-                      </div>
-                      <p class="notification-message">
-                        {getNotificationMessage(notification)}
-                      </p>
-                      {#if detailsText}
-                        <p class="notification-details">{detailsText}</p>
-                      {/if}
-                      <p class="notification-type">{notification.type}</p>
-                    </div>
-                    <button
-                      class="notification-delete-btn"
-                      type="button"
-                      disabled={isDeletingNotification(notification.id) || clearingNotifications}
-                      onclick={() => void handleDeleteNotification(notification.id)}
-                    >
-                      {isDeletingNotification(notification.id) ? "Deleting..." : "Delete"}
-                    </button>
-                  </article>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        </div>
-      {/if}
     </div>
     {#if auth.user}
       <div class="user-menu-wrapper" bind:this={userMenuWrapperEl}>
@@ -401,36 +345,122 @@
   </div>
 </nav>
 
+{#if showNotifications}
+  <div class="notifications-popup" bind:this={notificationsPopupEl}>
+    <div class="popup-card notifications-card">
+      <div class="notifications-header">
+        <h3>Notifications</h3>
+        <div class="notifications-header-actions">
+          <button
+            class="popup-action-btn"
+            type="button"
+            disabled={notificationsLoading || refetchingNotifications || clearingNotifications}
+            onclick={() => void handleRefetchNotifications()}
+          >
+            {refetchingNotifications ? "Refreshing..." : "Refetch"}
+          </button>
+          <button
+            class="popup-action-btn danger"
+            type="button"
+            disabled={notificationsLoading || clearingNotifications || notifications.length === 0}
+            onclick={() => void handleClearAllNotifications()}
+          >
+            {clearingNotifications ? "Clearing..." : "Clear all"}
+          </button>
+        </div>
+      </div>
+
+      {#if notificationsLoading}
+        <div class="notifications-state">Loading notifications...</div>
+      {:else if notificationsError}
+        <div class="notifications-state notifications-state-error">
+          {notificationsError}
+        </div>
+      {:else if notifications.length === 0}
+        <div class="notifications-state">No notifications right now.</div>
+      {:else}
+        <div class="notification-list">
+          {#each notifications as notification (notification.id)}
+            {@const detailsText = formatNotificationDetails(notification.details)}
+            <article class="notification-row">
+              <div class="notification-main">
+                <div class="notification-topline">
+                  <span class="notification-sender">{notification.senderUsername}</span>
+                  <span class="notification-time">
+                    {formatNotificationDate(notification.created_at)}
+                  </span>
+                </div>
+                <p class="notification-message">
+                  {getNotificationMessage(notification)}
+                </p>
+                {#if detailsText}
+                  <p class="notification-details">{detailsText}</p>
+                {/if}
+                <p class="notification-type">{notification.type}</p>
+              </div>
+              <button
+                class="notification-delete-btn"
+                type="button"
+                disabled={isDeletingNotification(notification.id) || clearingNotifications}
+                onclick={() => void handleDeleteNotification(notification.id)}
+              >
+                {isDeletingNotification(notification.id) ? "Deleting..." : "Delete"}
+              </button>
+            </article>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  </div>
+{/if}
+
 <style>
   .topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: thin;
     background: var(--topbar-bg);
     padding: 0 1rem;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border);
   }
 
+  .topbar::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .topbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+  }
+
   .tabs {
     display: flex;
+    flex: 0 0 auto;
     gap: 0.25rem;
+    min-width: 0;
   }
 
   .window-drag-region {
-    flex: 1;
-    min-width: 3rem;
+    flex: 1 0 1rem;
+    min-width: 1rem;
     height: 100%;
   }
 
   .tab {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-size: 0.9rem;
+    white-space: nowrap;
     color: var(--text-secondary);
     transition: all 0.15s;
   }
@@ -461,6 +491,7 @@
 
   .actions {
     display: flex;
+    flex: 0 0 auto;
     gap: 0.5rem;
     align-items: center;
   }
@@ -537,10 +568,10 @@
   }
 
   .notifications-popup {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 8px);
-    z-index: 20;
+    position: fixed;
+    right: 1rem;
+    top: calc(3.25rem + env(safe-area-inset-top, 0px));
+    z-index: 120;
   }
 
   .popup-card {

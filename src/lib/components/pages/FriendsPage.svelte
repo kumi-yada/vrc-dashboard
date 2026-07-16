@@ -394,6 +394,10 @@
   }
 
   @media (max-width: 560px) {
+    .search-wrapper {
+      display: none;
+    }
+
     .instances-grid {
       grid-template-columns: minmax(240px, 1fr);
     }
