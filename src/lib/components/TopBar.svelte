@@ -1,19 +1,25 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
-  import type { Notification } from "../types";
+  import type { InstanceGroup, Notification, UserProfile, WorldData } from "../types";
   import {
     clearAllNotifications,
     deleteNotification,
     fetchNotifications,
+    fetchInstance,
+    fetchUserProfile,
+    fetchWorld,
     getPipelineAuthToken,
     logout,
     getAuth,
   } from "../stores/auth.svelte";
+  import { resolveOwnerName } from "../stores/friends.svelte";
   import { showDesktopWindowControls } from "../utils/platform";
+  import { parseInstanceId } from "../utils/instance";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import UtilityDialog from "./UtilityDialog.svelte";
+  import WorldDialog from "./WorldDialog.svelte";
 
   interface Props {
     activeTab: string;
@@ -41,6 +47,15 @@
   let userMenuWrapperEl = $state<HTMLElement | null>(null);
   let utilityWrapperEl = $state<HTMLElement | null>(null);
   let topbarEl = $state<HTMLElement | null>(null);
+  let notificationUserDialogOpen = $state(false);
+  let notificationUser = $state<UserProfile | null>(null);
+  let notificationUserLoading = $state(false);
+  let notificationUserError = $state<string | null>(null);
+  let notificationWorldDialogOpen = $state(false);
+  let notificationWorld = $state<WorldData | null>(null);
+  let notificationGroup = $state<InstanceGroup | null>(null);
+  let notificationWorldLoading = $state(false);
+  let notificationWorldError = $state<string | null>(null);
   let lastNotificationRefreshTime = 0;
   let notificationSocket: WebSocket | null = null;
   let notificationReconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -94,6 +109,23 @@
     }).format(date);
   }
 
+  function parseNotificationValue(value: unknown): unknown {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const text = value.trim();
+    if (!text) {
+      return "";
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
+    }
+  }
+
   function stringifyNotificationValue(value: unknown): string {
     if (value === null || value === undefined) {
       return "";
@@ -105,11 +137,8 @@
         return "";
       }
 
-      try {
-        return stringifyNotificationValue(JSON.parse(text)) || text;
-      } catch {
-        return text;
-      }
+      const parsed = parseNotificationValue(text);
+      return parsed === text ? text : stringifyNotificationValue(parsed) || text;
     }
 
     if (typeof value !== "object" || Array.isArray(value)) {
@@ -122,8 +151,55 @@
       .join(" | ");
   }
 
-  function getNotificationDetails(notification: Notification): string {
-    return stringifyNotificationValue(notification.details) || stringifyNotificationValue(notification.data);
+  function getNotificationField(value: unknown, fieldNames: string[]): string {
+    const parsed = parseNotificationValue(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return "";
+    }
+
+    const record = parsed as Record<string, unknown>;
+    for (const fieldName of fieldNames) {
+      const fieldValue = record[fieldName];
+      if (typeof fieldValue === "string" && fieldValue.trim()) {
+        return fieldValue.trim();
+      }
+    }
+
+    for (const fieldValue of Object.values(record)) {
+      const nestedValue = getNotificationField(fieldValue, fieldNames);
+      if (nestedValue) {
+        return nestedValue;
+      }
+    }
+
+    return "";
+  }
+
+  function getNotificationStringField(notification: Notification, fieldNames: string[]): string {
+    return getNotificationField(notification, fieldNames) ||
+      getNotificationField(notification.details, fieldNames) ||
+      getNotificationField(notification.data, fieldNames);
+  }
+
+  function getInviteLocation(notification: Notification): string {
+    const location = getNotificationStringField(notification, ["location", "instanceLocation"]);
+    if (location.startsWith("wrld_")) {
+      return location;
+    }
+
+    const worldId = getNotificationStringField(notification, ["worldId", "world_id"]);
+    const instanceId = getNotificationStringField(notification, ["instanceId", "instance_id"]);
+    if (instanceId.startsWith("wrld_")) {
+      return instanceId;
+    }
+    if (worldId && instanceId) {
+      return `${worldId}:${instanceId}`;
+    }
+
+    const rawText = [notification.message, notification.title, notification.details, notification.data]
+      .map(stringifyNotificationValue)
+      .join(" ");
+    return rawText.match(/wrld_[^:\s"'}|,]+:[^\s"'}|,]+/)?.[0] ?? "";
   }
 
   function getNotificationCreatedAt(notification: Notification): string {
@@ -132,6 +208,110 @@
 
   function getNotificationSender(notification: Notification): string {
     return notification.senderUsername?.trim() || notification.title?.trim() || "VRChat";
+  }
+
+  function canOpenNotificationInstance(notification: Notification): boolean {
+    return notification.type.startsWith("invite") && Boolean(getInviteLocation(notification));
+  }
+
+  function canOpenNotificationUser(notification: Notification): boolean {
+    return notification.type === "friendRequest" && Boolean(notification.senderUserId);
+  }
+
+  function closeNotificationUserDialog(): void {
+    notificationUserDialogOpen = false;
+    notificationUserLoading = false;
+    notificationUserError = null;
+    notificationUser = null;
+  }
+
+  function closeNotificationWorldDialog(): void {
+    notificationWorldDialogOpen = false;
+    notificationWorldLoading = false;
+    notificationWorldError = null;
+    notificationWorld = null;
+    notificationGroup = null;
+  }
+
+  async function handleOpenNotificationUser(notification: Notification): Promise<void> {
+    if (!notification.senderUserId) {
+      return;
+    }
+
+    showNotifications = false;
+    notificationUserDialogOpen = true;
+    notificationUser = null;
+    notificationUserLoading = true;
+    notificationUserError = null;
+
+    try {
+      notificationUser = await fetchUserProfile(notification.senderUserId);
+    } catch (error) {
+      notificationUserError = error instanceof Error ? error.message : String(error);
+    } finally {
+      notificationUserLoading = false;
+    }
+  }
+
+  async function handleOpenNotificationInstance(notification: Notification): Promise<void> {
+    const location = getInviteLocation(notification);
+    await openNotificationLocation(location);
+  }
+
+  async function handleOpenNotificationGroup(group: InstanceGroup): Promise<void> {
+    await openNotificationLocation(group.location);
+  }
+
+  function getInstanceOwnerId(instance: Awaited<ReturnType<typeof fetchInstance>> | null): string {
+    return instance?.ownerId ?? instance?.private ?? instance?.hidden ?? instance?.friends ?? instance?.creatorId ?? "";
+  }
+
+  async function openNotificationLocation(location: string): Promise<void> {
+    const parsed = parseInstanceId(location);
+    if (!parsed) {
+      return;
+    }
+
+    showNotifications = false;
+    notificationWorldDialogOpen = true;
+    notificationWorld = null;
+    notificationWorldError = null;
+    notificationWorldLoading = true;
+
+    const fallbackGroup: InstanceGroup = {
+      location,
+      parsed,
+      instance: null,
+      ownerName: "",
+      friends: [],
+    };
+    notificationGroup = fallbackGroup;
+
+    try {
+      const [instanceResult, worldResult] = await Promise.allSettled([
+        fetchInstance(location),
+        fetchWorld(parsed.worldId),
+      ]);
+      const instance = instanceResult.status === "fulfilled" ? instanceResult.value : null;
+      const world = worldResult.status === "fulfilled" ? worldResult.value : instance?.world ?? null;
+      const ownerId = getInstanceOwnerId(instance) || parsed.ownerId;
+      const ownerName = ownerId ? await resolveOwnerName(ownerId) : "";
+
+      notificationWorld = world;
+      notificationGroup = {
+        ...fallbackGroup,
+        instance,
+        ownerName,
+      };
+
+      if (!world) {
+        notificationWorldError = "Could not load instance world.";
+      }
+    } catch (error) {
+      notificationWorldError = error instanceof Error ? error.message : String(error);
+    } finally {
+      notificationWorldLoading = false;
+    }
   }
 
   function isDeletingNotification(notificationId: string): boolean {
@@ -566,7 +746,6 @@
       {:else}
         <div class="notification-list">
           {#each notifications as notification (notification.id)}
-            {@const detailsText = getNotificationDetails(notification)}
             <article class="notification-row">
               <div class="notification-main">
                 <div class="notification-topline">
@@ -578,10 +757,28 @@
                 <p class="notification-message">
                   {getNotificationMessage(notification)}
                 </p>
-                {#if detailsText}
-                  <p class="notification-details">{detailsText}</p>
+                {#if canOpenNotificationInstance(notification) || canOpenNotificationUser(notification)}
+                  <div class="notification-actions">
+                    {#if canOpenNotificationInstance(notification)}
+                      <button
+                        class="notification-link-btn"
+                        type="button"
+                        onclick={() => void handleOpenNotificationInstance(notification)}
+                      >
+                        Open instance
+                      </button>
+                    {/if}
+                    {#if canOpenNotificationUser(notification)}
+                      <button
+                        class="notification-link-btn"
+                        type="button"
+                        onclick={() => void handleOpenNotificationUser(notification)}
+                      >
+                        Open user
+                      </button>
+                    {/if}
+                  </div>
                 {/if}
-                <p class="notification-type">{notification.type}</p>
               </div>
               <button
                 class="notification-delete-btn"
@@ -597,6 +794,26 @@
       {/if}
     </div>
   </div>
+{/if}
+
+{#if notificationUserDialogOpen}
+  <UserMenuDialog
+    user={notificationUser}
+    loading={notificationUserLoading}
+    error={notificationUserError}
+    onClose={closeNotificationUserDialog}
+  />
+{/if}
+
+{#if notificationWorldDialogOpen}
+  <WorldDialog
+    world={notificationWorld}
+    group={notificationGroup}
+    loading={notificationWorldLoading}
+    error={notificationWorldError}
+    onClose={closeNotificationWorldDialog}
+    onOpenInstance={handleOpenNotificationGroup}
+  />
 {/if}
 
 <style>
@@ -902,29 +1119,13 @@
     white-space: nowrap;
   }
 
-  .notification-message,
-  .notification-details,
-  .notification-type {
+  .notification-message {
     margin: 0.22rem 0 0;
   }
 
   .notification-message {
     color: var(--text-primary);
     line-height: 1.3;
-  }
-
-  .notification-details {
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    line-height: 1.25;
-    word-break: break-word;
-  }
-
-  .notification-type {
-    color: var(--text-secondary);
-    font-size: 0.74rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
   }
 
   .notification-delete-btn {
@@ -947,5 +1148,26 @@
   .notification-delete-btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  .notification-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.45rem;
+  }
+
+  .notification-link-btn {
+    border: 1px solid rgba(76, 175, 80, 0.45);
+    border-radius: 6px;
+    color: var(--accent);
+    padding: 0.2rem 0.45rem;
+    font-size: 0.74rem;
+    transition: all 0.15s;
+  }
+
+  .notification-link-btn:hover {
+    color: var(--text-primary);
+    background: rgba(76, 175, 80, 0.14);
   }
 </style>

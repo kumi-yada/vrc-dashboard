@@ -97,6 +97,11 @@ export interface InstanceData {
   id: string;
   instanceId: string;
   worldId: string;
+  ownerId?: string;
+  creatorId?: string;
+  friends?: string;
+  hidden?: string;
+  private?: string;
   type: string;
   region: string;
   n_users: number;
