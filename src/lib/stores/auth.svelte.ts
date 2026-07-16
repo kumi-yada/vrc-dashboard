@@ -195,6 +195,10 @@ export async function clearAllNotifications(): Promise<void> {
   await invoke("clear_all_notifications");
 }
 
+export async function getPipelineAuthToken(): Promise<string> {
+  return token ?? invoke<string>("get_auth_token");
+}
+
 export async function createInstance(
   payload: CreateInstanceRequest,
 ): Promise<InstanceData> {

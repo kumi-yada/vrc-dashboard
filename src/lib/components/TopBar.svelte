@@ -6,6 +6,7 @@
     clearAllNotifications,
     deleteNotification,
     fetchNotifications,
+    getPipelineAuthToken,
     logout,
     getAuth,
   } from "../stores/auth.svelte";
@@ -20,6 +21,7 @@
   }
 
   const NOTIFICATION_REFRESH_COOLDOWN_MS = 10_000;
+  const NOTIFICATION_PIPELINE_URL = "wss://pipeline.vrchat.cloud/";
 
   let { activeTab, onTabChange }: Props = $props();
 
@@ -40,6 +42,9 @@
   let utilityWrapperEl = $state<HTMLElement | null>(null);
   let topbarEl = $state<HTMLElement | null>(null);
   let lastNotificationRefreshTime = 0;
+  let notificationSocket: WebSocket | null = null;
+  let notificationReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let notificationPipelineRequest = 0;
   let notificationCount = $derived(notifications.length);
   let notificationBadgeLabel = $derived(notificationCount > 99 ? "99+" : String(notificationCount));
 
@@ -131,6 +136,131 @@
 
   function isDeletingNotification(notificationId: string): boolean {
     return deletingNotifications[notificationId] === true;
+  }
+
+  function parsePipelinePayload(value: unknown): unknown {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+
+  function getPipelineNotification(value: unknown): Notification | null {
+    const parsed = parsePipelinePayload(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return null;
+    }
+
+    const payload = parsed as Record<string, unknown>;
+    const content = parsePipelinePayload(payload.content);
+    if (content && typeof content === "object" && !Array.isArray(content)) {
+      return getPipelineNotification(content);
+    }
+
+    const notification = parsePipelinePayload(payload.notification);
+    if (notification && typeof notification === "object" && !Array.isArray(notification)) {
+      return getPipelineNotification(notification);
+    }
+
+    if (typeof payload.id === "string" && typeof payload.type === "string") {
+      return payload as unknown as Notification;
+    }
+
+    return null;
+  }
+
+  function isNotificationPipelineEvent(value: unknown): boolean {
+    const parsed = parsePipelinePayload(value);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return false;
+    }
+
+    const payload = parsed as Record<string, unknown>;
+    const type = typeof payload.type === "string" ? payload.type.toLowerCase() : "";
+    if (
+      type.includes("notification") ||
+      type.includes("invite") ||
+      (type.includes("friend") && type.includes("request"))
+    ) {
+      return true;
+    }
+
+    return isNotificationPipelineEvent(payload.content);
+  }
+
+  function upsertNotification(notification: Notification): void {
+    if (!notification.id) {
+      return;
+    }
+
+    notifications = [
+      notification,
+      ...notifications.filter((existing) => existing.id !== notification.id),
+    ];
+  }
+
+  function disconnectNotificationPipeline(): void {
+    notificationPipelineRequest += 1;
+
+    if (notificationReconnectTimer) {
+      clearTimeout(notificationReconnectTimer);
+      notificationReconnectTimer = null;
+    }
+
+    if (notificationSocket) {
+      notificationSocket.onopen = null;
+      notificationSocket.onmessage = null;
+      notificationSocket.onerror = null;
+      notificationSocket.onclose = null;
+      notificationSocket.close();
+      notificationSocket = null;
+    }
+  }
+
+  async function connectNotificationPipeline(requestId: number): Promise<void> {
+    try {
+      const authToken = await getPipelineAuthToken();
+      if (requestId !== notificationPipelineRequest || !auth.user) {
+        return;
+      }
+
+      const url = `${NOTIFICATION_PIPELINE_URL}?authToken=${encodeURIComponent(authToken)}`;
+      const socket = new WebSocket(url);
+      notificationSocket = socket;
+
+      socket.onmessage = (event) => {
+        const payload = parsePipelinePayload(event.data);
+        const notification = getPipelineNotification(payload);
+        if (notification) {
+          upsertNotification(notification);
+        }
+
+        if (isNotificationPipelineEvent(payload)) {
+          void loadNotifications(true);
+        }
+      };
+
+      socket.onclose = () => {
+        if (requestId !== notificationPipelineRequest || !auth.user) {
+          return;
+        }
+
+        notificationReconnectTimer = setTimeout(() => {
+          void connectNotificationPipeline(requestId);
+        }, 15_000);
+      };
+    } catch {
+      if (requestId === notificationPipelineRequest && auth.user) {
+        notificationReconnectTimer = setTimeout(() => {
+          void connectNotificationPipeline(requestId);
+        }, 15_000);
+      }
+    }
   }
 
   async function loadNotifications(manual = false): Promise<void> {
@@ -290,6 +420,19 @@
       }
     });
   }
+
+  $effect(() => {
+    if (!auth.user) {
+      disconnectNotificationPipeline();
+      return;
+    }
+
+    const requestId = notificationPipelineRequest + 1;
+    notificationPipelineRequest = requestId;
+    void connectNotificationPipeline(requestId);
+
+    return disconnectNotificationPipeline;
+  });
 </script>
 
 <svelte:document onclick={handleDocumentClick} />

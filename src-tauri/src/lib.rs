@@ -16,6 +16,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::set_auth_token,
             commands::clear_auth_token,
+            commands::get_auth_token,
             commands::get_current_user,
             commands::get_notifications,
             commands::delete_notification,

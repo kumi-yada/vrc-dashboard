@@ -74,10 +74,17 @@ pub async fn clear_auth_token(app: AppHandle, state: State<'_, AuthState>) -> Re
 }
 
 #[tauri::command]
+pub async fn get_auth_token(state: State<'_, AuthState>) -> Result<String, String> {
+    let auth = state.0.lock().map_err(|e| e.to_string())?;
+    auth.clone().ok_or_else(|| "Not authenticated".to_string())
+}
+
+#[tauri::command]
 pub async fn get_current_user(state: State<'_, AuthState>) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -106,37 +113,18 @@ pub async fn get_notifications(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
-    let mut v2_params: Vec<(&str, String)> = Vec::new();
-
-    if let Some(value) = n {
-        v2_params.push(("limit", value.to_string()));
-    }
-
     let client = reqwest::Client::new();
-    let mut v2_req = client
-        .get(format!("{}/notifications", BASE_URL))
-        .headers(build_headers(&token));
-
-    if !v2_params.is_empty() {
-        v2_req = v2_req.query(&v2_params);
-    }
-
-    let v2_resp = v2_req.send().await.map_err(|e| e.to_string())?;
-
-    if !v2_resp.status().is_success() {
-        return Err(format!("API error: {}", v2_resp.status()));
-    }
-
-    let mut notifications = v2_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
+    let mut notifications: Vec<Value> = Vec::new();
 
     let mut legacy_params: Vec<(&str, String)> = Vec::new();
 
     if let Some(value) = notification_type
         .map(|value| value.trim().to_string())
-        .filter(|value| !value.is_empty())
+        .filter(|value| !value.is_empty() && value != "all")
     {
         legacy_params.push(("type", value));
     }
@@ -167,13 +155,39 @@ pub async fn get_notifications(
 
     let legacy_resp = legacy_req.send().await.map_err(|e| e.to_string())?;
 
-    if !legacy_resp.status().is_success() {
-        return Ok(Value::Array(notifications));
+    let legacy_status = if legacy_resp.status().is_success() {
+        let legacy_notifications = legacy_resp
+            .json::<Vec<Value>>()
+            .await
+            .map_err(|e| e.to_string())?;
+        for notification in legacy_notifications {
+            append_unique_notification(&mut notifications, notification);
+        }
+        None
+    } else {
+        Some(legacy_resp.status())
+    };
+
+    let mut v2_req = client
+        .get(format!("{}/notifications", BASE_URL))
+        .headers(build_headers(&token));
+
+    if let Some(value) = n {
+        v2_req = v2_req.query(&[("limit", value.to_string())]);
     }
 
-    let legacy_notifications = legacy_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
-    for notification in legacy_notifications {
-        append_unique_notification(&mut notifications, notification);
+    let v2_resp = v2_req.send().await.map_err(|e| e.to_string())?;
+
+    if v2_resp.status().is_success() {
+        let v2_notifications = v2_resp
+            .json::<Vec<Value>>()
+            .await
+            .map_err(|e| e.to_string())?;
+        for notification in v2_notifications {
+            append_unique_notification(&mut notifications, notification);
+        }
+    } else if let Some(status) = legacy_status {
+        return Err(format!("API error: {} (v2: {})", status, v2_resp.status()));
     }
 
     let current_user_resp = client
@@ -187,7 +201,10 @@ pub async fn get_notifications(
         return Ok(Value::Array(notifications));
     }
 
-    let current_user = current_user_resp.json::<Value>().await.map_err(|e| e.to_string())?;
+    let current_user = current_user_resp
+        .json::<Value>()
+        .await
+        .map_err(|e| e.to_string())?;
     let Some(current_user_id) = current_user.get("id").and_then(Value::as_str) else {
         return Ok(Value::Array(notifications));
     };
@@ -210,7 +227,10 @@ pub async fn get_notifications(
         return Ok(Value::Array(notifications));
     }
 
-    let self_invites = self_invite_resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())?;
+    let self_invites = self_invite_resp
+        .json::<Vec<Value>>()
+        .await
+        .map_err(|e| e.to_string())?;
     for notification in self_invites {
         let receiver_user_id = notification.get("receiverUserId").and_then(Value::as_str);
         if receiver_user_id == Some(current_user_id) {
@@ -228,7 +248,8 @@ pub async fn delete_notification(
 ) -> Result<(), String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -269,7 +290,8 @@ pub async fn delete_notification(
 pub async fn clear_all_notifications(state: State<'_, AuthState>) -> Result<(), String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -299,13 +321,11 @@ pub async fn clear_all_notifications(state: State<'_, AuthState>) -> Result<(), 
 }
 
 #[tauri::command]
-pub async fn get_user(
-    state: State<'_, AuthState>,
-    user_id: String,
-) -> Result<Value, String> {
+pub async fn get_user(state: State<'_, AuthState>, user_id: String) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -330,7 +350,8 @@ pub async fn get_mutual_friends(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -349,13 +370,11 @@ pub async fn get_mutual_friends(
 }
 
 #[tauri::command]
-pub async fn get_group(
-    state: State<'_, AuthState>,
-    group_id: String,
-) -> Result<Value, String> {
+pub async fn get_group(state: State<'_, AuthState>, group_id: String) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -374,13 +393,11 @@ pub async fn get_group(
 }
 
 #[tauri::command]
-pub async fn get_friends(
-    state: State<'_, AuthState>,
-    offline: bool,
-) -> Result<Value, String> {
+pub async fn get_friends(state: State<'_, AuthState>, offline: bool) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -425,7 +442,8 @@ pub async fn get_instance(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -444,13 +462,11 @@ pub async fn get_instance(
 }
 
 #[tauri::command]
-pub async fn get_world(
-    state: State<'_, AuthState>,
-    world_id: String,
-) -> Result<Value, String> {
+pub async fn get_world(state: State<'_, AuthState>, world_id: String) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -480,7 +496,8 @@ pub async fn search_worlds(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let sort = sort_field.unwrap_or_else(|| "popularity".to_string());
@@ -520,7 +537,8 @@ pub async fn search_worlds(
 pub async fn get_recent_instances(state: State<'_, AuthState>) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -545,7 +563,8 @@ pub async fn invite_myself_to_instance(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -564,12 +583,11 @@ pub async fn invite_myself_to_instance(
 }
 
 #[tauri::command]
-pub async fn get_favorite_groups(
-    state: State<'_, AuthState>,
-) -> Result<Value, String> {
+pub async fn get_favorite_groups(state: State<'_, AuthState>) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -595,7 +613,8 @@ pub async fn get_favorites(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -604,10 +623,8 @@ pub async fn get_favorites(
     let mut all_favorites: Vec<Value> = Vec::new();
 
     loop {
-        let mut params: Vec<(&str, String)> = vec![
-            ("n", page_size.to_string()),
-            ("offset", offset.to_string()),
-        ];
+        let mut params: Vec<(&str, String)> =
+            vec![("n", page_size.to_string()), ("offset", offset.to_string())];
         if let Some(ref val) = r#type {
             params.push(("type", val.clone()));
         }
@@ -649,7 +666,8 @@ pub async fn add_favorite(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -676,7 +694,8 @@ pub async fn remove_favorite(
 ) -> Result<(), String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -703,7 +722,8 @@ pub async fn invite_user(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let payload = json!({
@@ -728,13 +748,11 @@ pub async fn invite_user(
 }
 
 #[tauri::command]
-pub async fn get_my_avatars(
-    state: State<'_, AuthState>,
-    user_id: String,
-) -> Result<Value, String> {
+pub async fn get_my_avatars(state: State<'_, AuthState>, user_id: String) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
@@ -781,12 +799,16 @@ pub async fn get_file_analysis(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let client = reqwest::Client::new();
     let resp = client
-        .get(format!("{}/analysis/{}/{}", BASE_URL, file_id, version_number))
+        .get(format!(
+            "{}/analysis/{}/{}",
+            BASE_URL, file_id, version_number
+        ))
         .headers(build_headers(&token))
         .send()
         .await
@@ -821,7 +843,8 @@ pub async fn create_instance(
 ) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;
-        auth.clone().ok_or_else(|| "Not authenticated".to_string())?
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
     };
 
     let mut payload = json!({
