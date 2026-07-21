@@ -9,19 +9,29 @@
   }
 
   let { friends, onFriendProfile }: Props = $props();
+
+  let collapsed = $state(false);
 </script>
 
-<div class="instance-card">
-  <div class="private-preview">
+<div class="instance-card" class:collapsed>
+  <button
+    class="private-preview"
+    type="button"
+    aria-expanded={!collapsed}
+    onclick={() => (collapsed = !collapsed)}
+  >
     <Icon icon="mdi:eye-off" width={32} class="private-icon" />
     <span class="private-label">Private</span>
     <span class="private-count">{friends.length} {friends.length === 1 ? "friend" : "friends"}</span>
-  </div>
-  <div class="friends-list">
-    {#each friends as friend (friend.id)}
-      <FriendEntry {friend} onProfileClick={onFriendProfile} />
-    {/each}
-  </div>
+    <Icon icon={collapsed ? "mdi:chevron-down" : "mdi:chevron-up"} width={18} />
+  </button>
+  {#if !collapsed}
+    <div class="friends-list">
+      {#each friends as friend (friend.id)}
+        <FriendEntry {friend} onProfileClick={onFriendProfile} />
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -50,6 +60,18 @@
     padding: 0.75rem;
     border-right: 1px solid rgba(255, 255, 255, 0.04);
     background: linear-gradient(135deg, rgba(156, 39, 176, 0.12), rgba(156, 39, 176, 0.04));
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .private-preview:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .instance-card.collapsed .private-preview {
+    width: 100%;
+    border-right: none;
   }
 
   :global(.private-icon) {
@@ -106,6 +128,11 @@
     :global(.private-icon) {
       width: 24px;
       height: 24px;
+    }
+
+    .friends-list {
+      overflow-y: visible;
+      max-height: none;
     }
   }
 </style>

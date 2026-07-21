@@ -298,5 +298,10 @@
       width: 100%;
       height: 60px;
     }
+
+    .friends-list {
+      overflow-y: visible;
+      max-height: none;
+    }
   }
 </style>
