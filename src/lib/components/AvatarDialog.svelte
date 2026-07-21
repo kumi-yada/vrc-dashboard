@@ -410,6 +410,19 @@
     overflow: hidden;
   }
 
+  @media (max-width: 720px) {
+    .dialog-shell {
+      padding: 0.75rem;
+      place-items: center;
+    }
+
+    .dialog {
+      width: 100%;
+      height: 100%;
+      max-height: calc(100dvh - 1.5rem);
+    }
+  }
+
   .dialog-header {
     display: flex;
     align-items: flex-start;

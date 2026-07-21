@@ -680,6 +680,8 @@
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     overflow: hidden;
     pointer-events: auto;
+    display: flex;
+    flex-direction: column;
   }
 
   .close-btn {
@@ -1099,9 +1101,9 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    max-height: calc(min(100vh, 860px) - 250px);
     padding: 1.25rem;
     overflow-y: auto;
+    flex: 1;
   }
 
   .loading-banner,
@@ -1206,11 +1208,13 @@
   @media (max-width: 720px) {
     .dialog-shell {
       padding: 0.75rem;
+      place-items: center;
     }
 
     .world-dialog {
       width: 100%;
-      max-height: 100%;
+      height: 100%;
+      max-height: calc(100dvh - 1.5rem);
     }
 
     .hero {
@@ -1218,7 +1222,6 @@
     }
 
     .dialog-body {
-      max-height: calc(100vh - 220px - 1.5rem);
       padding: 1rem;
     }
   }

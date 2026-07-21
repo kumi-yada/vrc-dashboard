@@ -164,11 +164,12 @@
   .utility-dialog {
     position: relative;
     width: min(100%, 540px);
+    max-height: min(100%, 860px);
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: 18px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-    overflow: hidden;
+    overflow-y: auto;
     pointer-events: auto;
   }
 
@@ -323,12 +324,14 @@
 
   @media (max-width: 520px) {
     .dialog-shell {
-      padding: 1rem;
-      align-items: end;
+      padding: 0.75rem;
+      place-items: center;
     }
 
     .utility-dialog {
       width: 100%;
+      height: 100%;
+      max-height: calc(100dvh - 1.5rem);
     }
   }
 </style>
