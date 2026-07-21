@@ -107,11 +107,9 @@ async function loadCurrentUser(): Promise<CurrentUser | null> {
     const message = getErrorMessage(e);
     user = null;
     currentUserId = null;
-    token = null;
 
     if (isUnauthorizedError(message)) {
-      error = null;
-      await clearStoredAuth();
+      error = "Saved session could not be restored. Your saved token was kept; retry or submit a new token.";
     } else {
       error = message;
     }
@@ -128,6 +126,9 @@ export function restoreSession(): Promise<void> {
     error = null;
 
     try {
+      token = await invoke<string>("get_auth_token").catch(() => null);
+      if (!token) return;
+
       await loadCurrentUser();
     } finally {
       initializing = false;
@@ -139,6 +140,16 @@ export function restoreSession(): Promise<void> {
 
 export async function refreshCurrentUser(): Promise<void> {
   await loadCurrentUser();
+}
+
+export async function retrySavedSession(): Promise<void> {
+  loading = true;
+  error = null;
+  try {
+    await loadCurrentUser();
+  } finally {
+    loading = false;
+  }
 }
 
 export async function fetchUserProfile(userId: string): Promise<UserProfile> {
@@ -272,9 +283,14 @@ export async function login(authToken: string): Promise<boolean> {
     token = authToken;
     currentUserId = null;
     const result = await loadCurrentUser();
+    if (!result) {
+      await clearStoredAuth();
+      token = null;
+    }
     return result !== null;
   } catch (e) {
     error = getErrorMessage(e);
+    await clearStoredAuth();
     token = null;
     user = null;
     currentUserId = null;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
-  import { login, getAuth } from "../../stores/auth.svelte";
+  import { login, getAuth, retrySavedSession } from "../../stores/auth.svelte";
   import { showDesktopWindowControls } from "../../utils/platform";
 
   const auth = getAuth();
@@ -13,6 +13,10 @@
     e.preventDefault();
     if (!tokenInput.trim()) return;
     await login(tokenInput.trim());
+  }
+
+  async function handleRetrySavedSession() {
+    await retrySavedSession();
   }
 
   async function minimizeWindow() {
@@ -72,6 +76,17 @@
 
     {#if auth.error}
       <p class="error">{auth.error}</p>
+    {/if}
+
+    {#if auth.token}
+      <button
+        type="button"
+        class="retry-btn"
+        disabled={auth.loading}
+        onclick={handleRetrySavedSession}
+      >
+        Retry saved session
+      </button>
     {/if}
 
     <div class="instructions">
@@ -211,6 +226,29 @@
   }
 
   .login-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .retry-btn {
+    width: 100%;
+    margin-top: 0.75rem;
+    min-height: var(--ui-input-min-height);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .retry-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .retry-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
