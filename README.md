@@ -6,7 +6,9 @@ without any tracking or history.
 
 Main purpose is to see who is online and where they are with more
 information then the VRC website and without all the clutter from the
-other apps. Improved UX for my personal needs
+other apps.
+
+Replacement for VRChat client interface since it never works...
 
 ## Features
 
