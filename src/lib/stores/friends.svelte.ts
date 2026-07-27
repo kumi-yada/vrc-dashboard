@@ -119,6 +119,46 @@ export async function fetchFriends(reload = false): Promise<void> {
       }
     }
 
+    // Include current user in the same categorization
+    if (auth.user && auth.user.location) {
+      const selfFriend: Friend = {
+        id: auth.user.id,
+        displayName: auth.user.displayName,
+        currentAvatarImageUrl: auth.user.currentAvatarImageUrl,
+        currentAvatarThumbnailImageUrl: auth.user.currentAvatarThumbnailImageUrl,
+        profilePicOverrideThumbnail: auth.user.profilePicOverrideThumbnail ?? "",
+        userIcon: auth.user.userIcon ?? "",
+        status: auth.user.status,
+        statusDescription: auth.user.statusDescription,
+        bio: auth.user.bio ?? "",
+        pronouns: auth.user.pronouns ?? "",
+        date_joined: auth.user.date_joined ?? "",
+        tags: auth.user.tags,
+        badges: auth.user.badges,
+        location: auth.user.location,
+        worldId: "",
+        instanceId: "",
+        state: auth.user.state,
+        platform: undefined,
+        last_platform: "",
+        isFriend: false,
+      };
+
+      if (auth.user.location === "traveling") {
+        traveling.push(selfFriend);
+      } else if (auth.user.location === "private") {
+        inPrivate.push(selfFriend);
+      } else if (
+        !auth.user.location ||
+        auth.user.location === "offline" ||
+        auth.user.location === ""
+      ) {
+        active.push(selfFriend);
+      } else {
+        inInstance.push(selfFriend);
+      }
+    }
+
     privateFriends = inPrivate;
     activeFriends = active;
     travelingFriends = traveling;
