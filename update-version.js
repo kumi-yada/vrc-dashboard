@@ -1,28 +1,35 @@
 const fs = require("fs");
-const p = "src-tauri/Cargo.toml";
-const tauriConf = "src-tauri/tauri.conf.json";
+
+function updateFile(path, label, replacer) {
+  const content = fs.readFileSync(path, "utf8");
+  const updated = replacer(content);
+  if (updated !== content) {
+    fs.writeFileSync(path, updated);
+    console.log(`Set ${label} version to`, v);
+  } else {
+    console.log(`${label} already at version`, v);
+  }
+}
+
 let v = (process.env.GITHUB_REF_NAME || "").replace(/^v/, "");
 if (!v) {
   console.log("No GITHUB_REF_NAME set, skipping");
   process.exit(0);
 }
-let s = fs.readFileSync(p, "utf8");
-s = s.replace(/^version\s*=\s*\".*\"/m, `version = "${v}"`);
-fs.writeFileSync(p, s);
-console.log("Set src-tauri/Cargo.toml version to", v);
 
-// update src-tauri/tauri.conf.json
-try {
-  let t = fs.readFileSync(tauriConf, "utf8");
-  let j = JSON.parse(t);
+updateFile("src-tauri/Cargo.toml", "src-tauri/Cargo.toml", (s) =>
+  s.replace(/^version\s*=\s*\".*\"/m, `version = "${v}"`),
+);
+
+updateFile("package.json", "package.json", (s) =>
+  s.replace(/"version"\s*:\s*"[^"]*"/, `"version": "${v}"`),
+);
+
+updateFile("src-tauri/tauri.conf.json", "src-tauri/tauri.conf.json", (s) => {
+  let j = JSON.parse(s);
   if (j.version !== v) {
     j.version = v;
-    fs.writeFileSync(tauriConf, JSON.stringify(j, null, 2) + "\n");
-    console.log("Set src-tauri/tauri.conf.json version to", v);
-  } else {
-    console.log("src-tauri/tauri.conf.json already at version", v);
+    return JSON.stringify(j, null, 2) + "\n";
   }
-} catch (e) {
-  console.error("Failed to update src-tauri/tauri.conf.json:", e.message);
-  process.exit(1);
-}
+  return s;
+});

@@ -1,5 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
+  import { version } from "../../../package.json";
   // import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
   interface Props {
@@ -137,6 +138,9 @@
             Resolve
           {/if}
         </button>
+      </div>
+      <div class="version-row">
+        <span class="version-label">v{version}</span>
       </div>
     </div>
   </div>
@@ -320,6 +324,19 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  .version-row {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    margin-top: auto;
+  }
+
+  .version-label {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    opacity: 0.5;
   }
 
   @media (max-width: 520px) {
