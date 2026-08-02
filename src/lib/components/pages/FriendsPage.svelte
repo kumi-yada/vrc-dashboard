@@ -86,8 +86,16 @@
     selectedProfile = friend;
     profileLoading = true;
     profileError = null;
+    selectedMutualFriends = null;
 
     const requestToken = ++profileRequestToken;
+
+    const isSelf = auth.user?.id === friend.id;
+    if (isSelf && auth.user) {
+      selectedProfile = auth.user;
+      profileLoading = false;
+      return;
+    }
 
     try {
       const profile = await fetchUserProfile(friend.id);
@@ -273,7 +281,7 @@
   <UserMenuDialog
     user={selectedProfile}
     mutualFriends={selectedMutualFriends}
-    showInvite={true}
+    showInvite={selectedProfile?.id !== auth.user?.id}
     loading={profileLoading}
     error={profileError}
     onClose={closeProfileDialog}
