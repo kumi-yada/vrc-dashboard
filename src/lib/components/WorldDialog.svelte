@@ -20,7 +20,7 @@
     addApiFavorite,
     removeApiFavorite,
   } from "../stores/auth.svelte";
-  import { parseInstanceId, visibilityLabel } from "../utils/instance";
+  import { parseInstanceId, visibilityLabel, regionLabel } from "../utils/instance";
   import {
     getFavorites,
     createGroup,
@@ -612,6 +612,13 @@
               <div class="detail-label">Type</div>
               <div class="detail-value">
                 {visibilityLabel(group.parsed.visibility)}
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">Region</div>
+              <div class="detail-value">
+                {regionLabel(group.parsed.region)}
               </div>
             </div>
           </section>

@@ -5,7 +5,7 @@
     type InstanceGroup,
     type SupportedPlatform,
   } from "../types";
-  import { visibilityLabel } from "../utils/instance";
+  import { visibilityLabel, regionLabel } from "../utils/instance";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
   import { invoke } from "@tauri-apps/api/core";
@@ -44,6 +44,7 @@
   const userCount = $derived(group.instance?.userCount ?? 0);
   const capacity = $derived(group.instance?.capacity ?? 0);
   const visLabel = $derived(visibilityLabel(group.parsed.visibility));
+  const region = $derived(regionLabel(group.parsed.region));
   const supportedPlatforms = $derived(getSupportedPlatforms(group));
 
   function handleWorldOpen() {
@@ -112,6 +113,7 @@
       <span class="world-name">{worldName}</span>
       <div class="world-meta">
         <span class="visibility">{visLabel}</span>
+        <span class="region-badge">{region}</span>
         <span class="player-count">
           <Icon icon="mdi:account-group" width={14} />
           {userCount}/{capacity}
@@ -202,8 +204,8 @@
 
   .world-meta {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 0.4rem;
     margin-top: 0.15rem;
   }
 
@@ -229,12 +231,21 @@
     font-weight: 600;
   }
 
+  .region-badge {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    padding: 0.05rem 0.3rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
   .player-count {
     display: flex;
     align-items: center;
     gap: 0.15rem;
     font-size: 0.65rem;
     color: var(--text-secondary);
+    margin-left: auto;
   }
 
   .invite-btn {
