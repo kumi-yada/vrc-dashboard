@@ -299,7 +299,7 @@
 
       {#if mutuals.length > 0}
         <div class="popup-mutuals">
-          <h3 class="mutuals-title">Mutual Friends</h3>
+          <h3 class="mutuals-title">Mutual Friends ({mutuals.length})</h3>
           <div class="mutuals-list">
             {#each mutuals as m (m.id)}
               <button
