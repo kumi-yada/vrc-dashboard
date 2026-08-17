@@ -163,18 +163,20 @@
 
   .login-container {
     display: flex;
-    align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 2rem;
+    padding: 1rem;
+    overflow-y: auto;
   }
 
   .login-card {
     background: var(--bg-secondary);
     border-radius: 12px;
-    padding: 2.5rem;
+    padding: 2rem;
     max-width: 480px;
     width: 100%;
+    height: fit-content;
+    margin: auto;
     box-shadow: 0 8px 32px var(--shadow);
   }
 
@@ -283,5 +285,15 @@
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.85rem;
+  }
+
+  @media (max-width: 480px) {
+    .login-container {
+      padding: 0.75rem;
+    }
+
+    .login-card {
+      padding: 1.5rem;
+    }
   }
 </style>
