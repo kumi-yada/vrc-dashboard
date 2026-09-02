@@ -792,6 +792,52 @@ pub async fn get_my_avatars(state: State<'_, AuthState>, user_id: String) -> Res
 }
 
 #[tauri::command]
+pub async fn get_my_worlds(state: State<'_, AuthState>) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let mut all_worlds: Vec<Value> = Vec::new();
+    let page_size = 100;
+    let mut offset = 0;
+
+    loop {
+        let resp = client
+            .get(format!("{}/worlds", BASE_URL))
+            .headers(build_headers(&token))
+            .query(&[
+                ("user", "me"),
+                ("releaseStatus", "all"),
+                ("sort", "updated"),
+                ("order", "descending"),
+                ("n", &page_size.to_string()),
+                ("offset", &offset.to_string()),
+            ])
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if !resp.status().is_success() {
+            return Err(format!("API error: {}", resp.status()));
+        }
+
+        let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
+        let count = page.len();
+        all_worlds.extend(page);
+
+        if count < page_size {
+            break;
+        }
+        offset += page_size;
+    }
+
+    Ok(Value::Array(all_worlds))
+}
+
+#[tauri::command]
 pub async fn get_file_analysis(
     state: State<'_, AuthState>,
     file_id: String,

@@ -268,6 +268,10 @@ export async function fetchMyAvatars(userId: string): Promise<AvatarData[]> {
   return invoke<AvatarData[]>("get_my_avatars", { userId });
 }
 
+export async function fetchMyWorlds(): Promise<WorldData[]> {
+  return invoke<WorldData[]>("get_my_worlds");
+}
+
 export async function fetchFileAnalysis(
   fileId: string,
   versionNumber: number,

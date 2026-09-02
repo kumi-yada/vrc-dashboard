@@ -37,6 +37,7 @@ pub fn run() {
             commands::add_favorite,
             commands::remove_favorite,
             commands::get_my_avatars,
+            commands::get_my_worlds,
             commands::get_file_analysis,
         ])
         .setup(|app| {
