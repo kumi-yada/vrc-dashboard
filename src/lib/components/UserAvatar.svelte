@@ -4,7 +4,7 @@
   interface Props {
     friend: Pick<
       UserProfile,
-      "displayName" | "profilePicOverrideThumbnail" | "currentAvatarThumbnailImageUrl" | "currentAvatarImageUrl"
+      "displayName" | "profilePicOverrideThumbnail" | "iconUrl" | "currentAvatarThumbnailImageUrl" | "currentAvatarImageUrl"
     >;
     size?: number;
     radius?: string;
@@ -21,7 +21,13 @@
   }: Props = $props();
 
   function getAvatar(user: Props["friend"]): string {
-    return user.profilePicOverrideThumbnail || user.currentAvatarThumbnailImageUrl || user.currentAvatarImageUrl || "";
+    return (
+      user.profilePicOverrideThumbnail ||
+      user.iconUrl ||
+      user.currentAvatarThumbnailImageUrl ||
+      user.currentAvatarImageUrl ||
+      ""
+    );
   }
 
   let filter = $derived(

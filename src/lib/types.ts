@@ -11,6 +11,7 @@ export interface UserProfile {
   displayName: string;
   currentAvatarImageUrl: string;
   currentAvatarThumbnailImageUrl: string;
+  iconUrl: string;
   profilePicOverrideThumbnail: string;
   userIcon: string;
   status: string;
