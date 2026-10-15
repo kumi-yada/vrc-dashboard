@@ -94,8 +94,6 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    env:
-      TMPDIR: /tmp
     steps:
       - uses: actions/checkout@v6
         with:
