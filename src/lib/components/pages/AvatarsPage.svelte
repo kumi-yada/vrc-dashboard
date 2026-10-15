@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { getAuth, fetchMyAvatars, fetchMyWorlds } from "../../stores/auth.svelte";
+  import { getAuth, fetchMyAvatars, fetchMyWorlds, fetchWorld } from "../../stores/auth.svelte";
   import type { AvatarData, WorldData } from "../../types";
   import AvatarCard from "../AvatarCard.svelte";
   import AvatarDialog from "../AvatarDialog.svelte";
@@ -146,9 +146,14 @@
     selectedAvatar = null;
   }
 
-  function handleWorldOpen(world: WorldData) {
+  async function handleWorldOpen(world: WorldData) {
     selectedWorld = world;
     worldDialogOpen = true;
+    try {
+      selectedWorld = await fetchWorld(world.id);
+    } catch {
+      // keep the list data if the full world can't be fetched
+    }
   }
 
   function handleWorldClose() {

@@ -74,6 +74,23 @@
     }
   }
 
+  const TAG_PREFIX_CATEGORIES: Array<[string, string]> = [
+    ["author_tag_", "author"],
+    ["content_", "content"],
+    ["system_", "system"],
+    ["language_", "language"],
+    ["platform_", "platform"],
+    ["feature_", "feature"],
+    ["admin_", "admin"],
+  ];
+
+  function tagCategory(tag: string): string {
+    for (const [prefix, category] of TAG_PREFIX_CATEGORIES) {
+      if (tag.startsWith(prefix)) return category;
+    }
+    return "other";
+  }
+
   function formatDate(dateStr: string | undefined): string {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -179,14 +196,12 @@
       {/if}
 
       {#if world?.tags && world.tags.length > 0}
-        {@const authorTags = world.tags.filter((t) => t.startsWith("author_tag_"))}
-        {#if authorTags.length > 0}
-          <div class="tags">
-            {#each authorTags as tag (tag)}
-              <span class="tag">{tag.replace("author_tag_", "")}</span>
-            {/each}
-          </div>
-        {/if}
+        <div class="tags">
+          {#each world.tags as tag (tag)}
+            {@const category = tagCategory(tag)}
+            <span class="tag tag-{category}">{tag}</span>
+          {/each}
+        </div>
       {/if}
     </div>
   </div>
@@ -483,5 +498,41 @@
     border: 1px solid var(--border);
     border-radius: 999px;
     padding: 0.1rem 0.5rem;
+  }
+
+  .tag-content {
+    color: #ffb74d;
+    background: rgba(255, 152, 0, 0.12);
+    border-color: rgba(255, 152, 0, 0.35);
+  }
+
+  .tag-system {
+    color: #ce93d8;
+    background: rgba(156, 39, 176, 0.12);
+    border-color: rgba(156, 39, 176, 0.35);
+  }
+
+  .tag-language {
+    color: #4dd0e1;
+    background: rgba(0, 188, 212, 0.12);
+    border-color: rgba(0, 188, 212, 0.35);
+  }
+
+  .tag-platform {
+    color: #81c784;
+    background: rgba(76, 175, 80, 0.12);
+    border-color: rgba(76, 175, 80, 0.35);
+  }
+
+  .tag-feature {
+    color: #90caf9;
+    background: rgba(33, 150, 243, 0.12);
+    border-color: rgba(33, 150, 243, 0.35);
+  }
+
+  .tag-admin {
+    color: #f48fb1;
+    background: rgba(233, 30, 99, 0.12);
+    border-color: rgba(233, 30, 99, 0.35);
   }
 </style>

@@ -296,6 +296,23 @@
     }
   }
 
+  const TAG_PREFIX_CATEGORIES: Array<[string, string]> = [
+    ["author_tag_", "author"],
+    ["content_", "content"],
+    ["system_", "system"],
+    ["language_", "language"],
+    ["platform_", "platform"],
+    ["feature_", "feature"],
+    ["admin_", "admin"],
+  ];
+
+  function tagCategory(tag: string): string {
+    for (const [prefix, category] of TAG_PREFIX_CATEGORIES) {
+      if (tag.startsWith(prefix)) return category;
+    }
+    return "other";
+  }
+
   function formatDate(dateStr: string): string {
     if (!dateStr) return "";
 
@@ -635,7 +652,8 @@
             <h3>Tags</h3>
             <div class="tag-list">
               {#each world.tags as tag (tag)}
-                <span class="tag">{tag.replace(/^author_tag_/, "")}</span>
+                {@const category = tagCategory(tag)}
+                <span class="tag tag-{category}">{tag}</span>
               {/each}
             </div>
           </section>
@@ -1186,6 +1204,42 @@
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-secondary);
     font-size: 0.78rem;
+  }
+
+  .tag-content {
+    color: #ffb74d;
+    background: rgba(255, 152, 0, 0.12);
+    border: 1px solid rgba(255, 152, 0, 0.35);
+  }
+
+  .tag-system {
+    color: #ce93d8;
+    background: rgba(156, 39, 176, 0.12);
+    border: 1px solid rgba(156, 39, 176, 0.35);
+  }
+
+  .tag-language {
+    color: #4dd0e1;
+    background: rgba(0, 188, 212, 0.12);
+    border: 1px solid rgba(0, 188, 212, 0.35);
+  }
+
+  .tag-platform {
+    color: #81c784;
+    background: rgba(76, 175, 80, 0.12);
+    border: 1px solid rgba(76, 175, 80, 0.35);
+  }
+
+  .tag-feature {
+    color: #90caf9;
+    background: rgba(33, 150, 243, 0.12);
+    border: 1px solid rgba(33, 150, 243, 0.35);
+  }
+
+  .tag-admin {
+    color: #f48fb1;
+    background: rgba(233, 30, 99, 0.12);
+    border: 1px solid rgba(233, 30, 99, 0.35);
   }
 
   .dialog-state {
