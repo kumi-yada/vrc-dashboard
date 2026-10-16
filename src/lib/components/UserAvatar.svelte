@@ -10,6 +10,7 @@
     radius?: string;
     grayscale?: number;
     brightness?: number;
+    fit?: "cover" | "contain";
   }
 
   let {
@@ -18,6 +19,7 @@
     radius = "10px",
     grayscale = 0,
     brightness = 1,
+    fit = "cover",
   }: Props = $props();
 
   function getAvatar(user: Props["friend"]): string {
@@ -47,6 +49,7 @@
   style:height={`calc(${size}px * var(--ui-scale, 1))`}
   style:border-radius={radius}
   style:filter={filter}
+  style:object-fit={fit}
 />
 
 <style>

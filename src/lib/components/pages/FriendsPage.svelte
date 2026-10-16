@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { formatDistanceToNow } from "date-fns";
+  import { formatShortAgo } from "../../utils/time";
   import {
     getFriendsStore,
     fetchFriends,
@@ -208,13 +208,13 @@
           {#each sortedOfflineFriends as friend (friend.id)}
             <button class="offline-friend-item" onclick={() => handleFriendProfile(friend)}>
               <div class="offline-avatar">
-                <UserAvatar {friend} grayscale={100} />
+                <UserAvatar {friend} size={48} radius="8px" fit="contain" grayscale={100} />
               </div>
               <div class="offline-info">
                 <span class="offline-name">{friend.displayName}</span>
                 <span class="offline-time">
                   {#if friend.last_activity}
-                    {formatDistanceToNow(new Date(friend.last_activity), { addSuffix: true })}
+                    {formatShortAgo(friend.last_activity)}
                   {:else}
                     Unknown
                   {/if}
@@ -409,6 +409,11 @@
     .instances-grid {
       grid-template-columns: minmax(240px, 1fr);
     }
+
+    .offline-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.5rem;
+    }
   }
 
   .loading-state,
@@ -468,10 +473,7 @@
   }
 
   .offline-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
+    display: flex;
     flex-shrink: 0;
   }
 
