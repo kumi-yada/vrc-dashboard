@@ -8,6 +8,7 @@ import type {
   FileVersionAnalysis,
   InstanceData,
   Notification,
+  PublicProfile,
   UserProfile,
   WorldData,
 } from "../types";
@@ -94,8 +95,13 @@ async function loadCurrentUser(): Promise<CurrentUser | null> {
       authUserData = currentUser;
     }
 
-    const fullUserProfile = await loadCurrentUserProfile(resolvedUserId);
+    const [fullUserProfile, publicProfile] = await Promise.all([
+      loadCurrentUserProfile(resolvedUserId),
+      // bio/badges/avatar urls were dropped from the user endpoints.
+      fetchPublicProfile(resolvedUserId, true).catch(() => null),
+    ]);
     const mergedUser = {
+      ...publicProfile,
       ...authUserData,
       ...fullUserProfile,
     } as CurrentUser;
@@ -154,6 +160,31 @@ export async function retrySavedSession(): Promise<void> {
 
 export async function fetchUserProfile(userId: string): Promise<UserProfile> {
   return invoke<UserProfile>("get_user", { userId });
+}
+
+export async function fetchPublicProfile(
+  userId: string,
+  asSelf = false,
+): Promise<PublicProfile> {
+  return invoke<PublicProfile>("get_public_profile", { userId, asSelf });
+}
+
+/**
+ * `get_user` stopped returning `bio`, `badges` and the avatar image urls, so a
+ * full profile needs the public profile endpoint merged on top of it. Fields
+ * the user endpoint still owns (status, tags, location, ...) win.
+ */
+export async function fetchFullUserProfile(
+  userId: string,
+): Promise<UserProfile> {
+  const [user, profile] = await Promise.all([
+    fetchUserProfile(userId),
+    fetchPublicProfile(userId).catch(() => null),
+  ]);
+
+  if (!profile) return user;
+
+  return { ...profile, ...user };
 }
 
 export async function fetchGroupProfile(groupId: string): Promise<GroupProfile> {

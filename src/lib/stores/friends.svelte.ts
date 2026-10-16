@@ -127,6 +127,7 @@ export async function fetchFriends(reload = false): Promise<void> {
         currentAvatarImageUrl: auth.user.currentAvatarImageUrl,
         currentAvatarThumbnailImageUrl: auth.user.currentAvatarThumbnailImageUrl,
         profilePicOverrideThumbnail: auth.user.profilePicOverrideThumbnail ?? "",
+        iconUrl: auth.user.iconUrl ?? "",
         userIcon: auth.user.userIcon ?? "",
         status: auth.user.status,
         statusDescription: auth.user.statusDescription,

@@ -22,6 +22,7 @@ pub fn run() {
             commands::delete_notification,
             commands::clear_all_notifications,
             commands::get_user,
+            commands::get_public_profile,
             commands::get_mutual_friends,
             commands::get_group,
             commands::get_friends,

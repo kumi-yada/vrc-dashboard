@@ -26,6 +26,23 @@ export interface UserProfile {
   onlineFriends?: string[];
 }
 
+/** `GET /users/profile/{userId}` - holds the fields `GET /users/{userId}` dropped. */
+export interface PublicProfile {
+  id: string;
+  displayName: string;
+  bio?: string;
+  bioLinks?: string[];
+  pronouns?: string;
+  status?: string;
+  statusDescription?: string;
+  currentAvatarImageUrl?: string;
+  currentAvatarThumbnailImageUrl?: string;
+  iconUrl?: string;
+  userIcon?: string;
+  badges?: Badge[];
+  trustTags?: string[];
+}
+
 export interface Friend extends UserProfile {
   location: string;
   worldId: string;

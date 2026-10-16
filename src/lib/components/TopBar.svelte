@@ -7,7 +7,7 @@
     deleteNotification,
     fetchNotifications,
     fetchInstance,
-    fetchUserProfile,
+    fetchFullUserProfile,
     fetchWorld,
     getPipelineAuthToken,
     logout,
@@ -245,7 +245,7 @@
     notificationUserError = null;
 
     try {
-      notificationUser = await fetchUserProfile(notification.senderUserId);
+      notificationUser = await fetchFullUserProfile(notification.senderUserId);
     } catch (error) {
       notificationUserError = error instanceof Error ? error.message : String(error);
     } finally {

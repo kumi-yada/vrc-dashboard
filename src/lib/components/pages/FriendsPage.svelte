@@ -6,7 +6,7 @@
     fetchFriends,
     fetchMutualFriends,
   } from "../../stores/friends.svelte";
-  import { fetchUserProfile, fetchWorld, getAuth } from "../../stores/auth.svelte";
+  import { fetchFullUserProfile, fetchWorld, getAuth } from "../../stores/auth.svelte";
   import type { InstanceGroup, UserProfile, WorldData } from "../../types";
   import InstanceCard from "../InstanceCard.svelte";
   import TravelingCard from "../TravelingCard.svelte";
@@ -98,7 +98,7 @@
     }
 
     try {
-      const profile = await fetchUserProfile(friend.id);
+      const profile = await fetchFullUserProfile(friend.id);
       fetchMutualFriends(friend.id)
         .then((mutuals) => {
           if (requestToken !== profileRequestToken) return;

@@ -343,6 +343,36 @@ pub async fn get_user(state: State<'_, AuthState>, user_id: String) -> Result<Va
     resp.json::<Value>().await.map_err(|e| e.to_string())
 }
 
+/// `get_user` no longer returns `bio`, `badges` or avatar image urls; those now
+/// live on `GET /profile/{userId}`.
+#[tauri::command]
+pub async fn get_public_profile(
+    state: State<'_, AuthState>,
+    user_id: String,
+    as_self: Option<bool>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .get(format!("{}/profile/{}", BASE_URL, user_id))
+        .headers(build_headers(&token))
+        .query(&[("asSelf", if as_self.unwrap_or(false) { "true" } else { "false" })])
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(format!("API error: {}", resp.status()));
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 pub async fn get_mutual_friends(
     state: State<'_, AuthState>,

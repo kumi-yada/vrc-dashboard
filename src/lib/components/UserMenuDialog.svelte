@@ -67,8 +67,6 @@
   );
   const userScalePercent = $derived(Math.round(uiScale.userScale * 100));
 
-  $inspect(auth);
-
   function getTrustLevel(tags: string[]): string {
     if (tags.includes("system_trust_veteran")) return "Trusted";
     if (tags.includes("system_trust_trusted")) return "Known";
@@ -401,14 +399,21 @@
 
   .user-dialog {
     position: relative;
+    display: flex;
+    flex-direction: column;
     width: min(100%, 640px);
     max-height: min(100%, 860px);
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: 18px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-    overflow-y: auto;
+    overflow: hidden;
     pointer-events: auto;
+  }
+
+  /* Only the bio gives up space when the dialog runs out of room. */
+  .user-dialog > * {
+    flex-shrink: 0;
   }
 
   .dialog-actions {
@@ -603,8 +608,10 @@
   .popup-bio {
     padding: 0.75rem 1.25rem;
     border-top: 1px solid var(--border);
-    max-height: 25rem;
+    flex: 0 1 auto;
+    min-height: 4.5rem;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .popup-bio p {
