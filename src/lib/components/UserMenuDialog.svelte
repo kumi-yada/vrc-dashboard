@@ -65,8 +65,6 @@
         ? "You must be online to send invites"
         : "Invite user to your current instance",
   );
-  const scalePercent = $derived(Math.round(uiScale.effectiveScale * 100));
-  const autoScalePercent = $derived(Math.round(uiScale.autoScale * 100));
   const userScalePercent = $derived(Math.round(uiScale.userScale * 100));
 
   $inspect(auth);
@@ -346,13 +344,14 @@
             />
 
             <div class="scale-panel-meta">
-              <span>Override {userScalePercent}%</span>
-              <span>Auto {autoScalePercent}%</span>
-              <span>Effective {scalePercent}%</span>
+              <span>{Math.round(USER_SCALE_MIN * 100)}%</span>
+              <span>Scale {userScalePercent}%</span>
+              <span>{Math.round(USER_SCALE_MAX * 100)}%</span>
             </div>
 
             <p class="scale-panel-note">
-              Automatic scale is capped at 150% for high-density displays.
+              Your display's own scaling is handled by the system. This only
+              adjusts the app on top of it.
             </p>
           </div>
         {/if}
