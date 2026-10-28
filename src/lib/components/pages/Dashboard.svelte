@@ -30,12 +30,13 @@
 
   async function refreshDashboardData(): Promise<void> {
     if (refreshPromise) return refreshPromise;
-    friendsRefreshToken += 1;
-    worldsRefreshToken += 1;
-    recentRefreshToken += 1;
-    avatarsRefreshToken += 1;
     refreshPromise = refreshCurrentUser()
-      .then(() => undefined)
+      .then(() => {
+        friendsRefreshToken += 1;
+        worldsRefreshToken += 1;
+        recentRefreshToken += 1;
+        avatarsRefreshToken += 1;
+      })
       .finally(() => {
         refreshPromise = null;
       });
@@ -51,21 +52,21 @@
     await refreshDashboardData();
   }
 
-  function handleWindowFocus() {
+  async function handleWindowFocus() {
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
+    await refreshCurrentUser();
     refreshActiveTab();
-    void refreshCurrentUser();
   }
 
-  function handleVisibilityChange() {
+  async function handleVisibilityChange() {
     if (document.visibilityState !== "visible") return;
     if (isCoolingDown()) return;
 
     lastRefreshTime = Date.now();
+    await refreshCurrentUser();
     refreshActiveTab();
-    void refreshCurrentUser();
   }
 
 
