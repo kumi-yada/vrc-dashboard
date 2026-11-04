@@ -5,6 +5,7 @@
   import WorldsPage from "./WorldsPage.svelte";
   import RecentPage from "./RecentPage.svelte";
   import AvatarsPage from "./AvatarsPage.svelte";
+  import InstancesPage from "./InstancesPage.svelte";
   import { refreshCurrentUser } from "../../stores/auth.svelte";
 
   const REFRESH_COOLDOWN_MS = 30_000;
@@ -14,6 +15,7 @@
   let worldsRefreshToken = $state(0);
   let recentRefreshToken = $state(0);
   let avatarsRefreshToken = $state(0);
+  let instancesRefreshToken = $state(0);
   let refreshPromise: Promise<void> | null = null;
   let lastRefreshTime = 0;
 
@@ -87,6 +89,8 @@
       <RecentPage refreshToken={recentRefreshToken} onRefresh={() => { recentRefreshToken += 1; }} />
     {:else if activeTab === "avatars"}
       <AvatarsPage refreshToken={avatarsRefreshToken} onRefresh={handleRefresh} />
+    {:else if activeTab === "instances"}
+      <InstancesPage refreshToken={instancesRefreshToken} onRefresh={() => { instancesRefreshToken += 1; }} />
     {/if}
   </div>
 

@@ -28,6 +28,10 @@
     deleteGroup,
     getGroupsForWorld,
   } from "../stores/favorites.svelte";
+  import {
+    getSavedInstances,
+    toggleSavedInstance,
+  } from "../stores/saved-instances.svelte";
   import type { ApiFavoriteGroup } from "../types";
 
   interface Props {
@@ -97,6 +101,12 @@
   let favOpen = $state(false);
   let newGroupName = $state("");
   const activeGroupIds = $derived(world ? getGroupsForWorld(world.id) : []);
+
+  // Saved instances (bookmarks)
+  const savedInstances = getSavedInstances();
+  const instanceSaved = $derived(
+    group ? savedInstances.instances.some((s) => s.location === group.location) : false,
+  );
 
   // VRChat API favorites
   let apiGroups = $state<ApiFavoriteGroup[]>([]);
@@ -393,6 +403,20 @@
         >
           <Icon icon="mdi:server-plus" width={18} />
         </button>
+        {#if group}
+          <button
+            class="bookmark-btn"
+            class:saved={instanceSaved}
+            type="button"
+            title={instanceSaved ? "Remove from saved instances" : "Save instance for later"}
+            onclick={() => toggleSavedInstance(group.location)}
+          >
+            <Icon
+              icon={instanceSaved ? "mdi:bookmark" : "mdi:bookmark-outline"}
+              width={18}
+            />
+          </button>
+        {/if}
         {#if inviteLocation}
           <button
             class="invite-instance-btn invite-instance-btn--{inviteState}"
@@ -789,6 +813,29 @@
 
   .create-instance-btn.active {
     color: #81c784;
+  }
+
+  .bookmark-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.28);
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+
+  .bookmark-btn:hover {
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+  }
+
+  .bookmark-btn.saved {
+    color: #ffd740;
   }
 
   .invite-instance-btn {

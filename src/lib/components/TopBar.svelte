@@ -68,6 +68,7 @@
     { id: "worlds", label: "Worlds", icon: "mdi:earth" },
     { id: "recent", label: "Recent", icon: "mdi:history" },
     { id: "avatars", label: "Avatars", icon: "mdi:human" },
+    { id: "instances", label: "Instances", icon: "mdi:bookmark" },
   ];
 
   async function handleLogout() {
