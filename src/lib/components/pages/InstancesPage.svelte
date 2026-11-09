@@ -1,11 +1,12 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
-  import { fetchInstance, fetchWorld, getAuth } from "../../stores/auth.svelte";
-  import { resolveOwnerName } from "../../stores/friends.svelte";
+  import { fetchInstance, fetchWorld, fetchFullUserProfile, getAuth } from "../../stores/auth.svelte";
+  import { resolveOwnerName, fetchMutualFriends } from "../../stores/friends.svelte";
   import { parseInstanceId } from "../../utils/instance";
-  import type { InstanceData, InstanceGroup, WorldData } from "../../types";
+  import type { InstanceData, InstanceGroup, UserProfile, WorldData } from "../../types";
   import RecentInstanceCard from "../RecentInstanceCard.svelte";
   import WorldDialog from "../WorldDialog.svelte";
+  import UserMenuDialog from "../UserMenuDialog.svelte";
   import {
     getSavedInstances,
     removeSavedInstanceByLocation,
@@ -33,6 +34,14 @@
   let worldError = $state<string | null>(null);
   let worldDialogOpen = $state(false);
   let worldRequestToken = 0;
+
+  // Profile dialog state
+  let selectedMutualFriends = $state<UserProfile[] | null>(null);
+  let selectedProfile = $state<UserProfile | null>(null);
+  let profileLoading = $state(false);
+  let profileError = $state<string | null>(null);
+  let profileDialogOpen = $state(false);
+  let profileRequestToken = 0;
 
   function buildStubInstance(location: string, parsed: InstanceGroup["parsed"], world: WorldData): InstanceData {
     return {
@@ -116,6 +125,53 @@
     selectedGroup = null;
   }
 
+  function closeProfileDialog() {
+    profileDialogOpen = false;
+    profileLoading = false;
+    profileError = null;
+    selectedProfile = null;
+  }
+
+  async function handleFriendProfile(friend: UserProfile) {
+    profileDialogOpen = true;
+    selectedProfile = friend;
+    profileLoading = true;
+    profileError = null;
+    selectedMutualFriends = null;
+
+    const requestToken = ++profileRequestToken;
+
+    const isSelf = auth.user?.id === friend.id;
+    if (isSelf && auth.user) {
+      selectedProfile = auth.user;
+      profileLoading = false;
+      return;
+    }
+
+    try {
+      const profile = await fetchFullUserProfile(friend.id);
+      fetchMutualFriends(friend.id)
+        .then((mutuals) => {
+          if (requestToken !== profileRequestToken) return;
+          selectedMutualFriends = mutuals;
+        })
+        .catch(() => {
+          if (requestToken !== profileRequestToken) return;
+          selectedMutualFriends = null;
+        });
+
+      if (requestToken !== profileRequestToken) return;
+      selectedProfile = profile;
+    } catch (error) {
+      if (requestToken !== profileRequestToken) return;
+      profileError = error instanceof Error ? error.message : String(error);
+    } finally {
+      if (requestToken === profileRequestToken) {
+        profileLoading = false;
+      }
+    }
+  }
+
   async function handleInstanceOpen(group: InstanceGroup) {
     worldDialogOpen = true;
     selectedWorld = group.instance?.world ?? null;
@@ -192,7 +248,7 @@
       <div class="instances-grid">
         {#each groups as group (group.location)}
           <div class="card-wrap">
-            <RecentInstanceCard {group} onOpen={handleInstanceOpen} />
+            <RecentInstanceCard {group} onOpen={handleInstanceOpen} onFriendProfile={handleFriendProfile} />
             <button
               class="remove-btn"
               type="button"
@@ -216,6 +272,18 @@
     error={worldError}
     onClose={closeWorldDialog}
     onOpenInstance={handleInstanceOpen}
+  />
+{/if}
+
+{#if profileDialogOpen}
+  <UserMenuDialog
+    user={selectedProfile}
+    mutualFriends={selectedMutualFriends}
+    showInvite={selectedProfile?.id !== auth.user?.id}
+    loading={profileLoading}
+    error={profileError}
+    onClose={closeProfileDialog}
+    onUserSelected={(user) => handleFriendProfile(user)}
   />
 {/if}
 
@@ -302,6 +370,10 @@
   .card-wrap :global(.recent-card) {
     flex: 1;
     min-width: 0;
+  }
+
+  .card-wrap :global(.friends-overlay) {
+    right: 2.4rem;
   }
 
   .remove-btn {

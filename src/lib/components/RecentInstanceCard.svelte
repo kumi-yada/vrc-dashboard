@@ -2,18 +2,40 @@
   import Icon from "@iconify/svelte";
   import {
     SUPPORTED_PLATFORMS,
+    type Friend,
     type InstanceGroup,
     type SupportedPlatform,
   } from "../types";
   import { visibilityLabel, regionLabel } from "../utils/instance";
+  import { getFriendsAtLocation } from "../stores/friends.svelte";
   import PlatformMeta from "./PlatformMeta.svelte";
+  import UserAvatar from "./UserAvatar.svelte";
 
   interface Props {
     group: InstanceGroup;
     onOpen: (group: InstanceGroup) => void;
+    onFriendProfile: (friend: Friend) => void;
   }
 
-  let { group, onOpen }: Props = $props();
+  let { group, onOpen, onFriendProfile }: Props = $props();
+
+  const MAX_VISIBLE_FRIENDS = 5;
+  const friendsHere = $derived(getFriendsAtLocation(group.location));
+  const visibleFriends = $derived(friendsHere.slice(0, MAX_VISIBLE_FRIENDS));
+  const hiddenFriendCount = $derived(friendsHere.length - visibleFriends.length);
+
+  function handleFriendClick(e: MouseEvent, friend: Friend) {
+    e.stopPropagation();
+    onFriendProfile(friend);
+  }
+
+  function handleFriendKeydown(e: KeyboardEvent, friend: Friend) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.stopPropagation();
+      e.preventDefault();
+      onFriendProfile(friend);
+    }
+  }
 
   const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
   const thumbnailUrl = $derived(
@@ -37,6 +59,25 @@
     {#if supportedPlatforms.length > 0}
       <div class="platforms-overlay">
         <PlatformMeta platforms={supportedPlatforms} />
+      </div>
+    {/if}
+    {#if friendsHere.length > 0}
+      <div class="friends-overlay">
+        {#each visibleFriends as friend (friend.id)}
+          <span
+            class="friend-avatar-btn"
+            role="button"
+            tabindex="0"
+            title={friend.displayName}
+            onclick={(e) => handleFriendClick(e, friend)}
+            onkeydown={(e) => handleFriendKeydown(e, friend)}
+          >
+            <UserAvatar {friend} size={22} radius="999px" />
+          </span>
+        {/each}
+        {#if hiddenFriendCount > 0}
+          <span class="more-count" title={`${hiddenFriendCount} more friend${hiddenFriendCount === 1 ? "" : "s"} here`}>+{hiddenFriendCount}</span>
+        {/if}
       </div>
     {/if}
     {#if thumbnailUrl}
@@ -117,6 +158,48 @@
     top: 0.4rem;
     left: 0.4rem;
     z-index: 2;
+  }
+
+  .friends-overlay {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 65%;
+  }
+
+  .friend-avatar-btn {
+    display: flex;
+    padding: 0;
+    border-radius: 999px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1.5px solid rgba(255, 255, 255, 0.55);
+    background: rgba(0, 0, 0, 0.45);
+    transition:
+      transform 0.15s,
+      border-color 0.15s;
+  }
+
+  .friend-avatar-btn:hover,
+  .friend-avatar-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  .more-count {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 999px;
+    padding: 0.15rem 0.4rem;
   }
 
   .overlay {

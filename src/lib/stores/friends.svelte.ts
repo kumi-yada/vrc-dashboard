@@ -83,6 +83,45 @@ export function getFriendsStore() {
   };
 }
 
+function buildSelfFriend(): Friend | null {
+  const auth = getAuth();
+  if (!auth.user || !auth.user.location) return null;
+
+  return {
+    id: auth.user.id,
+    displayName: auth.user.displayName,
+    currentAvatarImageUrl: auth.user.currentAvatarImageUrl,
+    currentAvatarThumbnailImageUrl: auth.user.currentAvatarThumbnailImageUrl,
+    profilePicOverrideThumbnail: auth.user.profilePicOverrideThumbnail ?? "",
+    iconUrl: auth.user.iconUrl ?? "",
+    userIcon: auth.user.userIcon ?? "",
+    status: auth.user.status,
+    statusDescription: auth.user.statusDescription,
+    bio: auth.user.bio ?? "",
+    pronouns: auth.user.pronouns ?? "",
+    date_joined: auth.user.date_joined ?? "",
+    tags: auth.user.tags,
+    badges: auth.user.badges,
+    location: auth.user.location,
+    worldId: "",
+    instanceId: "",
+    state: auth.user.state,
+    platform: undefined,
+    last_platform: "",
+    isFriend: false,
+  };
+}
+
+/** Friends (including self) currently located in the given instance location. Reactive when read inside a $derived. */
+export function getFriendsAtLocation(location: string): Friend[] {
+  const result = onlineFriends.filter((f) => f.location === location);
+  const self = buildSelfFriend();
+  if (self && self.location === location) {
+    result.push(self);
+  }
+  return result;
+}
+
 export async function fetchFriends(reload = false): Promise<void> {
   loading = true;
   error = null;
@@ -120,39 +159,16 @@ export async function fetchFriends(reload = false): Promise<void> {
     }
 
     // Include current user in the same categorization
-    if (auth.user && auth.user.location) {
-      const selfFriend: Friend = {
-        id: auth.user.id,
-        displayName: auth.user.displayName,
-        currentAvatarImageUrl: auth.user.currentAvatarImageUrl,
-        currentAvatarThumbnailImageUrl: auth.user.currentAvatarThumbnailImageUrl,
-        profilePicOverrideThumbnail: auth.user.profilePicOverrideThumbnail ?? "",
-        iconUrl: auth.user.iconUrl ?? "",
-        userIcon: auth.user.userIcon ?? "",
-        status: auth.user.status,
-        statusDescription: auth.user.statusDescription,
-        bio: auth.user.bio ?? "",
-        pronouns: auth.user.pronouns ?? "",
-        date_joined: auth.user.date_joined ?? "",
-        tags: auth.user.tags,
-        badges: auth.user.badges,
-        location: auth.user.location,
-        worldId: "",
-        instanceId: "",
-        state: auth.user.state,
-        platform: undefined,
-        last_platform: "",
-        isFriend: false,
-      };
-
-      if (auth.user.location === "traveling") {
+    const selfFriend = buildSelfFriend();
+    if (selfFriend) {
+      if (selfFriend.location === "traveling") {
         traveling.push(selfFriend);
-      } else if (auth.user.location === "private") {
+      } else if (selfFriend.location === "private") {
         inPrivate.push(selfFriend);
       } else if (
-        !auth.user.location ||
-        auth.user.location === "offline" ||
-        auth.user.location === ""
+        !selfFriend.location ||
+        selfFriend.location === "offline" ||
+        selfFriend.location === ""
       ) {
         active.push(selfFriend);
       } else {
