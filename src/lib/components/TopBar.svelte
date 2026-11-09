@@ -845,7 +845,7 @@
   .tabs {
     display: flex;
     flex: 0 0 auto;
-    gap: 0.25rem;
+    gap: 0;
     min-width: 0;
   }
 
@@ -860,7 +860,7 @@
     flex: 0 0 auto;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.625rem;
     border-radius: 6px;
     font-size: 0.9rem;
     white-space: nowrap;
@@ -880,7 +880,7 @@
 
   @media (max-width: 560px) {
     .tabs {
-      gap: 0.1rem;
+      gap: 0;
     }
 
     .tab {
