@@ -16,6 +16,7 @@ Replacement for VRChat client interface since it never works...
 - Worlds Page: search for worlds using tags
 - Recent Page: recent instances you have been to
 - Avatar Page: view own avatars including performance rank details
+- Instances Page: view bookmarked instances
 - Utilities
     - URL resolver for sites like bilibili so they can be put in VRC
 
