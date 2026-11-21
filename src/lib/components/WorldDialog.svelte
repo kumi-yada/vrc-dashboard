@@ -411,6 +411,14 @@
   async function handleWorldOpen() {
     if (!world?.id) return;
 
+    const parsed = group ? parseInstanceId(group.location) : null;
+    if (parsed) {
+      await openUrl(
+        `https://vrchat.com/home/launch?worldId=${encodeURIComponent(parsed.worldId)}&instanceId=${parsed.instancePart}`,
+      );
+      return;
+    }
+
     await openUrl(
       `https://vrchat.com/home/world/${encodeURIComponent(world.id)}`,
     );
@@ -684,8 +692,10 @@
         class="hero"
         type="button"
         onclick={handleWorldOpen}
-        title={t("world.openVrchat")}
-        aria-label={t("world.openWorldAria", { name: world.name })}
+        title={group ? t("notif.openInstance") : t("world.openVrchat")}
+        aria-label={group
+          ? t("notif.openInstance")
+          : t("world.openWorldAria", { name: world.name })}
         style:background-image={imageUrl ? `url(${imageUrl})` : undefined}
       >
         <div class="hero-scrim"></div>
