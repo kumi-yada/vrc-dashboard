@@ -15,6 +15,7 @@
   import {
     createInstance,
     getAuth,
+    fetchInstance,
     fetchFavoriteGroups,
     fetchFavorites,
     addApiFavorite,
@@ -128,6 +129,28 @@
   type InviteState = "idle" | "loading" | "success" | "error";
   let inviteState = $state<InviteState>("idle");
   const inviteLocation = $derived(group?.location ?? "");
+
+  // Watch for an open slot when the instance is full
+  const WATCH_POLL_INTERVAL_MS = 5000;
+  const WATCH_MAX_CONSECUTIVE_ERRORS = 12;
+  let watchingForSlot = $state(false);
+  let watchedInstance = $state<InstanceData | null>(null);
+  let watchTimer: ReturnType<typeof setTimeout> | null = null;
+  let watchErrorCount = 0;
+
+  const displayInstance = $derived(watchedInstance ?? group?.instance ?? null);
+  const isInstanceFull = $derived(
+    displayInstance !== null &&
+      displayInstance.capacity > 0 &&
+      displayInstance.userCount >= displayInstance.capacity,
+  );
+
+  $effect(() => {
+    void group?.location;
+    stopWatchingForSlot();
+    watchedInstance = null;
+    return () => stopWatchingForSlot();
+  });
   const requiresOwnerId = $derived(createType !== "public");
   const createDisabled = $derived(
     createLoading ||
@@ -262,6 +285,54 @@
         inviteState = "idle";
       }, 2000);
     }
+  }
+
+  function stopWatchingForSlot() {
+    if (watchTimer !== null) {
+      clearTimeout(watchTimer);
+      watchTimer = null;
+    }
+    watchErrorCount = 0;
+    watchingForSlot = false;
+  }
+
+  async function pollInstanceForSlot() {
+    if (!watchingForSlot || !inviteLocation) return;
+
+    try {
+      const instance = await fetchInstance(inviteLocation);
+      if (!watchingForSlot) return;
+      watchErrorCount = 0;
+      watchedInstance = instance;
+
+      if (instance.userCount < instance.capacity) {
+        stopWatchingForSlot();
+        await handleInviteInstance();
+        return;
+      }
+    } catch {
+      watchErrorCount += 1;
+      if (watchErrorCount >= WATCH_MAX_CONSECUTIVE_ERRORS) {
+        stopWatchingForSlot();
+        return;
+      }
+    }
+
+    if (watchingForSlot) {
+      watchTimer = setTimeout(() => {
+        void pollInstanceForSlot();
+      }, WATCH_POLL_INTERVAL_MS);
+    }
+  }
+
+  function toggleWatchForSlot() {
+    if (watchingForSlot) {
+      stopWatchingForSlot();
+      return;
+    }
+    if (!inviteLocation || !isInstanceFull) return;
+    watchingForSlot = true;
+    void pollInstanceForSlot();
   }
 
   async function handleCreateInstance() {
@@ -422,22 +493,43 @@
           </button>
         {/if}
         {#if inviteLocation}
-          <button
-            class="invite-instance-btn invite-instance-btn--{inviteState}"
-            type="button"
-            title={t("invite.myself")}
-            onclick={handleInviteInstance}
-          >
-            {#if inviteState === "loading"}
-              <Icon icon="mdi:loading" width={16} class="spinning" />
-            {:else if inviteState === "success"}
-              <Icon icon="mdi:check" width={16} />
-            {:else if inviteState === "error"}
-              <Icon icon="mdi:alert" width={16} />
-            {:else}
-              <Icon icon="mdi:email-arrow-right-outline" width={16} />
-            {/if}
-          </button>
+          {#if isInstanceFull}
+            <button
+              class="invite-instance-btn watch-btn"
+              class:watch-active={watchingForSlot}
+              class:watch-success={inviteState === "success"}
+              type="button"
+              title={watchingForSlot
+                ? t("invite.watchSlotStop")
+                : t("invite.watchSlot")}
+              onclick={toggleWatchForSlot}
+            >
+              {#if inviteState === "success"}
+                <Icon icon="mdi:check" width={16} />
+              {:else if watchingForSlot}
+                <Icon icon="mdi:bell-ring" width={16} />
+              {:else}
+                <Icon icon="mdi:bell-plus-outline" width={16} />
+              {/if}
+            </button>
+          {:else}
+            <button
+              class="invite-instance-btn invite-instance-btn--{inviteState}"
+              type="button"
+              title={t("invite.myself")}
+              onclick={handleInviteInstance}
+            >
+              {#if inviteState === "loading"}
+                <Icon icon="mdi:loading" width={16} class="spinning" />
+              {:else if inviteState === "success"}
+                <Icon icon="mdi:check" width={16} />
+              {:else if inviteState === "error"}
+                <Icon icon="mdi:alert" width={16} />
+              {:else}
+                <Icon icon="mdi:email-arrow-right-outline" width={16} />
+              {/if}
+            </button>
+          {/if}
         {/if}
         {#if favOpen}
           <div class="fav-panel">
@@ -649,7 +741,7 @@
             <div class="detail-row">
               <div class="detail-label">{t("world.users")}</div>
               <div class="detail-value">
-                {group.instance?.userCount ?? 0}/{group.instance?.capacity}
+                {displayInstance?.userCount ?? 0}/{displayInstance?.capacity}
               </div>
             </div>
 
@@ -867,6 +959,25 @@
 
   .invite-instance-btn--error {
     color: #ff6b6b;
+  }
+
+  .invite-instance-btn.watch-active {
+    color: var(--accent);
+    animation: watch-pulse 1.6s ease-in-out infinite;
+  }
+
+  .invite-instance-btn.watch-success {
+    color: var(--accent);
+  }
+
+  @keyframes watch-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
   }
 
   .fav-panel {
