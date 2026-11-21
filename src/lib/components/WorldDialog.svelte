@@ -22,6 +22,7 @@
   } from "../stores/auth.svelte";
   import { parseInstanceId, visibilityLabel, regionLabel } from "../utils/instance";
   import { getI18n, t, tp } from "../stores/i18n.svelte";
+  import { reportError } from "../stores/errors.svelte";
   import {
     getFavorites,
     createGroup,
@@ -253,8 +254,9 @@
     try {
       await invoke("invite_myself_to_instance", { location: inviteLocation });
       inviteState = "success";
-    } catch {
+    } catch (e) {
       inviteState = "error";
+      reportError(t("error.inviteFailed"), e);
     } finally {
       setTimeout(() => {
         inviteState = "idle";

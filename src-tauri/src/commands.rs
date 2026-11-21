@@ -40,6 +40,35 @@ fn build_headers(token: &str) -> HeaderMap {
     headers
 }
 
+const MAX_ERROR_DETAIL_LEN: usize = 500;
+
+fn status_detail(status: StatusCode, body: &str) -> String {
+    let trimmed = body.trim();
+    if trimmed.is_empty() {
+        return status.to_string();
+    }
+
+    // VRChat error responses look like {"error":{"message":"...","status_code":403}}
+    let extracted = serde_json::from_str::<Value>(trimmed)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("error")
+                .and_then(|error| error.get("message"))
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        });
+    let message = extracted.unwrap_or_else(|| trimmed.to_string());
+    let truncated: String = message.chars().take(MAX_ERROR_DETAIL_LEN).collect();
+    format!("{} — {}", status, truncated)
+}
+
+async fn api_error(resp: reqwest::Response) -> String {
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+    format!("API error: {}", status_detail(status, &body))
+}
+
 fn append_unique_notification(notifications: &mut Vec<Value>, notification: Value) {
     let id = notification.get("id").and_then(Value::as_str);
     let exists = id.is_some_and(|id| {
@@ -96,7 +125,7 @@ pub async fn get_current_user(state: State<'_, AuthState>) -> Result<Value, Stri
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -187,7 +216,7 @@ pub async fn get_notifications(
             append_unique_notification(&mut notifications, notification);
         }
     } else if let Some(status) = legacy_status {
-        return Err(format!("API error: {} (v2: {})", status, v2_resp.status()));
+        return Err(format!("{} (legacy: {})", api_error(v2_resp).await, status));
     }
 
     let current_user_resp = client
@@ -276,11 +305,7 @@ pub async fn delete_notification(
         .map_err(|e| e.to_string())?;
 
     if !legacy_resp.status().is_success() {
-        return Err(format!(
-            "API error: {} (legacy: {})",
-            v2_status,
-            legacy_resp.status()
-        ));
+        return Err(format!("{} (v2: {})", api_error(legacy_resp).await, v2_status));
     }
 
     Ok(())
@@ -311,8 +336,8 @@ pub async fn clear_all_notifications(state: State<'_, AuthState>) -> Result<(), 
 
     if !resp.status().is_success() && !legacy_resp.status().is_success() {
         return Err(format!(
-            "API error: {} (legacy: {})",
-            resp.status(),
+            "{} (legacy: {})",
+            api_error(resp).await,
             legacy_resp.status()
         ));
     }
@@ -337,7 +362,7 @@ pub async fn get_user(state: State<'_, AuthState>, user_id: String) -> Result<Va
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -367,7 +392,7 @@ pub async fn get_public_profile(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -393,7 +418,7 @@ pub async fn get_mutual_friends(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -416,7 +441,7 @@ pub async fn get_group(state: State<'_, AuthState>, group_id: String) -> Result<
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -449,7 +474,7 @@ pub async fn get_friends(state: State<'_, AuthState>, offline: bool) -> Result<V
             .map_err(|e| e.to_string())?;
 
         if !resp.status().is_success() {
-            return Err(format!("API error: {}", resp.status()));
+            return Err(api_error(resp).await);
         }
 
         let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
@@ -485,7 +510,7 @@ pub async fn get_instance(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -508,7 +533,7 @@ pub async fn get_world(state: State<'_, AuthState>, world_id: String) -> Result<
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -557,7 +582,7 @@ pub async fn search_worlds(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -580,7 +605,7 @@ pub async fn get_recent_instances(state: State<'_, AuthState>) -> Result<Value, 
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -606,7 +631,7 @@ pub async fn invite_myself_to_instance(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -629,7 +654,7 @@ pub async fn get_favorite_groups(state: State<'_, AuthState>) -> Result<Value, S
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -671,7 +696,7 @@ pub async fn get_favorites(
             .map_err(|e| e.to_string())?;
 
         if !resp.status().is_success() {
-            return Err(format!("API error: {}", resp.status()));
+            return Err(api_error(resp).await);
         }
 
         let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
@@ -711,7 +736,7 @@ pub async fn add_favorite(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -737,7 +762,7 @@ pub async fn remove_favorite(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     Ok(())
@@ -771,7 +796,7 @@ pub async fn invite_user(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -805,7 +830,7 @@ pub async fn get_my_avatars(state: State<'_, AuthState>, user_id: String) -> Res
             .map_err(|e| e.to_string())?;
 
         if !resp.status().is_success() {
-            return Err(format!("API error: {}", resp.status()));
+            return Err(api_error(resp).await);
         }
 
         let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
@@ -851,7 +876,7 @@ pub async fn get_my_worlds(state: State<'_, AuthState>) -> Result<Value, String>
             .map_err(|e| e.to_string())?;
 
         if !resp.status().is_success() {
-            return Err(format!("API error: {}", resp.status()));
+            return Err(api_error(resp).await);
         }
 
         let page: Vec<Value> = resp.json().await.map_err(|e| e.to_string())?;
@@ -898,11 +923,7 @@ pub async fn get_file_analysis(
             return Err("Analysis not yet available".to_string());
         }
 
-        if body.is_empty() {
-            return Err(format!("API error: {}", status));
-        }
-
-        return Err(format!("API error: {} {}", status, body));
+        return Err(format!("API error: {}", status_detail(status, &body)));
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())
@@ -947,7 +968,7 @@ pub async fn create_instance(
         .map_err(|e| e.to_string())?;
 
     if !resp.status().is_success() {
-        return Err(format!("API error: {}", resp.status()));
+        return Err(api_error(resp).await);
     }
 
     resp.json::<Value>().await.map_err(|e| e.to_string())

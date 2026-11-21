@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { openUrl } from "@tauri-apps/plugin-opener";
   import { getAuth, inviteUserToInstance } from "../stores/auth.svelte";
+  import { reportError } from "../stores/errors.svelte";
   import {
     USER_SCALE_MAX,
     USER_SCALE_MIN,
@@ -127,8 +128,9 @@
     try {
       await inviteUserToInstance(user.id, currentLocation);
       inviteState = "success";
-    } catch {
+    } catch (e) {
       inviteState = "error";
+      reportError(t("error.inviteFailed"), e);
     } finally {
       setTimeout(() => {
         inviteState = "idle";

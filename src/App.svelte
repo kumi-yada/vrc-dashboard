@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import Login from "./lib/components/pages/Login.svelte";
   import Dashboard from "./lib/components/pages/Dashboard.svelte";
+  import ErrorSnackbar from "./lib/components/ErrorSnackbar.svelte";
   import { getAuth, restoreSession } from "./lib/stores/auth.svelte";
   import { initializeUiScale } from "./lib/stores/ui-scale.svelte";
   import { t } from "./lib/stores/i18n.svelte";
@@ -36,6 +37,8 @@
   {#if isAndroid}
     <div class="android-safe-area android-safe-area-bottom" aria-hidden="true"></div>
   {/if}
+
+  <ErrorSnackbar />
 </div>
 
 <style>

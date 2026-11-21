@@ -7,6 +7,7 @@
   } from "../types";
   import { visibilityLabel, regionLabel } from "../utils/instance";
   import { t } from "../stores/i18n.svelte";
+  import { reportError } from "../stores/errors.svelte";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
   import { invoke } from "@tauri-apps/api/core";
@@ -62,8 +63,9 @@
     try {
       await invoke("invite_myself_to_instance", { location: group.location });
       inviteState = "success";
-    } catch {
+    } catch (e) {
       inviteState = "error";
+      reportError(t("error.inviteFailed"), e);
     } finally {
       setTimeout(() => {
         inviteState = "idle";

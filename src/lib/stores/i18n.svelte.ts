@@ -351,6 +351,12 @@ const en = {
   "error.resolveUserId": "Unable to resolve current user ID",
   "error.sessionRestore":
     "Saved session could not be restored. Your saved token was kept; retry or submit a new token.",
+
+  // Error snackbar
+  "error.inviteFailed": "Invite failed",
+  "error.detailsTitle": "Error details",
+  "error.detailsHint": "Show details",
+  "error.unknown": "Unknown error",
 } as const;
 
 export type MessageKey = keyof typeof en;
@@ -697,6 +703,12 @@ const ja: Messages = {
   "error.resolveUserId": "現在のユーザーIDを解決できません",
   "error.sessionRestore":
     "保存されたセッションを復元できませんでした。保存されたトークンは保持されています。再試行するか、新しいトークンを入力してください。",
+
+  // Error snackbar
+  "error.inviteFailed": "招待に失敗しました",
+  "error.detailsTitle": "エラーの詳細",
+  "error.detailsHint": "詳細を表示",
+  "error.unknown": "不明なエラー",
 };
 
 const zh: Messages = {
@@ -1036,6 +1048,12 @@ const zh: Messages = {
   // Auth errors
   "error.resolveUserId": "无法解析当前用户 ID",
   "error.sessionRestore": "无法恢复已保存的会话。已保留保存的令牌，请重试或输入新令牌。",
+
+  // Error snackbar
+  "error.inviteFailed": "邀请失败",
+  "error.detailsTitle": "错误详情",
+  "error.detailsHint": "查看详情",
+  "error.unknown": "未知错误",
 };
 
 const TRANSLATIONS: Record<Locale, Messages> = { en, ja, zh };
