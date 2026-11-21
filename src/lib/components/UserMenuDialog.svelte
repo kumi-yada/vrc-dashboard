@@ -10,11 +10,18 @@
     resetUserScale,
     setUserScale,
   } from "../stores/ui-scale.svelte";
+  import {
+    LOCALES,
+    getI18n,
+    setLocale,
+    t,
+  } from "../stores/i18n.svelte";
   import type { UserProfile } from "../types";
   import { isDesktop } from "../utils/platform";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
-  import { formatRelative } from "date-fns";
+  import { formatRelative, type Locale as DateFnsLocale } from "date-fns";
+  import { ja as dateFnsJa, zhCN as dateFnsZhCN } from "date-fns/locale";
 
   interface Props {
     user: UserProfile | null;
@@ -40,6 +47,13 @@
 
   const auth = getAuth();
   const uiScale = getUiScale();
+  const i18n = getI18n();
+
+  const DATE_FNS_LOCALES: Record<string, DateFnsLocale | undefined> = {
+    en: undefined,
+    ja: dateFnsJa,
+    zh: dateFnsZhCN,
+  };
   const showcasedBadges = $derived(
     user?.badges?.filter((badge) => badge.showcased) ?? [],
   );
@@ -60,19 +74,19 @@
   );
   const inviteTitle = $derived(
     !showInvite
-      ? "Invite unavailable"
+      ? t("invite.unavailable")
       : !currentLocation || currentLocation === "offline"
-        ? "You must be online to send invites"
-        : "Invite user to your current instance",
+        ? t("invite.mustBeOnline")
+        : t("invite.toCurrent"),
   );
   const userScalePercent = $derived(Math.round(uiScale.userScale * 100));
 
   function getTrustLevel(tags: string[]): string {
-    if (tags.includes("system_trust_veteran")) return "Trusted";
-    if (tags.includes("system_trust_trusted")) return "Known";
-    if (tags.includes("system_trust_known")) return "User";
-    if (tags.includes("system_trust_basic")) return "New User";
-    return "Visitor";
+    if (tags.includes("system_trust_veteran")) return t("trust.trusted");
+    if (tags.includes("system_trust_trusted")) return t("trust.known");
+    if (tags.includes("system_trust_known")) return t("trust.user");
+    if (tags.includes("system_trust_basic")) return t("trust.newUser");
+    return t("trust.visitor");
   }
 
   function getTrustColor(tags: string[]): string {
@@ -85,7 +99,7 @@
 
   function formatDate(dateStr: string): string {
     if (!dateStr) return "";
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    return new Date(dateStr).toLocaleDateString(i18n.tag, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -173,7 +187,7 @@
           {/if}
         </button>
       {/if}
-      <button class="close-btn" type="button" title="Close" onclick={onClose}>
+      <button class="close-btn" type="button" title={t("common.close")} onclick={onClose}>
         <Icon icon="mdi:close" width="1.125rem" />
       </button>
     </div>
@@ -184,8 +198,8 @@
           class="popup-avatar-wrap"
           type="button"
           onclick={handleProfileOpen}
-          title="Open VRChat profile"
-          aria-label={`Open ${user.displayName}'s VRChat profile`}
+          title={t("profile.openVrchat")}
+          aria-label={t("profile.openUserVrchat", { name: user.displayName })}
         >
           <UserAvatar friend={user} size={64} />
           <StatusDot
@@ -217,7 +231,7 @@
       {#if loading}
         <div class="loading-banner">
           <Icon icon="mdi:loading" width="1rem" class="spinning" />
-          Refreshing profile...
+          {t("profile.refreshing")}
         </div>
       {/if}
 
@@ -239,7 +253,7 @@
           {#if Array.isArray(user.onlineFriends)}
             <div class="stat">
               <span class="stat-value">{user.onlineFriends.length}</span>
-              <span class="stat-label">Online</span>
+              <span class="stat-label">{t("stats.online")}</span>
             </div>
           {/if}
           {#if Array.isArray(user.onlineFriends) && (Array.isArray(user.friends) || user.date_joined || user.last_activity)}
@@ -248,7 +262,7 @@
           {#if Array.isArray(user.friends)}
             <div class="stat">
               <span class="stat-value">{user.friends.length}</span>
-              <span class="stat-label">Friends</span>
+              <span class="stat-label">{t("stats.friends")}</span>
             </div>
           {/if}
           {#if Array.isArray(user.friends) && (user.date_joined || user.last_activity)}
@@ -259,7 +273,7 @@
               <span class="stat-value stat-date"
                 >{formatDate(user.date_joined)}</span
               >
-              <span class="stat-label">Joined</span>
+              <span class="stat-label">{t("stats.joined")}</span>
             </div>
           {/if}
           {#if user.last_activity}
@@ -272,9 +286,10 @@
                 >{formatRelative(
                   new Date(user.last_activity),
                   new Date(),
+                  { locale: DATE_FNS_LOCALES[i18n.locale] },
                 )}</span
               >
-              <span class="stat-label">Last Active</span>
+              <span class="stat-label">{t("stats.lastActive")}</span>
             </div>
           {/if}
         </div>
@@ -295,7 +310,7 @@
 
       {#if mutuals.length > 0}
         <div class="popup-mutuals">
-          <h3 class="mutuals-title">Mutual Friends ({mutuals.length})</h3>
+          <h3 class="mutuals-title">{t("mutuals.title", { count: mutuals.length })}</h3>
           <div class="mutuals-list">
             {#each mutuals as m (m.id)}
               <button
@@ -319,14 +334,14 @@
         {#if isDesktop}
           <div class="scale-panel">
             <div class="scale-panel-header">
-              <h3>Interface Scale</h3>
+              <h3>{t("settings.interfaceScale")}</h3>
               <button
                 class="scale-reset-btn"
                 type="button"
                 disabled={uiScale.userScale === 1}
                 onclick={handleScaleReset}
               >
-                Reset
+                {t("settings.reset")}
               </button>
             </div>
 
@@ -338,38 +353,67 @@
               step={USER_SCALE_STEP}
               value={uiScale.userScale}
               oninput={handleScaleInput}
-              aria-label="Interface scale override"
+              aria-label={t("settings.scaleAria")}
             />
 
             <div class="scale-panel-meta">
               <span>{Math.round(USER_SCALE_MIN * 100)}%</span>
-              <span>Scale {userScalePercent}%</span>
+              <span>{t("settings.scalePercent", { percent: userScalePercent })}</span>
               <span>{Math.round(USER_SCALE_MAX * 100)}%</span>
             </div>
 
             <p class="scale-panel-note">
-              Your display's own scaling is handled by the system. This only
-              adjusts the app on top of it.
+              {t("settings.scaleNote")}
             </p>
           </div>
         {/if}
 
+        <div class="scale-panel language-panel">
+          <div class="scale-panel-header">
+            <h3>{t("settings.language")}</h3>
+          </div>
+          <div
+            class="language-options"
+            role="radiogroup"
+            aria-label={t("settings.language")}
+          >
+            {#each LOCALES as option (option.id)}
+              <button
+                class="language-option"
+                class:active={i18n.locale === option.id}
+                type="button"
+                role="radio"
+                aria-checked={i18n.locale === option.id}
+                onclick={() => setLocale(option.id)}
+              >
+                <Icon
+                  icon={i18n.locale === option.id
+                    ? "mdi:radiobox-marked"
+                    : "mdi:radiobox-blank"}
+                  width="0.95rem"
+                />
+                {option.label}
+              </button>
+            {/each}
+          </div>
+        </div>
+
         <div class="popup-footer">
           <button class="logout-btn" type="button" onclick={handleLogout}>
             <Icon icon="mdi:logout" width="0.9375rem" />
-            Sign Out
+            {t("settings.signOut")}
           </button>
         </div>
       {/if}
     {:else if loading}
       <div class="dialog-state">
         <Icon icon="mdi:loading" width="1.5rem" class="spinning" />
-        <h2 class="dialog-title" id="user-menu-title">Loading profile</h2>
+        <h2 class="dialog-title" id="user-menu-title">{t("profile.loading")}</h2>
       </div>
     {:else}
       <div class="dialog-state">
         <Icon icon="mdi:account-off-outline" width="1.5rem" />
-        <h2 class="dialog-title" id="user-menu-title">Profile unavailable</h2>
+        <h2 class="dialog-title" id="user-menu-title">{t("profile.unavailable")}</h2>
         {#if error}
           <p class="dialog-copy">{error}</p>
         {/if}
@@ -738,6 +782,35 @@
     font-size: 0.74rem;
     color: var(--text-muted);
     line-height: 1.35;
+  }
+
+  .language-options {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .language-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+  }
+
+  .language-option:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .language-option.active {
+    color: var(--accent);
+    border-color: rgba(76, 175, 80, 0.5);
+    background: rgba(76, 175, 80, 0.12);
   }
 
   .popup-footer {

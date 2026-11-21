@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { login, getAuth, retrySavedSession } from "../../stores/auth.svelte";
+  import { t } from "../../stores/i18n.svelte";
   import { showDesktopWindowControls } from "../../utils/platform";
 
   const auth = getAuth();
@@ -39,13 +40,13 @@
   <div class="window-drag-region" data-tauri-drag-region></div>
   {#if showDesktopWindowControls}
     <div class="window-controls">
-      <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
+      <button class="window-btn" title={t("window.minimize")} onclick={minimizeWindow}>
         <Icon icon="mdi:window-minimize" width="1rem" />
       </button>
-      <button class="window-btn" title="Maximize" onclick={toggleMaximizeWindow}>
+      <button class="window-btn" title={t("window.maximize")} onclick={toggleMaximizeWindow}>
         <Icon icon="mdi:window-maximize" width="0.875rem" />
       </button>
-      <button class="window-btn window-btn-close" title="Close" onclick={closeWindow}>
+      <button class="window-btn window-btn-close" title={t("window.close")} onclick={closeWindow}>
         <Icon icon="mdi:close" width="1rem" />
       </button>
     </div>
@@ -55,7 +56,7 @@
 <div class="login-container">
   <div class="login-card">
     <h1>VRC Dashboard</h1>
-    <p class="subtitle">Enter your VRChat auth token to get started</p>
+    <p class="subtitle">{t("login.subtitle")}</p>
 
     <form onsubmit={handleSubmit}>
       <input
@@ -70,7 +71,7 @@
         class="login-btn"
         disabled={auth.loading || !tokenInput.trim()}
       >
-        {auth.loading ? "Authenticating..." : "Login"}
+        {auth.loading ? t("login.submitting") : t("login.submit")}
       </button>
     </form>
 
@@ -85,26 +86,26 @@
         disabled={auth.loading}
         onclick={handleRetrySavedSession}
       >
-        Retry saved session
+        {t("login.retrySaved")}
       </button>
     {/if}
 
     <div class="instructions">
-      <h3>How to get your auth token:</h3>
+      <h3>{t("login.howToTitle")}</h3>
       <ol>
         <li>
-          Go to <strong>vrchat.com</strong> and log in - <a
+          {t("login.step1a")} <strong>vrchat.com</strong> {t("login.step1b")} - <a
             href="https://vrchat.com/home"
-            target="_blank">Link</a
+            target="_blank">{t("login.link")}</a
           >
         </li>
         <li>
-          Go to <strong>vrchat.com/api/1/auth</strong> - <a
+          {t("login.step1a")} <strong>vrchat.com/api/1/auth</strong> - <a
             href="https://vrchat.com/api/1/auth"
-            target="_blank">Link</a
+            target="_blank">{t("login.link")}</a
           >
         </li>
-        <li>Find the <code>auth</code> cookie and copy its value</li>
+        <li>{t("login.step3a")} <code>auth</code> {t("login.step3b")}</li>
       </ol>
     </div>
   </div>

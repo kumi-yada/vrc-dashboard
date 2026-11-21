@@ -21,6 +21,7 @@
     removeApiFavorite,
   } from "../stores/auth.svelte";
   import { parseInstanceId, visibilityLabel, regionLabel } from "../utils/instance";
+  import { getI18n, t, tp } from "../stores/i18n.svelte";
   import {
     getFavorites,
     createGroup,
@@ -68,6 +69,7 @@
   );
   const instanceCount = $derived(world?.slimInstances?.length ?? 0);
   const auth = getAuth();
+  const i18n = getI18n();
 
   const CREATE_INSTANCE_REGIONS: CreateInstanceRegion[] = [
     "us",
@@ -76,10 +78,10 @@
     "jp",
   ];
   const CREATE_INSTANCE_REGION_LABELS: Record<CreateInstanceRegion, string> = {
-    us: "US West",
-    use: "US East",
-    eu: "Europe",
-    jp: "Japan",
+    us: "region.usw",
+    use: "region.use",
+    eu: "region.eu",
+    jp: "region.jp",
   };
   const CREATE_INSTANCE_TYPES: CreateInstanceType[] = [
     "friends",
@@ -89,11 +91,11 @@
     "public",
   ];
   const CREATE_INSTANCE_TYPE_LABELS: Record<CreateInstanceType, string> = {
-    friends: "Friends",
-    hidden: "Friends+",
-    private: "Invite",
-    privateplus: "Invite+",
-    public: "Public",
+    friends: "itype.friends",
+    hidden: "itype.hidden",
+    private: "itype.private",
+    privateplus: "itype.privateplus",
+    public: "itype.public",
   };
 
   // Favorites
@@ -267,7 +269,7 @@
 
     const ownerId = createType === "public" ? undefined : auth.user?.id;
     if (createType !== "public" && !ownerId) {
-      createError = "You need to be logged in to create non-public instances.";
+      createError = t("world.createNeedLogin");
       return;
     }
 
@@ -285,7 +287,7 @@
 
       const createdGroup = buildCreatedGroup(created);
       if (!createdGroup) {
-        createError = "Created instance could not be opened from this dialog.";
+        createError = t("world.createErrorOpen");
         return;
       }
 
@@ -326,7 +328,7 @@
   function formatDate(dateStr: string): string {
     if (!dateStr) return "";
 
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    return new Date(dateStr).toLocaleDateString(i18n.tag, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -366,7 +368,7 @@
   aria-labelledby="world-dialog-title"
 >
   <div class="world-dialog">
-    <button class="close-btn" type="button" title="Close" onclick={onClose}>
+    <button class="close-btn" type="button" title={t("common.close")} onclick={onClose}>
       <Icon icon="mdi:close" width={18} />
     </button>
 
@@ -375,7 +377,7 @@
         {#if world.id}
           <button
             class="copy-id-btn"
-            title="Copy world id"
+            title={t("world.copyId")}
             onclick={() => navigator.clipboard.writeText(world.id)}
             type="button"
           >
@@ -386,7 +388,7 @@
           class="fav-btn"
           class:fav-active={isFavorited}
           type="button"
-          title={isFavorited ? "Edit favorites" : "Add to favorites"}
+          title={isFavorited ? t("world.editFavorites") : t("world.addToFavorites")}
           onclick={toggleFavPanel}
         >
           <Icon
@@ -398,7 +400,7 @@
           class="create-instance-btn"
           class:active={createOpen}
           type="button"
-          title="Create instance"
+          title={t("world.createInstance")}
           onclick={toggleCreatePanel}
         >
           <Icon icon="mdi:server-plus" width={18} />
@@ -408,7 +410,7 @@
             class="bookmark-btn"
             class:saved={instanceSaved}
             type="button"
-            title={instanceSaved ? "Remove from saved instances" : "Save instance for later"}
+            title={instanceSaved ? t("world.bookmarkRemove") : t("world.bookmarkSave")}
             onclick={() => toggleSavedInstance(group.location)}
           >
             <Icon
@@ -421,7 +423,7 @@
           <button
             class="invite-instance-btn invite-instance-btn--{inviteState}"
             type="button"
-            title="Invite myself to this instance"
+            title={t("invite.myself")}
             onclick={handleInviteInstance}
           >
             {#if inviteState === "loading"}
@@ -437,9 +439,9 @@
         {/if}
         {#if favOpen}
           <div class="fav-panel">
-            <p class="fav-panel-title">Favorite Groups</p>
+            <p class="fav-panel-title">{t("world.favPanelTitle")}</p>
             {#if favorites.groups.length === 0}
-              <p class="fav-empty">No groups yet. Create one below.</p>
+              <p class="fav-empty">{t("world.favEmpty")}</p>
             {:else}
               {#each favorites.groups as group (group.id)}
                 <div class="fav-group-row">
@@ -461,7 +463,7 @@
                   <button
                     type="button"
                     class="fav-delete-btn"
-                    title="Delete group"
+                    title={t("world.favDeleteGroup")}
                     onclick={() => deleteGroup(group.id)}
                   >
                     <Icon icon="mdi:trash-can-outline" width={13} />
@@ -469,11 +471,11 @@
                 </div>
               {/each}
             {/if}
-            <p class="fav-panel-title" style="margin-top: 8px">VRChat Favorites</p>
+            <p class="fav-panel-title" style="margin-top: 8px">{t("world.apiFavTitle")}</p>
             {#if apiLoading}
-              <p class="fav-empty">Loading…</p>
+              <p class="fav-empty">{t("world.apiFavLoading")}</p>
             {:else if apiGroups.length === 0}
-              <p class="fav-empty">No VRChat groups found.</p>
+              <p class="fav-empty">{t("world.apiFavEmpty")}</p>
             {:else}
               {#each apiGroups as group (group.id)}
                 <div class="fav-group-row">
@@ -496,7 +498,7 @@
               <input
                 class="fav-new-input"
                 type="text"
-                placeholder="New group name…"
+                placeholder={t("world.newGroupPlaceholder")}
                 bind:value={newGroupName}
                 onkeydown={handleNewGroupKeydown}
               />
@@ -520,10 +522,10 @@
         {/if}
         {#if createOpen}
           <div class="create-panel">
-            <p class="fav-panel-title">Create Instance</p>
+            <p class="fav-panel-title">{t("world.createTitle")}</p>
 
             <label class="create-field" for="create-region-select">
-              <span>Region</span>
+              <span>{t("world.createRegion")}</span>
               <select
                 id="create-region-select"
                 class="create-select"
@@ -531,14 +533,14 @@
               >
                 {#each CREATE_INSTANCE_REGIONS as regionOption (regionOption)}
                   <option value={regionOption}>
-                    {CREATE_INSTANCE_REGION_LABELS[regionOption]}
+                    {t(CREATE_INSTANCE_REGION_LABELS[regionOption])}
                   </option>
                 {/each}
               </select>
             </label>
 
             <label class="create-field" for="create-type-select">
-              <span>Type</span>
+              <span>{t("world.createType")}</span>
               <select
                 id="create-type-select"
                 class="create-select"
@@ -546,7 +548,7 @@
               >
                 {#each CREATE_INSTANCE_TYPES as typeOption (typeOption)}
                   <option value={typeOption}>
-                    {CREATE_INSTANCE_TYPE_LABELS[typeOption]}
+                    {t(CREATE_INSTANCE_TYPE_LABELS[typeOption])}
                   </option>
                 {/each}
               </select>
@@ -554,7 +556,7 @@
 
             {#if createType !== "public" && !auth.user?.id}
               <p class="create-help create-help-error">
-                Current user id is required for non-public instances.
+                {t("world.createNeedUserId")}
               </p>
             {/if}
 
@@ -570,10 +572,10 @@
             >
               {#if createLoading}
                 <Icon icon="mdi:loading" width={14} class="spinning" />
-                Creating...
+                {t("world.creating")}
               {:else}
                 <Icon icon="mdi:plus" width={14} />
-                Create
+                {t("world.create")}
               {/if}
             </button>
           </div>
@@ -588,8 +590,8 @@
         class="hero"
         type="button"
         onclick={handleWorldOpen}
-        title="Open VRChat world"
-        aria-label={`Open ${world.name} on VRChat`}
+        title={t("world.openVrchat")}
+        aria-label={t("world.openWorldAria", { name: world.name })}
         style:background-image={imageUrl ? `url(${imageUrl})` : undefined}
       >
         <div class="hero-scrim"></div>
@@ -613,7 +615,7 @@
             {#if instanceCount > 0}
               <span>
                 <Icon icon="mdi:server-outline" width={14} />
-                {instanceCount} public instance{instanceCount === 1 ? "" : "s"}
+                {tp("world.publicInstancesOne", "world.publicInstancesOther", instanceCount)}
               </span>
             {/if}
           </div>
@@ -624,7 +626,7 @@
         {#if loading}
           <div class="loading-banner">
             <Icon icon="mdi:loading" width={16} class="spinning" />
-            Refreshing world data...
+            {t("world.refreshing")}
           </div>
         {/if}
 
@@ -638,26 +640,26 @@
         {#if group}
           <section class="instance-section">
             <div class="detail-row">
-              <div class="detail-label">Owner</div>
+              <div class="detail-label">{t("world.owner")}</div>
               <div class="detail-value">{group.ownerName ?? "—"}</div>
             </div>
 
             <div class="detail-row">
-              <div class="detail-label">Users</div>
+              <div class="detail-label">{t("world.users")}</div>
               <div class="detail-value">
                 {group.instance?.userCount ?? 0}/{group.instance?.capacity}
               </div>
             </div>
 
             <div class="detail-row">
-              <div class="detail-label">Type</div>
+              <div class="detail-label">{t("world.type")}</div>
               <div class="detail-value">
                 {visibilityLabel(group.parsed.visibility)}
               </div>
             </div>
 
             <div class="detail-row">
-              <div class="detail-label">Region</div>
+              <div class="detail-label">{t("world.region")}</div>
               <div class="detail-value">
                 {regionLabel(group.parsed.region)}
               </div>
@@ -666,14 +668,14 @@
         {/if}
         {#if world.description}
           <section class="section">
-            <h3>About</h3>
+            <h3>{t("world.about")}</h3>
             <p>{world.description}</p>
           </section>
         {/if}
 
         {#if world.tags && world.tags.length > 0}
           <section class="section">
-            <h3>Tags</h3>
+            <h3>{t("world.tags")}</h3>
             <div class="tag-list">
               {#each world.tags as tag (tag)}
                 {@const category = tagCategory(tag)}
@@ -686,12 +688,12 @@
     {:else if loading}
       <div class="dialog-state">
         <Icon icon="mdi:loading" width={24} class="spinning" />
-        <h2 class="dialog-title" id="world-dialog-title">Loading world</h2>
+        <h2 class="dialog-title" id="world-dialog-title">{t("world.loading")}</h2>
       </div>
     {:else}
       <div class="dialog-state">
         <Icon icon="mdi:earth-off" width={24} />
-        <h2 class="dialog-title" id="world-dialog-title">World unavailable</h2>
+        <h2 class="dialog-title" id="world-dialog-title">{t("world.unavailable")}</h2>
         {#if error}
           <p class="dialog-copy">{error}</p>
         {/if}

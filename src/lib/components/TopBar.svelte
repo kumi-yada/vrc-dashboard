@@ -14,6 +14,7 @@
     getAuth,
   } from "../stores/auth.svelte";
   import { resolveOwnerName } from "../stores/friends.svelte";
+  import { getI18n, t } from "../stores/i18n.svelte";
   import { showDesktopWindowControls } from "../utils/platform";
   import { parseInstanceId } from "../utils/instance";
   import UserMenuDialog from "./UserMenuDialog.svelte";
@@ -32,6 +33,7 @@
   let { activeTab, onTabChange }: Props = $props();
 
   const auth = getAuth();
+  const i18n = getI18n();
   const appWindow = getCurrentWindow();
   let showUserMenu = $state(false);
   let showNotifications = $state(false);
@@ -64,12 +66,12 @@
   let notificationBadgeLabel = $derived(notificationCount > 99 ? "99+" : String(notificationCount));
 
   const tabs = [
-    { id: "friends", label: "Friends", icon: "mdi:account-group" },
-    { id: "worlds", label: "Worlds", icon: "mdi:earth" },
-    { id: "recent", label: "Recent", icon: "mdi:history" },
-    { id: "avatars", label: "Avatars", icon: "mdi:human" },
-    { id: "instances", label: "Instances", icon: "mdi:bookmark" },
-  ];
+    { id: "friends", labelKey: "tab.friends", icon: "mdi:account-group" },
+    { id: "worlds", labelKey: "tab.worlds", icon: "mdi:earth" },
+    { id: "recent", labelKey: "tab.recent", icon: "mdi:history" },
+    { id: "avatars", labelKey: "tab.avatars", icon: "mdi:human" },
+    { id: "instances", labelKey: "tab.instances", icon: "mdi:bookmark" },
+  ] as const;
 
   async function handleLogout() {
     showUserMenu = false;
@@ -81,14 +83,14 @@
   function getNotificationFallbackMessage(type: string): string {
     switch (type) {
       case "friendRequest":
-        return "sent you a friend request.";
+        return t("notif.fallback.friendRequest");
       case "invite":
       case "invite.instance.contentGated":
-        return "sent you an invite.";
+        return t("notif.fallback.invite");
       case "group.invite":
-        return "sent you a group invite.";
+        return t("notif.fallback.groupInvite");
       default:
-        return "sent you a notification.";
+        return t("notif.fallback.default");
     }
   }
 
@@ -104,7 +106,7 @@
       return createdAt;
     }
 
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(i18n.tag, {
       dateStyle: "short",
       timeStyle: "short",
     }).format(date);
@@ -306,7 +308,7 @@
       };
 
       if (!world) {
-        notificationWorldError = "Could not load instance world.";
+        notificationWorldError = t("notif.error.loadWorld");
       }
     } catch (error) {
       notificationWorldError = error instanceof Error ? error.message : String(error);
@@ -628,7 +630,7 @@
         onclick={() => onTabChange(tab.id)}
       >
         <Icon icon={tab.icon} width="1.125rem" />
-        <span class="tab-label">{tab.label}</span>
+        <span class="tab-label">{t(tab.labelKey)}</span>
       </button>
     {/each}
   </div>
@@ -640,7 +642,7 @@
       <button
         class="icon-btn"
         class:active={showUtility}
-        title="Utilities"
+        title={t("topbar.utilities")}
         onclick={handleToggleUtility}
       >
         <Icon icon="mdi:tools" width="1.375rem" />
@@ -654,12 +656,12 @@
       <button
         class="icon-btn notification-btn"
         class:active={showNotifications}
-        title={notificationCount > 0 ? `${notificationCount} notifications` : "Notifications"}
+        title={notificationCount > 0 ? t("notif.count", { count: notificationCount }) : t("notif.title")}
         onclick={() => void handleToggleNotifications()}
       >
         <Icon icon="mdi:bell-outline" width="1.375rem" />
         {#if notificationCount > 0}
-          <span class="notification-badge" aria-label={`${notificationCount} notifications`}>
+          <span class="notification-badge" aria-label={t("notif.count", { count: notificationCount })}>
             {notificationBadgeLabel}
           </span>
         {/if}
@@ -689,19 +691,19 @@
 
     {#if showDesktopWindowControls}
       <div class="window-controls">
-        <button class="window-btn" title="Minimize" onclick={minimizeWindow}>
+        <button class="window-btn" title={t("window.minimize")} onclick={minimizeWindow}>
           <Icon icon="mdi:window-minimize" width="1rem" />
         </button>
         <button
           class="window-btn"
-          title="Maximize"
+          title={t("window.maximize")}
           onclick={toggleMaximizeWindow}
         >
           <Icon icon="mdi:window-maximize" width="0.875rem" />
         </button>
         <button
           class="window-btn window-btn-close"
-          title="Close"
+          title={t("window.close")}
           onclick={closeWindow}
         >
           <Icon icon="mdi:close" width="1rem" />
@@ -715,7 +717,7 @@
   <div class="notifications-popup" bind:this={notificationsPopupEl}>
     <div class="popup-card notifications-card">
       <div class="notifications-header">
-        <h3>Notifications</h3>
+        <h3>{t("notif.title")}</h3>
         <div class="notifications-header-actions">
           <button
             class="popup-action-btn"
@@ -723,7 +725,7 @@
             disabled={notificationsLoading || refetchingNotifications || clearingNotifications}
             onclick={() => void handleRefetchNotifications()}
           >
-            {refetchingNotifications ? "Refreshing..." : "Refetch"}
+            {refetchingNotifications ? t("notif.refreshing") : t("notif.refetch")}
           </button>
           <button
             class="popup-action-btn danger"
@@ -731,19 +733,19 @@
             disabled={notificationsLoading || clearingNotifications || notifications.length === 0}
             onclick={() => void handleClearAllNotifications()}
           >
-            {clearingNotifications ? "Clearing..." : "Clear all"}
+            {clearingNotifications ? t("notif.clearing") : t("notif.clearAll")}
           </button>
         </div>
       </div>
 
       {#if notificationsLoading}
-        <div class="notifications-state">Loading notifications...</div>
+        <div class="notifications-state">{t("notif.loading")}</div>
       {:else if notificationsError}
         <div class="notifications-state notifications-state-error">
           {notificationsError}
         </div>
       {:else if notifications.length === 0}
-        <div class="notifications-state">No notifications right now.</div>
+        <div class="notifications-state">{t("notif.empty")}</div>
       {:else}
         <div class="notification-list">
           {#each notifications as notification (notification.id)}
@@ -766,7 +768,7 @@
                         type="button"
                         onclick={() => void handleOpenNotificationInstance(notification)}
                       >
-                        Open instance
+                        {t("notif.openInstance")}
                       </button>
                     {/if}
                     {#if canOpenNotificationUser(notification)}
@@ -775,7 +777,7 @@
                         type="button"
                         onclick={() => void handleOpenNotificationUser(notification)}
                       >
-                        Open user
+                        {t("notif.openUser")}
                       </button>
                     {/if}
                   </div>
@@ -787,7 +789,7 @@
                 disabled={isDeletingNotification(notification.id) || clearingNotifications}
                 onclick={() => void handleDeleteNotification(notification.id)}
               >
-                {isDeletingNotification(notification.id) ? "Deleting..." : "Delete"}
+                {isDeletingNotification(notification.id) ? t("notif.deleting") : t("notif.delete")}
               </button>
             </article>
           {/each}

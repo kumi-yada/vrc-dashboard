@@ -6,6 +6,7 @@
     type SupportedPlatform,
     type WorldData,
   } from "../types";
+  import { t } from "../stores/i18n.svelte";
 
   interface Props {
     world: WorldData;
@@ -36,7 +37,7 @@
   class="world-card"
   type="button"
   onclick={() => onWorldOpen(world)}
-  title={`Open ${world.name}`}
+  title={t("card.openWorld", { name: world.name })}
 >
   <div class="thumbnail-wrapper">
     {#if imageUrl}
@@ -50,12 +51,12 @@
     <span class="name">{world.name}</span>
     <span class="author">{world.authorName}</span>
     <div class="meta">
-      <span class="meta-item" title="Favorites">
+      <span class="meta-item" title={t("card.favorites")}>
         <Icon icon="mdi:heart-outline" width={12} />
         {favoritesLabel}
       </span>
       {#if (world.occupants ?? 0) > 0}
-        <span class="meta-item" title="Online now">
+        <span class="meta-item" title={t("card.onlineNow")}>
           <Icon icon="mdi:account-outline" width={12} />
           {world.occupants}
         </span>

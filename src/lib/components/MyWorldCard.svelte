@@ -6,6 +6,7 @@
     type SupportedPlatform,
     type WorldData,
   } from "../types";
+  import { getI18n, t } from "../stores/i18n.svelte";
 
   interface Props {
     world: WorldData;
@@ -13,6 +14,8 @@
   }
 
   let { world, onOpen }: Props = $props();
+
+  const i18n = getI18n();
 
   const imageUrl = $derived(world.thumbnailImageUrl ?? world.imageUrl ?? "");
 
@@ -32,7 +35,7 @@
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(i18n.tag, {
       dateStyle: "medium",
     }).format(d);
   }
@@ -42,7 +45,7 @@
   class="world-card"
   type="button"
   onclick={() => onOpen(world)}
-  title={`Open ${world.name}`}
+  title={t("card.openWorld", { name: world.name })}
 >
   <div class="thumbnail-wrapper">
     {#if imageUrl}
@@ -57,16 +60,16 @@
   <div class="info">
     <span class="name">{world.name}</span>
     <div class="meta">
-      <span class="meta-item" title="Favorites">
+      <span class="meta-item" title={t("card.favorites")}>
         <Icon icon="mdi:heart-outline" width={12} />
         {compact(world.favorites)}
       </span>
-      <span class="meta-item" title="Visits">
+      <span class="meta-item" title={t("card.visits")}>
         <Icon icon="mdi:eye-outline" width={12} />
         {compact(world.visits)}
       </span>
       {#if (world.occupants ?? 0) > 0}
-        <span class="meta-item" title="Online now">
+        <span class="meta-item" title={t("card.onlineNow")}>
           <Icon icon="mdi:account-outline" width={12} />
           {world.occupants}
         </span>

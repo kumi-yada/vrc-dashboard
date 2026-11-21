@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { getAuth, fetchMyAvatars, fetchMyWorlds, fetchWorld } from "../../stores/auth.svelte";
+  import { t, tp } from "../../stores/i18n.svelte";
   import type { AvatarData, WorldData } from "../../types";
   import AvatarCard from "../AvatarCard.svelte";
   import AvatarDialog from "../AvatarDialog.svelte";
@@ -18,9 +19,9 @@
 
   type View = "avatars" | "worlds";
 
-  const VIEWS: { id: View; label: string; icon: string }[] = [
-    { id: "avatars", label: "Avatars", icon: "mdi:human" },
-    { id: "worlds", label: "Worlds", icon: "mdi:earth" },
+  const VIEWS: { id: View; labelKey: "avatars.viewAvatars" | "avatars.viewWorlds"; icon: string }[] = [
+    { id: "avatars", labelKey: "avatars.viewAvatars", icon: "mdi:human" },
+    { id: "worlds", labelKey: "avatars.viewWorlds", icon: "mdi:earth" },
   ];
 
   let view = $state<View>("avatars");
@@ -90,7 +91,7 @@
   async function loadAvatars() {
     const userId = auth.currentUserId;
     if (!userId) {
-      avatarsError = "Not logged in";
+      avatarsError = t("avatars.notLoggedIn");
       return;
     }
 
@@ -110,7 +111,7 @@
 
   async function loadWorlds() {
     if (!auth.currentUserId) {
-      worldsError = "Not logged in";
+      worldsError = t("avatars.notLoggedIn");
       return;
     }
 
@@ -173,7 +174,7 @@
           onclick={() => (view = tab.id)}
         >
           <Icon icon={tab.icon} width={14} />
-          {tab.label}
+          {t(tab.labelKey)}
         </button>
       {/each}
     </div>
@@ -182,7 +183,7 @@
       <input
         type="text"
         class="search-input"
-        placeholder={view === "avatars" ? "Search avatars…" : "Search worlds…"}
+        placeholder={view === "avatars" ? t("avatars.searchAvatars") : t("avatars.searchWorlds")}
         bind:value={searchQuery}
       />
     </div>
@@ -192,15 +193,16 @@
         type="button"
         onclick={onRefresh}
         disabled={loading}
-        title="Refresh"
+        title={t("common.refresh")}
       >
         <Icon icon="mdi:refresh" width={20} class={loading ? "spinning" : ""} />
       </button>
       {#if totalCount > 0}
-        {@const noun = view === "avatars" ? "avatar" : "world"}
         <span class="count">
           {filteredCount === totalCount
-            ? `${totalCount} ${noun}${totalCount === 1 ? "" : "s"}`
+            ? view === "avatars"
+              ? tp("avatars.countAvatarOne", "avatars.countAvatarOther", totalCount)
+              : tp("avatars.countWorldOne", "avatars.countWorldOther", totalCount)
             : `${filteredCount} / ${totalCount}`}
         </span>
       {/if}
@@ -211,19 +213,19 @@
     {#if loading}
       <div class="state-view">
         <Icon icon="mdi:loading" width={32} class="spinning" />
-        <p>{view === "avatars" ? "Loading avatars…" : "Loading worlds…"}</p>
+        <p>{view === "avatars" ? t("avatars.loadingAvatars") : t("avatars.loadingWorlds")}</p>
       </div>
     {:else if error}
       <div class="state-view error-view">
         <Icon icon="mdi:alert-circle-outline" width={32} />
         <p>{error}</p>
-        <button class="retry-btn" onclick={retry}>Retry</button>
+        <button class="retry-btn" onclick={retry}>{t("common.retry")}</button>
       </div>
     {:else if view === "avatars"}
       {#if filteredAvatars.length === 0}
         <div class="state-view">
           <Icon icon="mdi:human-off" width={48} />
-          <p>{searchQuery ? "No avatars match your search" : "No uploaded avatars found"}</p>
+          <p>{searchQuery ? t("avatars.noMatchAvatars") : t("avatars.noAvatars")}</p>
         </div>
       {:else}
         <div class="item-grid">
@@ -235,7 +237,7 @@
     {:else if filteredWorlds.length === 0}
       <div class="state-view">
         <Icon icon="mdi:earth-off" width={48} />
-        <p>{searchQuery ? "No worlds match your search" : "No uploaded worlds found"}</p>
+        <p>{searchQuery ? t("avatars.noMatchWorlds") : t("avatars.noWorlds")}</p>
       </div>
     {:else}
       <div class="item-grid">

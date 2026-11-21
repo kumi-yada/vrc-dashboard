@@ -1,4 +1,5 @@
 import type { InstanceVisibility, ParsedInstance } from "../types";
+import { t } from "../stores/i18n.svelte";
 
 export function parseInstanceId(location: string): ParsedInstance | null {
   if (!location || location === "private" || location === "offline" || location === "") {
@@ -55,23 +56,23 @@ function parseOwnerId(instancePart: string, visibility: InstanceVisibility): str
 
 export function visibilityLabel(v: InstanceVisibility): string {
   const labels: Record<InstanceVisibility, string> = {
-    public: "Public",
-    friends: "Friends",
-    "friends+": "Friend+",
-    invite: "Invite",
-    "invite+": "Invite+",
-    group: "Group",
-    "group+": "Group+",
+    public: "visibility.public",
+    friends: "visibility.friends",
+    "friends+": "visibility.friendsPlus",
+    invite: "visibility.invite",
+    "invite+": "visibility.invitePlus",
+    group: "visibility.group",
+    "group+": "visibility.groupPlus",
   };
-  return labels[v];
+  return t(labels[v]);
 }
 
 export function regionLabel(region: string): string {
   const labels: Record<string, string> = {
-    us: "US West",
-    use: "US East",
-    eu: "Europe",
-    jp: "Japan",
+    us: "region.usw",
+    use: "region.use",
+    eu: "region.eu",
+    jp: "region.jp",
   };
-  return labels[region] || region.toUpperCase();
+  return labels[region] ? t(labels[region]) : region.toUpperCase();
 }

@@ -3,6 +3,7 @@
   import { openUrl } from "@tauri-apps/plugin-opener";
   import type { AvatarData, AvatarUnityPackage, FileVersionAnalysis } from "../types";
   import { fetchFileAnalysis } from "../stores/auth.svelte";
+  import { getI18n, t } from "../stores/i18n.svelte";
 
   interface Props {
     avatar: AvatarData | null;
@@ -10,6 +11,32 @@
   }
 
   let { avatar, onClose }: Props = $props();
+
+  const i18n = getI18n();
+
+  const PERF_RATING_KEYS: Record<string, string> = {
+    Excellent: "perfRating.Excellent",
+    Good: "perfRating.Good",
+    Medium: "perfRating.Medium",
+    Poor: "perfRating.Poor",
+    VeryPoor: "perfRating.VeryPoor",
+  };
+
+  const RELEASE_STATUS_KEYS: Record<string, string> = {
+    public: "release.public",
+    private: "release.private",
+    hidden: "release.hidden",
+  };
+
+  function perfLabel(rating: string): string {
+    const key = PERF_RATING_KEYS[rating];
+    return key ? t(key) : rating;
+  }
+
+  function releaseLabel(status: string): string {
+    const key = RELEASE_STATUS_KEYS[status];
+    return key ? t(key) : status;
+  }
 
   const PERF_COLORS: Record<string, string> = {
     Excellent: "#4caf50",
@@ -28,49 +55,49 @@
   };
 
   const STAT_LABELS: Record<string, string> = {
-    animatorCount: "Animator Count",
-    audioSourceCount: "Audio Source Count",
-    blendShapeCount: "Blend Shape Count",
-    boneCount: "Bone Count",
-    cameraCount: "Camera Count",
-    clothCount: "Cloth Count",
-    constraintCount: "Constraint Count",
-    constraintDepth: "Constraint Depth",
-    contactCount: "Contact Count",
-    customExpressions: "Custom Expressions",
-    customizeAnimationLayers: "Customize Anim Layers",
-    enableEyeLook: "Eye Look Enabled",
-    lightCount: "Light Count",
-    lineRendererCount: "Line Renderer Count",
-    lipSync: "Lip Sync",
-    materialCount: "Material Count",
-    materialSlotsUsed: "Material Slots Used",
-    meshCount: "Mesh Count",
-    meshIndices: "Mesh Indices",
-    meshParticleMaxPolygons: "Mesh Particle Max Polygons",
-    meshPolygons: "Mesh Polygons",
-    meshVertices: "Mesh Vertices",
-    particleCollisionEnabled: "Particle Collision Enabled",
-    particleSystemCount: "Particle System Count",
-    particleTrailsEnabled: "Particle Trails Enabled",
-    physBoneColliderCount: "PhysBone Collider Count",
-    physBoneCollisionCheckCount: "PhysBone Collision Checks",
-    physBoneComponentCount: "PhysBone Component Count",
-    physBoneTransformCount: "PhysBone Transform Count",
-    physicsColliders: "Physics Colliders",
-    physicsRigidbodies: "Physics Rigidbodies",
-    skinnedMeshCount: "Skinned Mesh Count",
-    skinnedMeshIndices: "Skinned Mesh Indices",
-    skinnedMeshPolygons: "Skinned Mesh Polygons",
-    skinnedMeshVertices: "Skinned Mesh Vertices",
-    totalClothVertices: "Total Cloth Vertices",
-    totalIndices: "Total Indices",
-    totalMaxParticles: "Total Max Particles",
-    totalPolygons: "Total Polygons",
-    totalTextureUsage: "Total Texture Usage",
-    totalVertices: "Total Vertices",
-    trailRendererCount: "Trail Renderer Count",
-    writeDefaultsUsed: "Write Defaults Used",
+    animatorCount: "stat.animatorCount",
+    audioSourceCount: "stat.audioSourceCount",
+    blendShapeCount: "stat.blendShapeCount",
+    boneCount: "stat.boneCount",
+    cameraCount: "stat.cameraCount",
+    clothCount: "stat.clothCount",
+    constraintCount: "stat.constraintCount",
+    constraintDepth: "stat.constraintDepth",
+    contactCount: "stat.contactCount",
+    customExpressions: "stat.customExpressions",
+    customizeAnimationLayers: "stat.customizeAnimationLayers",
+    enableEyeLook: "stat.enableEyeLook",
+    lightCount: "stat.lightCount",
+    lineRendererCount: "stat.lineRendererCount",
+    lipSync: "stat.lipSync",
+    materialCount: "stat.materialCount",
+    materialSlotsUsed: "stat.materialSlotsUsed",
+    meshCount: "stat.meshCount",
+    meshIndices: "stat.meshIndices",
+    meshParticleMaxPolygons: "stat.meshParticleMaxPolygons",
+    meshPolygons: "stat.meshPolygons",
+    meshVertices: "stat.meshVertices",
+    particleCollisionEnabled: "stat.particleCollisionEnabled",
+    particleSystemCount: "stat.particleSystemCount",
+    particleTrailsEnabled: "stat.particleTrailsEnabled",
+    physBoneColliderCount: "stat.physBoneColliderCount",
+    physBoneCollisionCheckCount: "stat.physBoneCollisionCheckCount",
+    physBoneComponentCount: "stat.physBoneComponentCount",
+    physBoneTransformCount: "stat.physBoneTransformCount",
+    physicsColliders: "stat.physicsColliders",
+    physicsRigidbodies: "stat.physicsRigidbodies",
+    skinnedMeshCount: "stat.skinnedMeshCount",
+    skinnedMeshIndices: "stat.skinnedMeshIndices",
+    skinnedMeshPolygons: "stat.skinnedMeshPolygons",
+    skinnedMeshVertices: "stat.skinnedMeshVertices",
+    totalClothVertices: "stat.totalClothVertices",
+    totalIndices: "stat.totalIndices",
+    totalMaxParticles: "stat.totalMaxParticles",
+    totalPolygons: "stat.totalPolygons",
+    totalTextureUsage: "stat.totalTextureUsage",
+    totalVertices: "stat.totalVertices",
+    trailRendererCount: "stat.trailRendererCount",
+    writeDefaultsUsed: "stat.writeDefaultsUsed",
   };
 
   const STAT_ORDER = Object.keys(STAT_LABELS);
@@ -129,14 +156,14 @@
     const pkg = getPackageForPlatform(platform);
     if (!pkg?.assetUrl) {
       analysisCache = { ...analysisCache, [platform]: null };
-      errorPlatforms = { ...errorPlatforms, [platform]: "No asset URL for this platform" };
+      errorPlatforms = { ...errorPlatforms, [platform]: t("avatar.noAssetUrl") };
       return;
     }
 
     const info = extractFileInfo(pkg);
     if (!info) {
       analysisCache = { ...analysisCache, [platform]: null };
-      errorPlatforms = { ...errorPlatforms, [platform]: "Could not determine file ID/version" };
+      errorPlatforms = { ...errorPlatforms, [platform]: t("avatar.noFileInfo") };
       return;
     }
 
@@ -173,7 +200,7 @@
   }
 
   function formatStatValue(key: string, value: unknown): string {
-    if (typeof value === "boolean") return value ? "Yes" : "No";
+    if (typeof value === "boolean") return value ? t("avatar.yes") : t("avatar.no");
     if (key === "totalTextureUsage" && typeof value === "number") return bytesToMB(value);
     if (typeof value === "number") return value.toLocaleString();
     if (Array.isArray(value)) return `[${value.length}]`;
@@ -199,10 +226,10 @@
     const fmt = (v: number) =>
       key === "totalTextureUsage" ? bytesToMB(v) : v.toLocaleString();
     return [
-      `Excellent: ≤ ${fmt(excellent)}`,
-      `Good:      ≤ ${fmt(good)}`,
-      `Medium:    ≤ ${fmt(medium)}`,
-      `Poor:      ≤ ${fmt(poor)}`,
+      t("perfTip.excellent", { value: fmt(excellent) }),
+      t("perfTip.good", { value: fmt(good) }),
+      t("perfTip.medium", { value: fmt(medium) }),
+      t("perfTip.poor", { value: fmt(poor) }),
     ];
   }
 
@@ -212,7 +239,7 @@
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(i18n.tag, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(d);
@@ -237,7 +264,7 @@
   class="dialog-shell"
   role="dialog"
   aria-modal="true"
-  aria-label={avatar?.name ?? "Avatar Details"}
+  aria-label={avatar?.name ?? t("avatar.detailsAria")}
 >
   <div class="dialog">
     <div class="dialog-header">
@@ -246,7 +273,7 @@
           class="header-thumbnail thumbnail-link"
           type="button"
           onclick={() => void handleAvatarOpen()}
-          aria-label={`Open ${avatar?.name ?? "avatar"} in VRChat`}
+          aria-label={t("avatar.openInVrchat", { name: avatar?.name ?? t("avatar.openFallback") })}
         >
           {#if imageUrl}
             <img src={imageUrl} alt={avatar?.name} />
@@ -264,18 +291,18 @@
                 class="perf-badge"
                 style="color: {PERF_COLORS[avatar.performanceRating] ?? 'var(--text-muted)'}; border-color: {PERF_COLORS[avatar.performanceRating] ?? 'var(--text-muted)'};"
               >
-                {avatar.performanceRating}
+                {perfLabel(avatar.performanceRating)}
               </span>
             {/if}
             {#if avatar?.releaseStatus}
               <span class="release-badge" class:public={avatar.releaseStatus === "public"}>
-                {avatar.releaseStatus}
+                {releaseLabel(avatar.releaseStatus)}
               </span>
             {/if}
           </div>
         </div>
       </div>
-      <button class="close-btn" type="button" onclick={onClose} aria-label="Close">
+      <button class="close-btn" type="button" onclick={onClose} aria-label={t("common.close")}>
         <Icon icon="mdi:close" width={20} />
       </button>
     </div>
@@ -300,7 +327,7 @@
       {#if loading}
         <div class="state-view">
           <Icon icon="mdi:loading" width={28} class="spinning" />
-          <p>Loading analysis…</p>
+          <p>{t("avatar.loadingAnalysis")}</p>
         </div>
       {:else if error}
         <div class="state-view error-view">
@@ -311,38 +338,38 @@
             type="button"
             onclick={() => retryPlatform(selectedPlatform)}
           >
-            Retry
+            {t("common.retry")}
           </button>
         </div>
       {:else if !analysis}
         <div class="state-view">
           <Icon icon="mdi:chart-bar" width={28} />
-          <p>No analysis data available</p>
+          <p>{t("avatar.noAnalysis")}</p>
         </div>
       {:else}
         <div class="file-info">
           <div class="file-info-row">
-            <span class="file-label">File Size</span>
+            <span class="file-label">{t("avatar.fileSize")}</span>
             <span class="file-value">{bytesToMB(analysis.fileSize)}</span>
           </div>
           <div class="file-info-row">
-            <span class="file-label">Uncompressed</span>
+            <span class="file-label">{t("avatar.uncompressed")}</span>
             <span class="file-value">{bytesToMB(analysis.uncompressedSize)}</span>
           </div>
           {#if analysis.created_at}
             <div class="file-info-row">
-              <span class="file-label">Uploaded</span>
+              <span class="file-label">{t("avatar.uploaded")}</span>
               <span class="file-value">{formatDate(analysis.created_at)}</span>
             </div>
           {/if}
           {#if analysis.performanceRating}
             <div class="file-info-row">
-              <span class="file-label">Performance</span>
+              <span class="file-label">{t("avatar.performance")}</span>
               <span
                 class="file-value"
                 style="color: {PERF_COLORS[analysis.performanceRating] ?? 'inherit'};"
               >
-                {analysis.performanceRating}
+                {perfLabel(analysis.performanceRating)}
               </span>
             </div>
           {/if}
@@ -357,7 +384,7 @@
                 {@const color = getStatColor(key, rawValue)}
                 {@const tooltip = getTooltipLines(key)}
                 <div class="stat-row" class:has-tooltip={tooltip !== null}>
-                  <span class="stat-label">{STAT_LABELS[key] ?? key}</span>
+                  <span class="stat-label">{t(STAT_LABELS[key] ?? key)}</span>
                   <span class="stat-value" style={color ? `color: ${color};` : ""}>
                     {formatStatValue(key, rawValue)}
                   </span>

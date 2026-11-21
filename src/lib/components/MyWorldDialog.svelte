@@ -7,6 +7,7 @@
     type SupportedPlatform,
     type WorldData,
   } from "../types";
+  import { getI18n, t } from "../stores/i18n.svelte";
 
   interface Props {
     world: WorldData | null;
@@ -14,6 +15,8 @@
   }
 
   let { world, onClose }: Props = $props();
+
+  const i18n = getI18n();
 
   const imageUrl = $derived(world?.thumbnailImageUrl ?? world?.imageUrl ?? "");
 
@@ -41,20 +44,20 @@
   const stats = $derived(
     world
       ? ([
-          ["Favorites", (world.favorites ?? 0).toLocaleString()],
-          ["Visits", (world.visits ?? 0).toLocaleString()],
-          ["Capacity", String(world.capacity ?? 0)],
+          [t("wstat.favorites"), (world.favorites ?? 0).toLocaleString()],
+          [t("wstat.visits"), (world.visits ?? 0).toLocaleString()],
+          [t("wstat.capacity"), String(world.capacity ?? 0)],
           world.recommendedCapacity
-            ? ["Recommended", String(world.recommendedCapacity)]
+            ? [t("wstat.recommended"), String(world.recommendedCapacity)]
             : null,
-          ["Occupants", String(world.occupants ?? 0)],
-          activeInstances > 0 ? ["Active Instances", String(activeInstances)] : null,
-          world.heat !== undefined ? ["Heat", String(world.heat)] : null,
-          world.popularity !== undefined ? ["Popularity", String(world.popularity)] : null,
-          world.created_at ? ["Created", formatDate(world.created_at)] : null,
-          world.updated_at ? ["Updated", formatDate(world.updated_at)] : null,
-          publishedDate ? ["Published", formatDate(publishedDate)] : null,
-          labsDate ? ["Labs", formatDate(labsDate)] : null,
+          [t("wstat.occupants"), String(world.occupants ?? 0)],
+          activeInstances > 0 ? [t("wstat.activeInstances"), String(activeInstances)] : null,
+          world.heat !== undefined ? [t("wstat.heat"), String(world.heat)] : null,
+          world.popularity !== undefined ? [t("wstat.popularity"), String(world.popularity)] : null,
+          world.created_at ? [t("wstat.created"), formatDate(world.created_at)] : null,
+          world.updated_at ? [t("wstat.updated"), formatDate(world.updated_at)] : null,
+          publishedDate ? [t("wstat.published"), formatDate(publishedDate)] : null,
+          labsDate ? [t("wstat.labs"), formatDate(labsDate)] : null,
         ].filter(Boolean) as [string, string][])
       : [],
   );
@@ -95,7 +98,7 @@
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(i18n.tag, {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(d);
@@ -119,7 +122,7 @@
   class="dialog-shell"
   role="dialog"
   aria-modal="true"
-  aria-label={world?.name ?? "World Details"}
+  aria-label={world?.name ?? t("world.detailsAria")}
 >
   <div class="dialog">
     <div class="dialog-header">
@@ -128,7 +131,7 @@
           class="header-thumbnail thumbnail-link"
           type="button"
           onclick={() => void handleWorldOpen()}
-          aria-label={`Open ${world?.name ?? "world"} in VRChat`}
+          aria-label={t("world.openInVrchat", { name: world?.name ?? t("world.openFallback") })}
         >
           {#if imageUrl}
             <img src={imageUrl} alt={world?.name} />
@@ -142,8 +145,9 @@
           <h2 class="dialog-title">{world?.name ?? ""}</h2>
           <div class="header-badges">
             {#if world?.releaseStatus}
+              {@const releaseKey = { public: "release.public", private: "release.private", hidden: "release.hidden" }[world.releaseStatus]}
               <span class="release-badge" class:public={world.releaseStatus === "public"}>
-                {world.releaseStatus}
+                {releaseKey ? t(releaseKey) : world.releaseStatus}
               </span>
             {/if}
             {#each platformList as platform (platform)}
@@ -155,7 +159,7 @@
           </div>
         </div>
       </div>
-      <button class="close-btn" type="button" onclick={onClose} aria-label="Close">
+      <button class="close-btn" type="button" onclick={onClose} aria-label={t("common.close")}>
         <Icon icon="mdi:close" width={20} />
       </button>
     </div>
@@ -163,7 +167,7 @@
     <div class="dialog-body">
       {#if world?.id}
         <div class="id-row">
-          <span class="file-label">World ID</span>
+          <span class="file-label">{t("world.worldId")}</span>
           <div class="id-value-wrapper">
             <code class="id-value">{world.id}</code>
             <button
@@ -171,8 +175,8 @@
               class:copied
               type="button"
               onclick={() => void copyWorldId()}
-              title="Copy world ID"
-              aria-label="Copy world ID"
+              title={t("world.copyWorldId")}
+              aria-label={t("world.copyWorldId")}
             >
               <Icon icon={copied ? "mdi:check" : "mdi:content-copy"} width={16} />
             </button>

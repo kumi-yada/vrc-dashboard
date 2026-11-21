@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { fetchRecentInstances, fetchInstance, fetchWorld, fetchFullUserProfile, getAuth } from "../../stores/auth.svelte";
   import { resolveOwnerName, fetchMutualFriends } from "../../stores/friends.svelte";
+  import { t, tp } from "../../stores/i18n.svelte";
   import { parseInstanceId } from "../../utils/instance";
   import type { InstanceGroup, UserProfile, WorldData } from "../../types";
   import RecentInstanceCard from "../RecentInstanceCard.svelte";
@@ -187,14 +188,14 @@
   <div class="subheader">
     <span class="page-title">
       <Icon icon="mdi:history" width={18} />
-      Recent Instances
+      {t("recent.title")}
     </span>
     <div class="controls">
       <button
         class="refresh-btn"
         onclick={onRefresh}
         disabled={loading}
-        title="Refresh"
+        title={t("common.refresh")}
       >
         <Icon
           icon="mdi:refresh"
@@ -204,7 +205,7 @@
       </button>
       {#if groups.length > 0}
         <span class="count"
-          >{groups.length} instance{groups.length === 1 ? "" : "s"}</span
+          >{tp("recent.countOne", "recent.countOther", groups.length)}</span
         >
       {/if}
     </div>
@@ -214,18 +215,18 @@
     {#if loading}
       <div class="state-view">
         <Icon icon="mdi:loading" width={32} class="spinning" />
-        <p>Loading recent instances…</p>
+        <p>{t("recent.loading")}</p>
       </div>
     {:else if error}
       <div class="state-view error-view">
         <Icon icon="mdi:alert-circle-outline" width={32} />
         <p>{error}</p>
-        <button class="retry-btn" onclick={() => void load()}>Retry</button>
+        <button class="retry-btn" onclick={() => void load()}>{t("common.retry")}</button>
       </div>
     {:else if groups.length === 0}
       <div class="state-view">
         <Icon icon="mdi:history" width={48} />
-        <p>No recent instances</p>
+        <p>{t("recent.empty")}</p>
       </div>
     {:else}
       <div class="instances-grid">

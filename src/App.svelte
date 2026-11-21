@@ -4,6 +4,7 @@
   import Dashboard from "./lib/components/pages/Dashboard.svelte";
   import { getAuth, restoreSession } from "./lib/stores/auth.svelte";
   import { initializeUiScale } from "./lib/stores/ui-scale.svelte";
+  import { t } from "./lib/stores/i18n.svelte";
   import { isAndroid } from "./lib/utils/platform";
 
   const auth = getAuth();
@@ -23,7 +24,7 @@
   <div class="app-content">
     {#if auth.initializing}
       <div class="boot-screen">
-        <p>Restoring saved session...</p>
+        <p>{t("app.restoring")}</p>
       </div>
     {:else if auth.isAuthenticated}
       <Dashboard />

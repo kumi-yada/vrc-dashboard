@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import type { Friend } from "../types";
+  import { t, tp } from "../stores/i18n.svelte";
   import FriendEntry from "./FriendEntry.svelte";
 
   interface Props {
@@ -21,8 +22,8 @@
     onclick={() => (collapsed = !collapsed)}
   >
     <Icon icon="mdi:eye-off" width={32} class="private-icon" />
-    <span class="private-label">Private</span>
-    <span class="private-count">{friends.length} {friends.length === 1 ? "friend" : "friends"}</span>
+    <span class="private-label">{t("group.private")}</span>
+    <span class="private-count">{tp("group.friendOne", "group.friendOther", friends.length)}</span>
     <Icon icon={collapsed ? "mdi:chevron-down" : "mdi:chevron-up"} width={18} />
   </button>
   {#if !collapsed}

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import type { AvatarData } from "../types";
+  import { getI18n, t } from "../stores/i18n.svelte";
 
   interface Props {
     avatar: AvatarData;
@@ -9,7 +10,33 @@
 
   let { avatar, onOpen }: Props = $props();
 
+  const i18n = getI18n();
+
   const imageUrl = $derived(avatar.thumbnailImageUrl ?? avatar.imageUrl ?? "");
+
+  const PERF_RATING_KEYS: Record<string, string> = {
+    Excellent: "perfRating.Excellent",
+    Good: "perfRating.Good",
+    Medium: "perfRating.Medium",
+    Poor: "perfRating.Poor",
+    VeryPoor: "perfRating.VeryPoor",
+  };
+
+  const RELEASE_STATUS_KEYS: Record<string, string> = {
+    public: "release.public",
+    private: "release.private",
+    hidden: "release.hidden",
+  };
+
+  function perfLabel(rating: string): string {
+    const key = PERF_RATING_KEYS[rating];
+    return key ? t(key) : rating;
+  }
+
+  function releaseLabel(status: string): string {
+    const key = RELEASE_STATUS_KEYS[status];
+    return key ? t(key) : status;
+  }
 
   const PERF_COLORS: Record<string, string> = {
     Excellent: "#4caf50",
@@ -29,7 +56,7 @@
     if (!dateStr) return "";
     const d = new Date(dateStr);
     if (Number.isNaN(d.getTime())) return dateStr;
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(i18n.tag, {
       dateStyle: "medium",
     }).format(d);
   }
@@ -39,7 +66,7 @@
   class="avatar-card"
   type="button"
   onclick={() => onOpen(avatar)}
-  title={`Open ${avatar.name}`}
+  title={t("card.openAvatar", { name: avatar.name })}
 >
   <div class="thumbnail-wrapper">
     {#if imageUrl}
@@ -56,11 +83,11 @@
     <div class="meta">
       {#if avatar.performanceRating}
         <span class="perf-badge" style="color: {perfColor}; border-color: {perfColor};">
-          {avatar.performanceRating}
+          {perfLabel(avatar.performanceRating)}
         </span>
       {/if}
       <span class="release" class:public={avatar.releaseStatus === "public"}>
-        {avatar.releaseStatus}
+        {releaseLabel(avatar.releaseStatus)}
       </span>
     </div>
     {#if avatar.updated_at}

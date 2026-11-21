@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { version } from "../../../package.json";
+  import { t } from "../stores/i18n.svelte";
   // import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
   interface Props {
@@ -41,14 +42,14 @@
     error = null;
 
     if (!urlInput.trim()) {
-      error = "Please enter a URL";
+      error = t("utility.errorEmpty");
       return;
     }
 
     const videoId = parseBilibiliUrl(urlInput);
 
     if (!videoId) {
-      error = "Not a valid Bilibili URL";
+      error = t("utility.errorInvalid");
       return;
     }
 
@@ -62,7 +63,7 @@
       // Problems installing deps
       // await writeText(resolvedUrl);
     } catch (e) {
-      error = e instanceof Error ? e.message : "Failed to copy to clipboard";
+      error = e instanceof Error ? e.message : t("utility.errorCopy");
     } finally {
       isResolving = false;
     }
@@ -89,7 +90,7 @@
 >
   <div class="utility-dialog">
     <div class="dialog-actions">
-      <button class="close-btn" type="button" title="Close" onclick={onClose}>
+      <button class="close-btn" type="button" title={t("common.close")} onclick={onClose}>
         <Icon icon="mdi:close" width="1.125rem" />
       </button>
     </div>
@@ -97,13 +98,13 @@
     <div class="dialog-content">
       <h2 class="dialog-title" id="utility-dialog-title">
         <Icon icon="mdi:tools" width="1.25rem" />
-        Utilities
+        {t("utility.title")}
       </h2>
 
       <div class="utility-section">
-        <h3 class="section-title">Bilibili URL Resolver</h3>
+        <h3 class="section-title">{t("utility.bilibiliTitle")}</h3>
         <p class="section-description">
-          Convert a Bilibili video URL to a direct API link
+          {t("utility.bilibiliDesc")}
         </p>
 
         <div class="input-group">
@@ -113,7 +114,7 @@
             placeholder="https://www.bilibili.com/video/BV..."
             bind:value={urlInput}
             disabled={isResolving}
-            aria-label="Bilibili URL"
+            aria-label={t("utility.bilibiliAria")}
           />
         </div>
 
@@ -132,10 +133,10 @@
         >
           {#if isResolving}
             <Icon icon="mdi:loading" width="1rem" class="spinning" />
-            Resolving...
+            {t("utility.resolving")}
           {:else}
             <Icon icon="mdi:check-circle-outline" width="1rem" />
-            Resolve
+            {t("utility.resolve")}
           {/if}
         </button>
       </div>

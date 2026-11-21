@@ -1,6 +1,7 @@
 <script lang="ts">
   import Icon from "@iconify/svelte";
   import { PLATFORM_META, type Friend, type SupportedPlatform } from "../types";
+  import { t } from "../stores/i18n.svelte";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
@@ -28,7 +29,7 @@
   <button
     class="avatar-button avatar-wrapper"
     type="button"
-    title={`Open ${friend.displayName} profile`}
+    title={t("friend.openProfile", { name: friend.displayName })}
     onclick={() => onProfileClick(friend)}
   >
     <UserAvatar

@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { fetchInstance, fetchWorld, fetchFullUserProfile, getAuth } from "../../stores/auth.svelte";
   import { resolveOwnerName, fetchMutualFriends } from "../../stores/friends.svelte";
+  import { t, tp } from "../../stores/i18n.svelte";
   import { parseInstanceId } from "../../utils/instance";
   import type { InstanceData, InstanceGroup, UserProfile, WorldData } from "../../types";
   import RecentInstanceCard from "../RecentInstanceCard.svelte";
@@ -203,14 +204,14 @@
   <div class="subheader">
     <span class="page-title">
       <Icon icon="mdi:bookmark" width={18} />
-      Saved Instances
+      {t("instances.title")}
     </span>
     <div class="controls">
       <button
         class="refresh-btn"
         onclick={onRefresh}
         disabled={loading}
-        title="Refresh"
+        title={t("common.refresh")}
       >
         <Icon
           icon="mdi:refresh"
@@ -220,7 +221,7 @@
       </button>
       {#if groups.length > 0}
         <span class="count"
-          >{groups.length} instance{groups.length === 1 ? "" : "s"}</span
+          >{tp("instances.countOne", "instances.countOther", groups.length)}</span
         >
       {/if}
     </div>
@@ -230,19 +231,19 @@
     {#if loading && groups.length === 0}
       <div class="state-view">
         <Icon icon="mdi:loading" width={32} class="spinning" />
-        <p>Loading saved instances…</p>
+        <p>{t("instances.loading")}</p>
       </div>
     {:else if error}
       <div class="state-view error-view">
         <Icon icon="mdi:alert-circle-outline" width={32} />
         <p>{error}</p>
-        <button class="retry-btn" onclick={() => void load(savedStore.instances)}>Retry</button>
+        <button class="retry-btn" onclick={() => void load(savedStore.instances)}>{t("common.retry")}</button>
       </div>
     {:else if groups.length === 0}
       <div class="state-view">
         <Icon icon="mdi:bookmark-outline" width={48} />
-        <p>No saved instances</p>
-        <p class="hint">Open an instance and tap the bookmark to save it here.</p>
+        <p>{t("instances.empty")}</p>
+        <p class="hint">{t("instances.emptyHint")}</p>
       </div>
     {:else}
       <div class="instances-grid">
@@ -252,7 +253,7 @@
             <button
               class="remove-btn"
               type="button"
-              title="Remove from saved instances"
+              title={t("instances.remove")}
               onclick={() => handleRemove(group.location)}
             >
               <Icon icon="mdi:bookmark-remove" width={14} />

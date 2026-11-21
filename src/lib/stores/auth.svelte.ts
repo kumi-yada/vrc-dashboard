@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { t } from "./i18n.svelte";
 import type {
   ApiFavorite,
   ApiFavoriteGroup,
@@ -74,7 +75,7 @@ async function clearStoredAuth(): Promise<void> {
 async function resolveCurrentUserIdentifier(): Promise<CurrentUserIdentifier> {
   const result = await invoke<CurrentUserIdentifier>("get_current_user");
   if (!result?.id) {
-    throw new Error("Unable to resolve current user ID");
+    throw new Error(t("error.resolveUserId"));
   }
   return result;
 }
@@ -115,7 +116,7 @@ async function loadCurrentUser(): Promise<CurrentUser | null> {
     currentUserId = null;
 
     if (isUnauthorizedError(message)) {
-      error = "Saved session could not be restored. Your saved token was kept; retry or submit a new token.";
+      error = t("error.sessionRestore");
     } else {
       error = message;
     }

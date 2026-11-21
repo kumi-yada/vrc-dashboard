@@ -8,6 +8,7 @@
   } from "../types";
   import { visibilityLabel, regionLabel } from "../utils/instance";
   import { getFriendsAtLocation } from "../stores/friends.svelte";
+  import { t, tp } from "../stores/i18n.svelte";
   import PlatformMeta from "./PlatformMeta.svelte";
   import UserAvatar from "./UserAvatar.svelte";
 
@@ -37,7 +38,7 @@
     }
   }
 
-  const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
+  const worldName = $derived(group.instance?.world?.name ?? t("world.unknown"));
   const thumbnailUrl = $derived(
     group.instance?.world?.thumbnailImageUrl ??
       group.instance?.world?.imageUrl ??
@@ -76,7 +77,7 @@
           </span>
         {/each}
         {#if hiddenFriendCount > 0}
-          <span class="more-count" title={`${hiddenFriendCount} more friend${hiddenFriendCount === 1 ? "" : "s"} here`}>+{hiddenFriendCount}</span>
+          <span class="more-count" title={tp("recent.moreFriendsOne", "recent.moreFriendsOther", hiddenFriendCount)}>+{hiddenFriendCount}</span>
         {/if}
       </div>
     {/if}

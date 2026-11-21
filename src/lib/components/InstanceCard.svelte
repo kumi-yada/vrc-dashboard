@@ -6,6 +6,7 @@
     type SupportedPlatform,
   } from "../types";
   import { visibilityLabel, regionLabel } from "../utils/instance";
+  import { t } from "../stores/i18n.svelte";
   import FriendEntry from "./FriendEntry.svelte";
   import Icon from "@iconify/svelte";
   import { invoke } from "@tauri-apps/api/core";
@@ -35,7 +36,7 @@
 
   let { group, onFriendProfile, onWorldOpen }: Props = $props();
 
-  const worldName = $derived(group.instance?.world?.name ?? "Unknown World");
+  const worldName = $derived(group.instance?.world?.name ?? t("world.unknown"));
   const thumbnailUrl = $derived(
     group.instance?.world?.thumbnailImageUrl ??
       group.instance?.world?.imageUrl ??
@@ -79,7 +80,7 @@
         class="invite-btn invite-btn--{inviteState}"
         role="button"
         tabindex="0"
-        title="Invite myself to this instance"
+        title={t("invite.myself")}
         onclick={handleInvite}
         onkeydown={(e) => {
           if (e.key === "Enter" || e.key === " ")
@@ -120,7 +121,7 @@
         </span>
       </div>
       {#if group.ownerName}
-        <div class="owner-row" title={`Owner: ${group.ownerName}`}>
+        <div class="owner-row" title={t("instance.owner", { name: group.ownerName })}>
           <Icon icon="mdi:crown-outline" width={14} />
           <span class="owner-name">{group.ownerName}</span>
         </div>

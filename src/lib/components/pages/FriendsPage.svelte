@@ -7,6 +7,7 @@
     fetchMutualFriends,
   } from "../../stores/friends.svelte";
   import { fetchFullUserProfile, fetchWorld, getAuth } from "../../stores/auth.svelte";
+  import { t } from "../../stores/i18n.svelte";
   import type { InstanceGroup, UserProfile, WorldData } from "../../types";
   import InstanceCard from "../InstanceCard.svelte";
   import TravelingCard from "../TravelingCard.svelte";
@@ -162,7 +163,7 @@
       <Icon icon="mdi:magnify" width={18} />
       <input
         type="text"
-        placeholder="Search friends or worlds..."
+        placeholder={t("friends.searchPlaceholder")}
         bind:value={friends.searchQuery}
         class="search-input"
       />
@@ -172,7 +173,7 @@
         class="refresh-btn"
         onclick={onRefresh}
         disabled={friends.loading}
-        title="Refresh"
+        title={t("common.refresh")}
       >
         <Icon
           icon="mdi:refresh"
@@ -186,7 +187,7 @@
         class:active={showOfflineTab}
         onclick={toggleOfflineTab}
       >
-        {friends.onlineCount}/{friends.totalCount} Online
+        {t("friends.onlineCount", { online: friends.onlineCount, total: friends.totalCount })}
       </button>
     </div>
   </div>
@@ -196,12 +197,12 @@
       {#if friends.loading && sortedOfflineFriends.length === 0}
         <div class="loading-state">
           <Icon icon="mdi:loading" width={32} class="spinning" />
-          <p>Loading offline friends...</p>
+          <p>{t("friends.loadingOffline")}</p>
         </div>
       {:else if sortedOfflineFriends.length === 0}
         <div class="empty-state">
           <Icon icon="mdi:account-off-outline" width={48} />
-          <p>No offline friends</p>
+          <p>{t("friends.noOffline")}</p>
         </div>
       {:else}
         <div class="offline-grid">
@@ -216,7 +217,7 @@
                   {#if friend.last_activity}
                     {formatShortAgo(friend.last_activity)}
                   {:else}
-                    Unknown
+                    {t("common.unknown")}
                   {/if}
                 </span>
               </div>
@@ -229,20 +230,20 @@
       {#if friends.loading && friends.instanceGroups.length === 0}
         <div class="loading-state">
           <Icon icon="mdi:loading" width={32} class="spinning" />
-          <p>Loading friends...</p>
+          <p>{t("friends.loading")}</p>
         </div>
       {:else if friends.error}
         <div class="error-state">
           <Icon icon="mdi:alert-circle-outline" width={32} />
           <p>{friends.error}</p>
           <button class="retry-btn" onclick={() => void fetchFriends(true)}>
-            Retry
+            {t("common.retry")}
           </button>
         </div>
       {:else if friends.instanceGroups.length === 0 && friends.privateFriends.length === 0 && friends.activeFriends.length === 0 && friends.travelingFriends.length === 0}
         <div class="empty-state">
           <Icon icon="mdi:account-off-outline" width={48} />
-          <p>No friends online</p>
+          <p>{t("friends.noOnline")}</p>
         </div>
       {:else}
         <div class="instances-grid">

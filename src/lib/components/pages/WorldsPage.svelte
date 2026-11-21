@@ -2,6 +2,7 @@
   import Icon from "@iconify/svelte";
   import { searchWorlds, fetchWorld, fetchFavoriteGroups, fetchFavorites } from "../../stores/auth.svelte";
   import { getFavorites } from "../../stores/favorites.svelte";
+  import { t, tp } from "../../stores/i18n.svelte";
   import type { ApiFavoriteGroup, InstanceGroup, WorldData } from "../../types";
   import WorldCard from "../WorldCard.svelte";
   import WorldDialog from "../WorldDialog.svelte";
@@ -146,9 +147,9 @@
     }
   }
 
-  const PREDEFINED_TAGS: { tag: string; label: string }[] = [
-    { tag: "system_labs", label: "Labs" },
-    { tag: "author_tag_game", label: "Game" },
+  const PREDEFINED_TAGS: { tag: string; labelKey: "worlds.preset.labs" | "worlds.preset.game" }[] = [
+    { tag: "system_labs", labelKey: "worlds.preset.labs" },
+    { tag: "author_tag_game", labelKey: "worlds.preset.game" },
   ];
 
   let presetOpen = $state(false);
@@ -362,7 +363,7 @@
             <button
               type="button"
               class="tag-remove"
-              aria-label="Remove tag {tag}"
+              aria-label={t("worlds.removeTag", { tag })}
               onclick={() => removeTag(tag)}
             >
               <Icon icon="mdi:close" width={12} />
@@ -373,8 +374,8 @@
           type="text"
           class="tag-input"
           placeholder={tags.length === 0
-            ? "Type a tag and press Enter"
-            : "Add another tag…"}
+            ? t("worlds.tagPlaceholder")
+            : t("worlds.tagPlaceholderMore")}
           bind:value={tagInput}
           onkeydown={handleTagKeydown}
         />
@@ -383,7 +384,7 @@
         <button
           type="button"
           class="preset-btn"
-          title="Add predefined tags"
+          title={t("worlds.addPresets")}
           onclick={() => (presetOpen = !presetOpen)}
         >
           <Icon icon="mdi:tag-plus-outline" width={18} />
@@ -391,7 +392,7 @@
         </button>
         {#if presetOpen}
           <div class="preset-panel">
-            {#each PREDEFINED_TAGS as { tag, label } (tag)}
+            {#each PREDEFINED_TAGS as { tag, labelKey } (tag)}
               <button
                 type="button"
                 class="preset-item"
@@ -404,7 +405,7 @@
                     : "mdi:circle-outline"}
                   width={14}
                 />
-                {label}
+                {t(labelKey)}
               </button>
             {/each}
           </div>
@@ -414,11 +415,11 @@
         <button
           type="button"
           class="preset-btn"
-          title="Sort by"
+          title={t("worlds.sortBy")}
           onclick={() => (sortOpen = !sortOpen)}
         >
           <Icon icon="mdi:sort" width={18} />
-          <span class="sort-label">{sortField}</span>
+          <span class="sort-label">{t(`sort.${sortField}`)}</span>
           <Icon icon="mdi:chevron-down" width={13} class="chevron" />
         </button>
         {#if sortOpen}
@@ -439,7 +440,7 @@
                     : "mdi:circle-outline"}
                   width={14}
                 />
-                {field}
+                {t(`sort.${field}`)}
               </button>
             {/each}
           </div>
@@ -448,7 +449,7 @@
       <button
         type="button"
         class="order-btn"
-        title={order === "descending" ? "Descending" : "Ascending"}
+        title={order === "descending" ? t("worlds.orderDesc") : t("worlds.orderAsc")}
         onclick={() => {
           order = order === "descending" ? "ascending" : "descending";
         }}
@@ -467,7 +468,7 @@
           type="button"
           class="preset-btn"
           class:fav-filter-active={favoriteFilter !== null}
-          title="Filter by favorite group"
+          title={t("worlds.filterFav")}
           onclick={() => (favFilterOpen = !favFilterOpen)}
         >
           <Icon
@@ -477,8 +478,8 @@
           />
           <span class="sort-label">
             {favoriteFilter
-              ? (dropdownItems.find((i) => i.id === favoriteFilter)?.name ?? "Favorites")
-              : "Favorites"}
+              ? (dropdownItems.find((i) => i.id === favoriteFilter)?.name ?? t("worlds.favorites"))
+              : t("worlds.favorites")}
           </span>
           <Icon icon="mdi:chevron-down" width={13} class="chevron" />
         </button>
@@ -546,7 +547,7 @@
                 {/each}
               {/if}
             {:else}
-              <p class="fav-filter-empty">No favorite groups yet</p>
+              <p class="fav-filter-empty">{t("worlds.noFavGroups")}</p>
             {/if}
           </div>
         {/if}
@@ -555,7 +556,7 @@
         class="refresh-btn"
         onclick={onRefresh}
         disabled={loading || loadingMore}
-        title="Refresh"
+        title={t("common.refresh")}
       >
         <Icon
           icon="mdi:refresh"
@@ -565,7 +566,7 @@
       </button>
       {#if worlds.length > 0}
         <span class="count"
-          >{worlds.length} world{worlds.length === 1 ? "" : "s"}</span
+          >{tp("worlds.countOne", "worlds.countOther", worlds.length)}</span
         >
       {/if}
     </div>
@@ -575,20 +576,20 @@
     {#if loading}
       <div class="state-view">
         <Icon icon="mdi:loading" width={32} class="spinning" />
-        <p>Loading worlds…</p>
+        <p>{t("worlds.loading")}</p>
       </div>
     {:else if error && worlds.length === 0}
       <div class="state-view error-view">
         <Icon icon="mdi:alert-circle-outline" width={32} />
         <p>{error}</p>
         <button class="retry-btn" onclick={() => void loadWorlds(true)}
-          >Retry</button
+          >{t("common.retry")}</button
         >
       </div>
     {:else if worlds.length === 0}
       <div class="state-view">
         <Icon icon="mdi:earth-off" width={48} />
-        <p>No worlds found</p>
+        <p>{t("worlds.noWorlds")}</p>
       </div>
     {:else}
       <div class="worlds-grid">
@@ -613,9 +614,9 @@
           >
             {#if loadingMore}
               <Icon icon="mdi:loading" width={16} class="spinning" />
-              Loading…
+              {t("worlds.loadingMore")}
             {:else}
-              Load more
+              {t("worlds.loadMore")}
             {/if}
           </button>
         </div>
