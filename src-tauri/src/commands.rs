@@ -109,6 +109,11 @@ pub async fn get_auth_token(state: State<'_, AuthState>) -> Result<String, Strin
 }
 
 #[tauri::command]
+pub fn exit_app(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
 pub async fn get_current_user(state: State<'_, AuthState>) -> Result<Value, String> {
     let token = {
         let auth = state.0.lock().map_err(|e| e.to_string())?;

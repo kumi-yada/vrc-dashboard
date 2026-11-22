@@ -8,6 +8,8 @@
     type WorldData,
   } from "../types";
   import { getI18n, t } from "../stores/i18n.svelte";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid } from "../utils/platform";
 
   interface Props {
     world: WorldData | null;
@@ -15,6 +17,14 @@
   }
 
   let { world, onClose }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   const i18n = getI18n();
 

@@ -18,7 +18,8 @@
     t,
   } from "../stores/i18n.svelte";
   import type { UserProfile } from "../types";
-  import { isDesktop } from "../utils/platform";
+  import { isAndroid, isDesktop } from "../utils/platform";
+  import { registerBackHandler } from "../stores/back-button.svelte";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import { formatRelative, type Locale as DateFnsLocale } from "date-fns";
@@ -45,6 +46,14 @@
     loading = false,
     error = null,
   }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   const auth = getAuth();
   const uiScale = getUiScale();

@@ -3,6 +3,8 @@
   import { searchWorlds, fetchWorld, fetchFavoriteGroups, fetchFavorites } from "../../stores/auth.svelte";
   import { getFavorites } from "../../stores/favorites.svelte";
   import { t, tp } from "../../stores/i18n.svelte";
+  import { registerBackHandler } from "../../stores/back-button.svelte";
+  import { isAndroid } from "../../utils/platform";
   import type { ApiFavoriteGroup, InstanceGroup, WorldData } from "../../types";
   import WorldCard from "../WorldCard.svelte";
   import WorldDialog from "../WorldDialog.svelte";
@@ -218,6 +220,16 @@
       },
     };
   }
+
+  $effect(() => {
+    if (!isAndroid || (!presetOpen && !sortOpen && !favFilterOpen)) return;
+    return registerBackHandler(() => {
+      presetOpen = false;
+      sortOpen = false;
+      favFilterOpen = false;
+      return true;
+    });
+  });
 
   $effect(() => {
     // track tags reactively

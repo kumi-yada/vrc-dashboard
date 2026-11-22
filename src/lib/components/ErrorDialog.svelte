@@ -2,6 +2,8 @@
   import Icon from "@iconify/svelte";
   import { t } from "../stores/i18n.svelte";
   import type { ErrorToast } from "../stores/errors.svelte";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid } from "../utils/platform";
 
   interface Props {
     toast: ErrorToast;
@@ -9,6 +11,14 @@
   }
 
   let { toast, onClose }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {

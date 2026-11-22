@@ -4,6 +4,8 @@
   import type { AvatarData, AvatarUnityPackage, FileVersionAnalysis } from "../types";
   import { fetchFileAnalysis } from "../stores/auth.svelte";
   import { getI18n, t } from "../stores/i18n.svelte";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid } from "../utils/platform";
 
   interface Props {
     avatar: AvatarData | null;
@@ -11,6 +13,14 @@
   }
 
   let { avatar, onClose }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   const i18n = getI18n();
 

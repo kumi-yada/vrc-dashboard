@@ -15,7 +15,8 @@
   } from "../stores/auth.svelte";
   import { resolveOwnerName } from "../stores/friends.svelte";
   import { getI18n, t } from "../stores/i18n.svelte";
-  import { showDesktopWindowControls } from "../utils/platform";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid, showDesktopWindowControls } from "../utils/platform";
   import { parseInstanceId } from "../utils/instance";
   import UserMenuDialog from "./UserMenuDialog.svelte";
   import UserAvatar from "./UserAvatar.svelte";
@@ -615,6 +616,15 @@
     void connectNotificationPipeline(requestId);
 
     return disconnectNotificationPipeline;
+  });
+
+  $effect(() => {
+    if (!isAndroid || (!showNotifications && !showUserMenu)) return;
+    return registerBackHandler(() => {
+      showNotifications = false;
+      showUserMenu = false;
+      return true;
+    });
   });
 </script>
 

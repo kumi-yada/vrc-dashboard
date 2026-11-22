@@ -35,6 +35,8 @@
     getSavedInstances,
     toggleSavedInstance,
   } from "../stores/saved-instances.svelte";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid } from "../utils/platform";
   import type { ApiFavoriteGroup } from "../types";
 
   interface Props {
@@ -54,6 +56,14 @@
     loading = false,
     error = null,
   }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   const imageUrl = $derived(world?.imageUrl ?? world?.thumbnailImageUrl ?? "");
   const platformList = $derived(

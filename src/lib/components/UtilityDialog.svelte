@@ -2,6 +2,8 @@
   import Icon from "@iconify/svelte";
   import { version } from "../../../package.json";
   import { t } from "../stores/i18n.svelte";
+  import { registerBackHandler } from "../stores/back-button.svelte";
+  import { isAndroid } from "../utils/platform";
   // import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
   interface Props {
@@ -9,6 +11,14 @@
   }
 
   let { onClose }: Props = $props();
+
+  $effect(() => {
+    if (!isAndroid) return;
+    return registerBackHandler(() => {
+      onClose();
+      return true;
+    });
+  });
 
   let urlInput = $state("");
   let isResolving = $state(false);

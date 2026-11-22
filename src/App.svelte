@@ -5,6 +5,7 @@
   import ErrorSnackbar from "./lib/components/ErrorSnackbar.svelte";
   import { getAuth, restoreSession } from "./lib/stores/auth.svelte";
   import { initializeUiScale } from "./lib/stores/ui-scale.svelte";
+  import { initBackButton } from "./lib/stores/back-button.svelte";
   import { t } from "./lib/stores/i18n.svelte";
   import { isAndroid } from "./lib/utils/platform";
 
@@ -12,6 +13,7 @@
 
   onMount(() => {
     initializeUiScale();
+    initBackButton();
   });
 
   restoreSession();
