@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Download the latest GitHub release asset matching a name pattern (default: *AppImage*),
-# make it executable, place it in ~/Downloads/apps, and delete older AppImages there.
+# make it executable, place it in ~/Downloads/apps, and delete older AppImages there
+# (plus their entries in the rofi run cache, ~/.cache/rofi-4.runcache).
 #
 # Usage: download-latest-appimage.sh [owner/repo] [asset-name-pattern]
 # Defaults to this project's repo (kumi-yada/vrc-dashboard).
@@ -71,5 +72,31 @@ chmod 755 "$dest"
 # wildcarded), leaving other apps' AppImages untouched.
 glob_name=$(printf '%s' "$name" | sed -E 's/[0-9]+(\.[0-9]+)*/*/g')
 find "$DEST_DIR" -maxdepth 1 -type f -iname "$glob_name" ! -name "$name" -delete
+
+# rofi's run-mode cache ("<hit-count> <command>" per line) would keep offering
+# the deleted files, so drop entries that reference previous versions of this app.
+cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/rofi-4.runcache"
+if [[ -f "$cache_file" ]]; then
+  shopt -s nocasematch
+  kept=()
+  removed=0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    entry="${line#* }"
+    if [[ "$entry" == *$glob_name* && "$entry" != *$name* ]]; then
+      removed=$((removed + 1))
+    else
+      kept+=("$line")
+    fi
+  done <"$cache_file"
+  shopt -u nocasematch
+  if ((removed > 0)); then
+    if ((${#kept[@]} > 0)); then
+      printf '%s\n' "${kept[@]}" >"$cache_file"
+    else
+      : >"$cache_file"
+    fi
+    echo "Removed ${removed} stale entry(ies) from ${cache_file}"
+  fi
+fi
 
 echo "Installed: $dest"
