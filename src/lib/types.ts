@@ -311,3 +311,165 @@ export interface ApiFavorite {
   favoriteId: string;
   tags: string[];
 }
+
+export interface InventoryItemMetadata {
+  fileId?: string;
+  imageUrl?: string;
+  animated?: boolean;
+  [key: string]: unknown;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  itemType: string;
+  itemTypeLabel?: string;
+  imageUrl?: string;
+  isArchived?: boolean;
+  isSeen?: boolean;
+  flags?: string[];
+  tags?: string[];
+  holderId?: string;
+  templateId?: string;
+  metadata?: InventoryItemMetadata;
+}
+
+/** `POST /users/{userId}/boop` body: inventoryItemId alone, or emojiId (+version). */
+export interface BoopPayload {
+  emojiId?: string;
+  emojiVersion?: number;
+  inventoryItemId?: string;
+}
+
+/** Built-in emoji names accepted by the boop endpoint (`DefaultEmojiID`, incomplete). */
+export const DEFAULT_EMOJIS = [
+  "default_angry",
+  "default_arrowpoint",
+  "default_bats",
+  "default_beachball",
+  "default_beer",
+  "default_blushing",
+  "default_boo",
+  "default_broken_heart",
+  "default_candy",
+  "default_candy_cane",
+  "default_candy_corn",
+  "default_cantsee",
+  "default_champagne",
+  "default_cloud",
+  "default_coal",
+  "default_confetti",
+  "default_crying",
+  "default_drink",
+  "default_exclamation",
+  "default_fire",
+  "default_frown",
+  "default_gift",
+  "default_gifts",
+  "default_gingerbread",
+  "default_go",
+  "default_hand_wave",
+  "default_hang_ten",
+  "default_heart",
+  "default_hourglass",
+  "default_ice_cream",
+  "default_in_love",
+  "default_jack_o_lantern",
+  "default_keyboard",
+  "default_kiss",
+  "default_laugh",
+  "default_life_ring",
+  "default_mistletoe",
+  "default_money",
+  "default_music_note",
+  "default_neon_shades",
+  "default_noheadphones",
+  "default_nomic",
+  "default_pineapple",
+  "default_pizza",
+  "default_portal",
+  "default_question",
+  "default_shush",
+  "default_skull",
+  "default_smile",
+  "default_snow_fall",
+  "default_snowball",
+  "default_splash",
+  "default_spooky_ghost",
+  "default_stoic",
+  "default_stop",
+  "default_sun_lotion",
+  "default_sunglasses",
+  "default_thinking",
+  "default_thumbs_down",
+  "default_thumbs_up",
+  "default_tomato",
+  "default_tongue_out",
+  "default_web",
+  "default_wow",
+  "default_zzz",
+] as const;
+
+/** Best-effort mdi icon per built-in emoji; falls back to a generic face. */
+export const DEFAULT_EMOJI_ICONS: Record<string, string> = {
+  default_angry: "mdi:emoticon-angry-outline",
+  default_arrowpoint: "mdi:arrow-up-right",
+  default_bats: "mdi:bat",
+  default_beachball: "mdi:beach",
+  default_beer: "mdi:beer-outline",
+  default_blushing: "mdi:emoticon-wink-outline",
+  default_boo: "mdi:ghost-outline",
+  default_broken_heart: "mdi:heart-broken-outline",
+  default_candy: "mdi:candy-outline",
+  default_candy_cane: "mdi:candy",
+  default_candy_corn: "mdi:corn",
+  default_cantsee: "mdi:eye-off-outline",
+  default_champagne: "mdi:glass-flute",
+  default_cloud: "mdi:cloud-outline",
+  default_coal: "mdi:diamond-stone",
+  default_confetti: "mdi:party-popper",
+  default_crying: "mdi:emoticon-cry-outline",
+  default_drink: "mdi:glass-cocktail",
+  default_exclamation: "mdi:exclamation",
+  default_fire: "mdi:fire",
+  default_frown: "mdi:emoticon-sad-outline",
+  default_gift: "mdi:gift-outline",
+  default_gifts: "mdi:gift-open-outline",
+  default_go: "mdi:play",
+  default_hand_wave: "mdi:hand-wave-outline",
+  default_hang_ten: "mdi:hand-peace",
+  default_heart: "mdi:heart-outline",
+  default_hourglass: "mdi:timer-sand",
+  default_ice_cream: "mdi:ice-cream",
+  default_in_love: "mdi:heart-multiple-outline",
+  default_jack_o_lantern: "mdi:halloween",
+  default_keyboard: "mdi:keyboard-outline",
+  default_kiss: "mdi:emoticon-kiss-outline",
+  default_laugh: "mdi:emoticon-lol-outline",
+  default_life_ring: "mdi:lifebuoy",
+  default_money: "mdi:cash",
+  default_music_note: "mdi:music-note",
+  default_neon_shades: "mdi:sunglasses",
+  default_noheadphones: "mdi:headphones-off",
+  default_nomic: "mdi:food-apple-outline",
+  default_pizza: "mdi:pizza",
+  default_question: "mdi:help-circle-outline",
+  default_skull: "mdi:skull-outline",
+  default_smile: "mdi:emoticon-happy-outline",
+  default_snow_fall: "mdi:snowflake",
+  default_snowball: "mdi:snowflake",
+  default_splash: "mdi:water",
+  default_spooky_ghost: "mdi:ghost",
+  default_stoic: "mdi:emoticon-neutral-outline",
+  default_stop: "mdi:stop",
+  default_sun_lotion: "mdi:weather-sunny",
+  default_sunglasses: "mdi:sunglasses",
+  default_thinking: "mdi:thought-bubble-outline",
+  default_thumbs_down: "mdi:thumb-down-outline",
+  default_thumbs_up: "mdi:thumb-up-outline",
+  default_tongue_out: "mdi:emoticon-tongue-outline",
+  default_web: "mdi:web",
+  default_wow: "mdi:emoticon-excited-outline",
+  default_zzz: "mdi:sleep",
+};

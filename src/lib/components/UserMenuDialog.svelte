@@ -22,6 +22,7 @@
   import { registerBackHandler } from "../stores/back-button.svelte";
   import StatusDot from "./StatusDot.svelte";
   import UserAvatar from "./UserAvatar.svelte";
+  import BoopDialog from "./BoopDialog.svelte";
   import { formatRelative, type Locale as DateFnsLocale } from "date-fns";
   import { ja as dateFnsJa, zhCN as dateFnsZhCN } from "date-fns/locale";
 
@@ -74,6 +75,8 @@
   const mutuals: any[] = $derived(mutualFriends ?? []);
   type InviteState = "idle" | "loading" | "success" | "error";
   let inviteState = $state<InviteState>("idle");
+  let boopDialogOpen = $state(false);
+  const canBoop = $derived(Boolean(user && auth.user && user.id !== auth.user.id));
   const currentLocation = $derived(auth.user?.location?.trim() ?? "");
   const inviteDisabled = $derived(
     inviteState === "loading" ||
@@ -149,6 +152,7 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {
+      if (boopDialogOpen) return;
       onClose();
     }
   }
@@ -179,6 +183,16 @@
 >
   <div class="user-dialog">
     <div class="dialog-actions">
+      {#if canBoop && user}
+        <button
+          class="invite-btn boop-btn"
+          type="button"
+          title={t("boop.button", { name: user.displayName })}
+          onclick={() => (boopDialogOpen = true)}
+        >
+          <Icon icon="mdi:gesture-tap" width="1rem" />
+        </button>
+      {/if}
       {#if showInvite}
         <button
           class="invite-btn invite-btn--{inviteState}"
@@ -433,6 +447,10 @@
   </div>
 </div>
 
+{#if boopDialogOpen && user}
+  <BoopDialog user={user} onClose={() => (boopDialogOpen = false)} />
+{/if}
+
 <style>
   .dialog-backdrop {
     position: fixed;
@@ -530,6 +548,11 @@
 
   .invite-btn--error {
     color: #ef9a9a;
+  }
+
+  .boop-btn:hover:not(:disabled) {
+    color: var(--accent);
+    background: rgba(76, 175, 80, 0.12);
   }
 
   .dialog-state {

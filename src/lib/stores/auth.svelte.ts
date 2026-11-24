@@ -4,10 +4,12 @@ import type {
   ApiFavorite,
   ApiFavoriteGroup,
   AvatarData,
+  BoopPayload,
   CreateInstanceRequest,
   CurrentUser,
   FileVersionAnalysis,
   InstanceData,
+  InventoryItem,
   Notification,
   PublicProfile,
   UserProfile,
@@ -309,6 +311,22 @@ export async function fetchFileAnalysis(
   versionNumber: number,
 ): Promise<FileVersionAnalysis> {
   return invoke<FileVersionAnalysis>("get_file_analysis", { fileId, versionNumber });
+}
+
+export async function fetchInventory(types?: string): Promise<InventoryItem[]> {
+  return invoke<InventoryItem[]>("get_inventory", { types: types ?? null });
+}
+
+export async function sendBoop(
+  userId: string,
+  payload: BoopPayload = {},
+): Promise<unknown> {
+  return invoke("send_boop", {
+    userId,
+    emojiId: payload.emojiId ?? null,
+    emojiVersion: payload.emojiVersion ?? null,
+    inventoryItemId: payload.inventoryItemId ?? null,
+  });
 }
 
 export async function login(authToken: string): Promise<boolean> {

@@ -80,6 +80,23 @@ const en = {
   "stats.lastActive": "Last Active",
   "mutuals.title": "Mutual Friends ({count})",
 
+  // Boop dialog
+  "boop.button": "Boop {name}",
+  "boop.title": "Boop {name}",
+  "boop.tabEmoji": "Emoji",
+  "boop.tabStickers": "Stickers",
+  "boop.tabInventory": "Inventory",
+  "boop.custom": "Custom",
+  "boop.none": "None",
+  "boop.noneHint": "Send a plain boop",
+  "boop.loading": "Loading inventory…",
+  "boop.loadFailed": "Could not load inventory",
+  "boop.empty": "No items here",
+  "boop.send": "Send boop",
+  "boop.sending": "Sending…",
+  "boop.success": "Boop sent to {name}!",
+  "boop.failed": "Boop failed",
+
   // Settings in profile dialog
   "settings.interfaceScale": "Interface Scale",
   "settings.reset": "Reset",
@@ -437,6 +454,23 @@ const ja: Messages = {
   "stats.lastActive": "最終アクティブ",
   "mutuals.title": "共通のフレンド ({count})",
 
+  // Boop dialog
+  "boop.button": "{name}をブープ",
+  "boop.title": "{name}にブープ",
+  "boop.tabEmoji": "絵文字",
+  "boop.tabStickers": "ステッカー",
+  "boop.tabInventory": "インベントリ",
+  "boop.custom": "カスタム",
+  "boop.none": "なし",
+  "boop.noneHint": "通常のブープを送る",
+  "boop.loading": "インベントリを読み込み中…",
+  "boop.loadFailed": "インベントリを読み込めませんでした",
+  "boop.empty": "ここにアイテムはありません",
+  "boop.send": "ブープを送る",
+  "boop.sending": "送信中…",
+  "boop.success": "{name}にブープを送りました!",
+  "boop.failed": "ブープに失敗しました",
+
   // Settings in profile dialog
   "settings.interfaceScale": "インターフェースのスケール",
   "settings.reset": "リセット",
@@ -786,6 +820,23 @@ const zh: Messages = {
   "stats.joined": "加入日期",
   "stats.lastActive": "最后活跃",
   "mutuals.title": "共同好友 ({count})",
+
+  // Boop dialog
+  "boop.button": "戳一下 {name}",
+  "boop.title": "戳一下 {name}",
+  "boop.tabEmoji": "表情",
+  "boop.tabStickers": "贴纸",
+  "boop.tabInventory": "物品栏",
+  "boop.custom": "自定义",
+  "boop.none": "无",
+  "boop.noneHint": "发送普通戳一戳",
+  "boop.loading": "正在加载物品栏…",
+  "boop.loadFailed": "无法加载物品栏",
+  "boop.empty": "这里没有物品",
+  "boop.send": "发送戳一戳",
+  "boop.sending": "发送中…",
+  "boop.success": "已向 {name} 发送戳一戳!",
+  "boop.failed": "戳一戳失败",
 
   // Settings in profile dialog
   "settings.interfaceScale": "界面缩放",

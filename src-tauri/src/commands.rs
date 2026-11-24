@@ -935,6 +935,127 @@ pub async fn get_file_analysis(
 }
 
 #[tauri::command]
+pub async fn get_inventory(
+    state: State<'_, AuthState>,
+    types: Option<String>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    let client = reqwest::Client::new();
+    let mut all_items: Vec<Value> = Vec::new();
+    let page_size = 100;
+    let mut offset = 0;
+    let types_param = types
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+
+    loop {
+        let mut params: Vec<(&str, String)> = vec![
+            ("n", page_size.to_string()),
+            ("offset", offset.to_string()),
+        ];
+        if let Some(ref types) = types_param {
+            params.push(("types", types.clone()));
+        }
+
+        let resp = client
+            .get(format!("{}/inventory", BASE_URL))
+            .headers(build_headers(&token))
+            .query(&params)
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if !resp.status().is_success() {
+            return Err(api_error(resp).await);
+        }
+
+        // The endpoint wraps items in {"data": [...], "totalCount": N};
+        // tolerate a bare array too.
+        let body: Value = resp.json().await.map_err(|e| e.to_string())?;
+        let (page, total_count) = if let Some(array) = body.as_array() {
+            (array.to_vec(), None)
+        } else {
+            let page = body
+                .get("data")
+                .and_then(Value::as_array)
+                .map(|array| array.to_vec())
+                .unwrap_or_default();
+            let total = body
+                .get("totalCount")
+                .and_then(Value::as_u64)
+                .map(|value| value as usize);
+            (page, total)
+        };
+        let count = page.len();
+        all_items.extend(page);
+
+        if count < page_size {
+            break;
+        }
+        if total_count.is_some_and(|total| all_items.len() >= total) {
+            break;
+        }
+        offset += page_size;
+    }
+
+    Ok(Value::Array(all_items))
+}
+
+#[tauri::command]
+pub async fn send_boop(
+    state: State<'_, AuthState>,
+    user_id: String,
+    emoji_id: Option<String>,
+    emoji_version: Option<u32>,
+    inventory_item_id: Option<String>,
+) -> Result<Value, String> {
+    let token = {
+        let auth = state.0.lock().map_err(|e| e.to_string())?;
+        auth.clone()
+            .ok_or_else(|| "Not authenticated".to_string())?
+    };
+
+    // BoopRequest is either inventoryItemId alone, or emojiId with optional version.
+    let mut payload = json!({});
+    if let Some(item_id) = inventory_item_id
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+    {
+        payload["inventoryItemId"] = json!(item_id);
+    } else {
+        if let Some(emoji) = emoji_id
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+        {
+            payload["emojiId"] = json!(emoji);
+        }
+        if let Some(version) = emoji_version {
+            payload["emojiVersion"] = json!(version);
+        }
+    }
+
+    let client = reqwest::Client::new();
+    let resp = client
+        .post(format!("{}/users/{}/boop", BASE_URL, user_id))
+        .headers(build_headers(&token))
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !resp.status().is_success() {
+        return Err(api_error(resp).await);
+    }
+
+    resp.json::<Value>().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn create_instance(
     state: State<'_, AuthState>,
     world_id: String,

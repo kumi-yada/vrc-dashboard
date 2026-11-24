@@ -41,6 +41,8 @@ pub fn run() {
             commands::get_my_avatars,
             commands::get_my_worlds,
             commands::get_file_analysis,
+            commands::get_inventory,
+            commands::send_boop,
         ])
         .setup(|app| {
             if let Some(token) = commands::load_persisted_auth_token(app.handle())? {

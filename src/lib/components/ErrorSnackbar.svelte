@@ -9,6 +9,7 @@
   let detailsToast = $state<ErrorToast | null>(null);
 
   function openDetails(toast: ErrorToast) {
+    if (toast.kind !== "error") return;
     errors.dismiss(toast.id);
     detailsToast = toast;
   }
@@ -17,16 +18,22 @@
 {#if errors.toasts.length}
   <div class="snackbar-stack" role="region" aria-label={t("error.detailsTitle")}>
     {#each errors.toasts as toast (toast.id)}
-      <div class="snackbar" role="alert">
+      <div class="snackbar" class:success={toast.kind === "success"} role="alert">
         <button
           class="snackbar-body"
           type="button"
-          title={t("error.detailsHint")}
+          title={toast.kind === "error" ? t("error.detailsHint") : undefined}
           onclick={() => openDetails(toast)}
         >
-          <Icon icon="mdi:alert-circle" width="1.1rem" class="snackbar-icon" />
+          <Icon
+            icon={toast.kind === "success" ? "mdi:check-circle" : "mdi:alert-circle"}
+            width="1.1rem"
+            class="snackbar-icon"
+          />
           <span class="snackbar-message">{toast.message}</span>
-          <Icon icon="mdi:information-outline" width="0.95rem" class="snackbar-hint" />
+          {#if toast.kind === "error"}
+            <Icon icon="mdi:information-outline" width="0.95rem" class="snackbar-hint" />
+          {/if}
         </button>
         <button
           class="snackbar-close"
@@ -71,6 +78,10 @@
     animation: snackbar-in 0.18s ease-out;
   }
 
+  .snackbar.success {
+    border-color: rgba(76, 175, 80, 0.55);
+  }
+
   .snackbar-body {
     display: flex;
     align-items: center;
@@ -91,6 +102,10 @@
   :global(.snackbar .snackbar-icon) {
     color: #ff6b6b;
     flex-shrink: 0;
+  }
+
+  :global(.snackbar.success .snackbar-icon) {
+    color: var(--accent);
   }
 
   .snackbar-message {
